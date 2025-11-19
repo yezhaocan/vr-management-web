@@ -11,7 +11,7 @@ export default function LoginPage(props) {
     style,
     currentUser
   } = props;
-    console.log(`🚀 ~ LoginPage ~ currentUser-> `, currentUser)
+  console.log(`🚀 ~ LoginPage ~ currentUser-> `, currentUser)
   const {
     toast
   } = useToast();
@@ -29,8 +29,11 @@ export default function LoginPage(props) {
   }, []);
   const checkLoginStatus = async () => {
     try {
+      console.log('1233221')
       const tcb = await $w.cloud.getCloudInstance();
+      console.log(`🚀 ~ checkLoginStatus ~ tcb-> `, tcb)
       const auth = tcb.auth();
+      if (!auth.currentUser) return;
       console.log(`🚀 检查 ~ checkLoginStatus ~ auth-> `, auth)
       const loginState = auth.hasLoginState();
       console.log(`🚀 检查 ~ checkLoginStatus ~ loginState-> `, loginState && loginState.user.name !== 'anonymous')
