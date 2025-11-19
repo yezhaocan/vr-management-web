@@ -189,10 +189,11 @@ export default function Dashboard(props) {
       });
 
       // 跳转到登录页
-      $w.utils.redirectTo({
-        pageId: 'login',
-        params: {}
-      });
+      // $w.utils.redirectTo({
+      //   pageId: 'login',
+      //   params: {}
+      // });
+      window.location.href = '/app-x5yduyum/production/login'
     } catch (error) {
       
     }
