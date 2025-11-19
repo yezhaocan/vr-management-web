@@ -8,8 +8,10 @@ import { Eye, EyeOff, User, Lock, Mail, Phone } from 'lucide-react';
 export default function LoginPage(props) {
   const {
     $w,
-    style
+    style,
+    currentUser
   } = props;
+    console.log(`🚀 ~ LoginPage ~ currentUser-> `, currentUser)
   const {
     toast
   } = useToast();
@@ -32,7 +34,7 @@ export default function LoginPage(props) {
       console.log(`🚀 检查 ~ checkLoginStatus ~ auth-> `, auth)
       const loginState = auth.hasLoginState();
       console.log(`🚀 检查 ~ checkLoginStatus ~ loginState-> `, loginState && loginState.user.name !== 'anonymous')
-      if (loginState && loginState.user?.name?.toLocaleLowerCase() !== 'anonymous') {
+      if (loginState && loginState.user.name !== 'anonymous') {
         // 已登录，跳转到dashboard
         $w.utils.redirectTo({
           pageId: 'dashboard',
@@ -159,7 +161,7 @@ export default function LoginPage(props) {
           <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <User className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">欢迎登录</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white">VR观光管理平台</CardTitle>
           <CardDescription className="text-gray-400">
             请输入您的登录信息
           </CardDescription>
@@ -168,10 +170,10 @@ export default function LoginPage(props) {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">用户名/手机号/邮箱</label>
+              <label className="text-sm font-medium text-gray-300">用户名</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input type="text" placeholder="请输入用户名、手机号或邮箱" value={formData.username} onChange={e => handleInputChange('username', e.target.value)} onKeyPress={handleKeyPress} className={`pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400 input-focus ${errors.username ? 'border-red-500' : 'border-gray-600'}`} />
+                <Input type="text" placeholder="请输入用户名" value={formData.username} onChange={e => handleInputChange('username', e.target.value)} onKeyPress={handleKeyPress} className={`pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400 input-focus ${errors.username ? 'border-red-500' : 'border-gray-600'}`} />
               </div>
               {errors.username && <p className="text-sm text-red-400">{errors.username}</p>}
             </div>

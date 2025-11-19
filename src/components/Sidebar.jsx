@@ -13,11 +13,25 @@ export function Sidebar(props) {
     $w
   } = props;
 
+  const [currentUser, setCurrentUser] = React.useState({});
+  React.useEffect(() => {
+    getCurrentUser();
+  }, []);
+  const getCurrentUser = async () => {
+      const tcb = await $w.cloud.getCloudInstance();
+      const auth = tcb.auth();
+
+      // 获取当前用户信息
+      const user = await auth.getCurrentUser();
+      console.log(`🚀 ~ getCurrentUser ~ user-> `, user)
+      setCurrentUser(user || {});
+  }
+
   // 安全获取用户信息 - 使用腾讯云认证的真实用户信息
-  const currentUser = $w?.auth?.currentUser || {};
+  // const currentUser = $w?.auth?.currentUser || {};
   const userName = currentUser.name || '用户';
   const userNickName = currentUser.nickName || '';
-  const userAvatar = currentUser.avatarUrl || null;
+  const userAvatar = currentUser.avatarUrl || currentUser.picture || null;
   const menuItems = [{
     id: 'dashboard',
     label: '运行观测',
