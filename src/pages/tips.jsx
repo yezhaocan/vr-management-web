@@ -321,6 +321,48 @@ function TipsForm({
             {tip ? '编辑Tips' : '新建Tips'}
           </DialogTitle>
         </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 基础信息 */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name" className="text-white">Tips名称 *</Label>
+              <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入Tips名称" className="bg-gray-800 border-gray-700 text-white mt-1" required />
+            </div>
+
+            <div>
+              <Label htmlFor="type" className="text-white">类型 *</Label>
+              <Select value={formData.type} onValueChange={value => handleInputChange('type', value)}>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-1">
+                  <SelectValue placeholder="请选择Tips类型" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  {tipTypes.map(type => <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="description" className="text-white">描述 *</Label>
+              <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入Tips描述内容" className="bg-gray-800 border-gray-700 text-white mt-1 h-24" required />
+            </div>
+          </div>
+
+          {/* 图片上传区域 - 简化版 */}
+          <ImageUploadSection />
+
+          {/* 操作按钮 */}
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button type="button" variant="outline" onClick={onCancel} className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
+              取消
+            </Button>
+            <Button type="submit" disabled={loading} className="bg-blue-500 hover:bg-blue-600">
+              {loading ? '保存中...' : tip ? '更新Tips' : '创建Tips'}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>;
 }

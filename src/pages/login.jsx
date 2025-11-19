@@ -29,11 +29,18 @@ export default function LoginPage(props) {
     try {
       const tcb = await $w.cloud.getCloudInstance();
       const auth = tcb.auth();
+      console.log(`🚀 检查 ~ checkLoginStatus ~ auth-> `, auth)
       const loginState = auth.hasLoginState();
-      if (loginState) {
+      console.log(`🚀 检查 ~ checkLoginStatus ~ loginState-> `, loginState && loginState.user.name !== 'anonymous')
+      if (loginState && loginState.user?.name?.toLocaleLowerCase() !== 'anonymous') {
         // 已登录，跳转到dashboard
         $w.utils.redirectTo({
           pageId: 'dashboard',
+          params: {}
+        });
+      } else {
+        $w.utils.redirectTo({
+          pageId: 'login',
           params: {}
         });
       }
@@ -82,6 +89,7 @@ export default function LoginPage(props) {
         username: formData.username.trim(),
         password: formData.password
       });
+      console.log(`🚀 ~ handleLogin ~ loginResult-> `, loginResult)
       if (loginResult) {
         toast({
           title: '登录成功',
