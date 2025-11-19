@@ -229,14 +229,12 @@ export default function FlightTaskPage(props) {
     const variants = {
       'pending': 'secondary',
       'executing': 'default',
-      'completed': 'secondary',
-      'cancelled': 'destructive'
+      'completed': 'secondary'
     };
     const labels = {
       'pending': '待执行',
       'executing': '执行中',
-      'completed': '已完成',
-      'cancelled': '已取消'
+      'completed': '已完成'
     };
     return <Badge variant={variants[status] || 'secondary'}>{labels[status] || status}</Badge>;
   };
@@ -244,8 +242,7 @@ export default function FlightTaskPage(props) {
     const labels = {
       'pending': '待执行',
       'executing': '执行中',
-      'completed': '已完成',
-      'cancelled': '已取消'
+      'completed': '已完成'
     };
     return labels[status] || status;
   };
@@ -278,8 +275,7 @@ export default function FlightTaskPage(props) {
     const counts = {
       pending: 0,
       executing: 0,
-      completed: 0,
-      cancelled: 0
+      completed: 0
     };
     missions.forEach(mission => {
       if (counts.hasOwnProperty(mission.status)) {
@@ -321,7 +317,6 @@ export default function FlightTaskPage(props) {
               <option value="pending">待执行</option>
               <option value="executing">执行中</option>
               <option value="completed">已完成</option>
-              <option value="cancelled">已取消</option>
             </select>
           </div>
 
