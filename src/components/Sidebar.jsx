@@ -16,7 +16,62 @@ export function Sidebar(props) {
   const [currentUser, setCurrentUser] = React.useState({});
   React.useEffect(() => {
     getCurrentUser();
+    checkAuthStatus();
   }, []);
+
+    const checkAuthStatus = async () => {
+    try {
+      const tcb = await $w.cloud.getCloudInstance();
+      const auth = tcb.auth();
+
+      // 获取当前用户信息
+      const user = await  auth.getCurrentUser();
+      console.log(`🚀 ~ 获取当前用户信息 checkAuthStatus ~ user-> `, user)
+      const isAnonymous = user?.name?.toLocaleLowerCase() === 'anonymous';
+      if (user && !isAnonymous) {
+       
+      } else {
+        // 未登录，检查是否有登录状态
+        const loginState = auth.hasLoginState();
+        console.log(`🚀 ~ 未登录，检查是否有登录状态 checkAuthStatus ~ loginState-> `, loginState)
+        if (loginState && !isAnonymous) {
+          // setIsAuthenticated(true);
+          // setCurrentUser(loginState.user);
+          // setLoading(false);
+        } else {
+          // 未登录，重定向到登录页
+          // setIsAuthenticated(false);
+          // setLoading(false);
+
+          // 获取当前页面路径，避免循环重定向
+          const currentPage = window.location.pathname.replace('/', '') || 'dashboard';
+          if (currentPage !== 'login') {
+            $w.utils.redirectTo({
+              pageId: 'login',
+              params: {
+                redirect: currentPage
+              }
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('认证检查失败:', error);
+      // setLoading(false);
+
+      // 出错时也重定向到登录页
+      const currentPage = window.location.pathname.replace('/', '') || 'dashboard';
+      if (currentPage !== 'login') {
+        $w.utils.redirectTo({
+          pageId: 'login',
+          params: {
+            redirect: currentPage
+          }
+        });
+      }
+    }
+    };
+  
   const getCurrentUser = async () => {
       const tcb = await $w.cloud.getCloudInstance();
       const auth = tcb.auth();
