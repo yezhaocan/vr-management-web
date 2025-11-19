@@ -1,0 +1,75 @@
+
+{
+  "name": "mission",
+  "title": "飞行任务管理",
+  "schemas": [
+    {
+      "name": "droneModelSn",
+      "title": "无人机型号·设备编号",
+      "type": "String"
+    },
+    {
+      "name": "missionID",
+      "title": "任务编号",
+      "type": "Number"
+    },
+    {
+      "name": "description",
+      "title": "任务描述",
+      "type": "MultiLineString"
+    },
+    {
+      "name": "maxSpeed",
+      "title": "最高飞行速度",
+      "type": "Number"
+    },
+    {
+      "name": "airlineId",
+      "title": "关联航线ID",
+      "type": "String"
+    },
+    {
+      "name": "droneSn",
+      "title": "关联无人机序列号",
+      "type": "String"
+    },
+    {
+      "name": "name",
+      "title": "任务名称",
+      "type": "String"
+    },
+    {
+      "name": "startTime",
+      "title": "开始时间",
+      "type": "DateTime",
+      "format": "timestamp-ms"
+    },
+    {
+      "name": "endTime",
+      "title": "结束时间",
+      "type": "DateTime",
+      "format": "timestamp-ms"
+    },
+    {
+      "name": "airlineName",
+      "title": "航线名称",
+      "type": "String"
+    },
+    {
+      "name": "repeatCount",
+      "title": "重复飞行次数",
+      "type": "Number"
+    },
+    {
+      "name": "status",
+      "title": "任务状态",
+      "type": "String"
+    },
+    {
+      "name": "current_waypoint_index",
+      "title": "当前航点索引",
+      "type": "Number"
+    }
+  ]
+}
+  

@@ -1,0 +1,46 @@
+
+[
+  {
+    "_id": "1",
+    "battery": 85,
+    "manufacturer": "大疆创新",
+    "lastCommunicationTime": 1730390400000,
+    "lastUpdate": "2025-11-05 10:00:00",
+    "model": "DJI Mavic 3",
+    "location": "西湖景区管理中心",
+    "sn": "DJI00123456789",
+    "firmware": "v01.00.0900",
+    "status": "online",
+    "createdAt": 1730390400000,
+    "updatedAt": 1730390400000
+  },
+  {
+    "_id": "2",
+    "battery": 92,
+    "manufacturer": "大疆创新",
+    "lastCommunicationTime": 1730476800000,
+    "lastUpdate": "2025-11-05 11:30:00",
+    "model": "DJI Phantom 4 Pro",
+    "location": "黄山景区北门",
+    "sn": "DJI00987654321",
+    "firmware": "v02.00.1200",
+    "status": "online",
+    "createdAt": 1730476800000,
+    "updatedAt": 1730476800000
+  },
+  {
+    "_id": "3",
+    "battery": 78,
+    "manufacturer": "大疆创新",
+    "lastCommunicationTime": 1730390400000,
+    "lastUpdate": "2025-11-04 16:45:00",
+    "model": "DJI Air 2S",
+    "location": "张家界景区东门",
+    "sn": "DJI00567890123",
+    "firmware": "v01.02.0800",
+    "status": "offline",
+    "createdAt": 1730563200000,
+    "updatedAt": 1730563200000
+  }
+]
+  

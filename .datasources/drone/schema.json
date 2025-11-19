@@ -1,0 +1,54 @@
+
+{
+  "name": "drone",
+  "title": "无人机设备管理",
+  "schemas": [
+    {
+      "name": "battery",
+      "title": "电量",
+      "type": "Number"
+    },
+    {
+      "name": "manufacturer",
+      "title": "厂商",
+      "type": "String"
+    },
+    {
+      "name": "lastCommunicationTime",
+      "title": "最后通信时间",
+      "type": "DateTime",
+      "format": "timestamp-ms"
+    },
+    {
+      "name": "lastUpdate",
+      "title": "最后更新时间描述",
+      "type": "String"
+    },
+    {
+      "name": "model",
+      "title": "设备型号",
+      "type": "String"
+    },
+    {
+      "name": "location",
+      "title": "当前位置",
+      "type": "String"
+    },
+    {
+      "name": "sn",
+      "title": "设备序列号",
+      "type": "String"
+    },
+    {
+      "name": "firmware",
+      "title": "固件版本",
+      "type": "String"
+    },
+    {
+      "name": "status",
+      "title": "设备状态",
+      "type": "String"
+    }
+  ]
+}
+  

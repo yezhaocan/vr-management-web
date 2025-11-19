@@ -1,0 +1,87 @@
+
+{
+  "name": "airline",
+  "title": "航线管理",
+  "schemas": [
+    {
+      "name": "name",
+      "title": "航线名称",
+      "type": "String"
+    },
+    {
+      "name": "description",
+      "title": "航线描述",
+      "type": "MultiLineString"
+    },
+    {
+      "name": "waypointCount",
+      "title": "航点数量",
+      "type": "Number"
+    },
+    {
+      "name": "estimated_duration",
+      "title": "预计飞行时长",
+      "type": "Number"
+    },
+    {
+      "name": "waypoints",
+      "title": "航点列表",
+      "type": "Array",
+      "items": {
+        "type": "Object",
+        "properties": {
+          "name": {
+            "type": "String"
+          },
+          "flightSpeed": {
+            "type": "Number"
+          },
+          "hoverDuration": {
+            "type": "Number"
+          },
+          "altitude": {
+            "type": "Number"
+          },
+          "lat": {
+            "type": "Number"
+          },
+          "lng": {
+            "type": "Number"
+          },
+          "voiceGuide": {
+            "type": "Object",
+            "properties": {
+              "enabled": {
+                "type": "Boolean"
+              },
+              "text": {
+                "type": "String"
+              },
+              "character": {
+                "type": "String"
+              },
+              "voice": {
+                "type": "String"
+              },
+              "triggerType": {
+                "type": "String"
+              },
+              "audioFileId": {
+                "type": "String"
+              },
+              "audioUrl": {
+                "type": "String"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "cloudStorageId",
+      "title": "背景音乐文件ID",
+      "type": "String"
+    }
+  ]
+}
+  

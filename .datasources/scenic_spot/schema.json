@@ -1,0 +1,33 @@
+
+{
+  "name": "scenic_spot",
+  "title": "景区管理",
+  "schemas": [
+    {
+      "name": "address",
+      "title": "详细地址",
+      "type": "String"
+    },
+    {
+      "name": "latitude",
+      "title": "纬度",
+      "type": "Number"
+    },
+    {
+      "name": "description",
+      "title": "景区描述",
+      "type": "MultiLineString"
+    },
+    {
+      "name": "name",
+      "title": "景区名称",
+      "type": "String"
+    },
+    {
+      "name": "longitude",
+      "title": "经度",
+      "type": "Number"
+    }
+  ]
+}
+  

@@ -1,0 +1,40 @@
+
+[
+  {
+    "_id": "1",
+    "extension": "{\"bearing\": 0, \"fontFamily\": \"微软雅黑\", \"fontSize\": 16, \"fontColor\": \"#3B82F6\", \"stereoEffect\": \"轻微\"}",
+    "latitude": 39.9042,
+    "description": "最佳观景位置，可俯瞰整个湖区",
+    "imageFileId": "cloud://example-12345.6578-example-12345-1324567890/poi/viewing-platform.jpg",
+    "videoFileId": "",
+    "fontFamily": "微软雅黑",
+    "name": "观景台",
+    "fontSize": 16,
+    "style": "modern",
+    "fontColor": "#3B82F6",
+    "stereoEffect": "轻微",
+    "height": 100,
+    "longitude": 116.4074,
+    "createdAt": 1730390400000,
+    "updatedAt": 1730390400000
+  },
+  {
+    "_id": "2",
+    "extension": "{\"bearing\": 45, \"fontFamily\": \"宋体\", \"fontSize\": 18, \"fontColor\": \"#10B981\", \"stereoEffect\": \"中等\"}",
+    "latitude": 39.9082,
+    "description": "明清时期古建筑，具有重要历史价值",
+    "imageFileId": "cloud://example-12345.6578-example-12345-1324567890/poi/ancient-building.jpg",
+    "videoFileId": "cloud://example-12345.6578-example-12345-1324567890/poi/ancient-building.mp4",
+    "fontFamily": "宋体",
+    "name": "古建筑群",
+    "fontSize": 18,
+    "style": "classic",
+    "fontColor": "#10B981",
+    "stereoEffect": "中等",
+    "height": 50,
+    "longitude": 116.4104,
+    "createdAt": 1730476800000,
+    "updatedAt": 1730476800000
+  }
+]
+  

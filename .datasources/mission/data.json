@@ -1,0 +1,58 @@
+
+[
+  {
+    "_id": "1",
+    "droneModelSn": "DJI Mavic 3 - SN001",
+    "missionID": 1,
+    "description": "清晨西湖区域的航拍任务，捕捉湖光山色的美景",
+    "maxSpeed": 15,
+    "airlineId": "airline_001",
+    "droneSn": "DJI00123456789",
+    "name": "西湖晨光航拍任务",
+    "startTime": 1730390400000,
+    "endTime": 1730394000000,
+    "airlineName": "西湖环湖航线",
+    "repeatCount": 1,
+    "status": "completed",
+    "current_waypoint_index": 3,
+    "createdAt": 1730390400000,
+    "updatedAt": 1730390400000
+  },
+  {
+    "_id": "2",
+    "droneModelSn": "DJI Phantom 4 - SN002",
+    "missionID": 2,
+    "description": "黄山云海景观的航拍任务，记录壮观的云海景象",
+    "maxSpeed": 12,
+    "airlineId": "airline_002",
+    "droneSn": "DJI00987654321",
+    "name": "黄山云海拍摄任务",
+    "startTime": 1730476800000,
+    "endTime": 1730480400000,
+    "airlineName": "黄山主峰航线",
+    "repeatCount": 2,
+    "status": "scheduled",
+    "current_waypoint_index": 0,
+    "createdAt": 1730476800000,
+    "updatedAt": 1730476800000
+  },
+  {
+    "_id": "3",
+    "droneModelSn": "DJI Air 2S - SN003",
+    "missionID": 3,
+    "description": "张家界峰林景观的航拍任务，记录独特的石英砂岩峰林地貌",
+    "maxSpeed": 10,
+    "airlineId": "airline_003",
+    "droneSn": "DJI00567890123",
+    "name": "张家界峰林拍摄任务",
+    "startTime": 1730563200000,
+    "endTime": 1730566800000,
+    "airlineName": "张家界峰林航线",
+    "repeatCount": 1,
+    "status": "in_progress",
+    "current_waypoint_index": 2,
+    "createdAt": 1730563200000,
+    "updatedAt": 1730563200000
+  }
+]
+  

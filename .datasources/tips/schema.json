@@ -1,0 +1,32 @@
+
+{
+  "name": "tips",
+  "title": "Tips管理",
+  "schemas": [
+    {
+      "name": "name",
+      "title": "Tips名称",
+      "type": "String"
+    },
+    {
+      "name": "description",
+      "title": "描述",
+      "type": "MultiLineString"
+    },
+    {
+      "name": "type",
+      "title": "类型",
+      "type": "String"
+    },
+    {
+      "name": "imageFileId",
+      "title": "图片文件ID",
+      "type": "String"
+    },
+    {
+      "name": "videoFileId",
+      "title": "视频文件ID",
+      "type": "String"
+    }
+  ]
+}

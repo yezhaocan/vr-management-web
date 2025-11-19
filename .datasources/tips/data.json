@@ -1,0 +1,31 @@
+
+[
+  {
+    "_id": "1",
+    "name": "固定跟随提示",
+    "description": "无人机将保持固定距离跟随目标，适用于稳定的跟随拍摄场景",
+    "type": "fixed_follow",
+    "imageFileId": "cloud://example-12345.6578-example-12345-1324567890/tips/fixed-follow.jpg",
+    "createdAt": 1730390400000,
+    "updatedAt": 1730390400000
+  },
+  {
+    "_id": "2",
+    "name": "半跟随提示",
+    "description": "无人机在跟随过程中允许一定程度的自主调整，适用于动态拍摄场景",
+    "type": "semi_follow",
+    "imageFileId": "cloud://example-12345.6578-example-12345-1324567890/tips/semi-follow.jpg",
+    "createdAt": 1730476800000,
+    "updatedAt": 1730476800000
+  },
+  {
+    "_id": "3",
+    "name": "场景跟随提示",
+    "description": "无人机根据场景特征进行智能跟随，适用于复杂环境拍摄",
+    "type": "scene_follow",
+    "imageFileId": "cloud://example-12345.6578-example-12345-1324567890/tips/scene-follow.jpg",
+    "createdAt": 1730563200000,
+    "updatedAt": 1730563200000
+  }
+]
+  

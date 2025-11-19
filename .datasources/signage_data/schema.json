@@ -1,0 +1,73 @@
+
+{
+  "name": "signage_data",
+  "title": "POI管理",
+  "schemas": [
+    {
+      "name": "extension",
+      "title": "拓展字段",
+      "type": "String"
+    },
+    {
+      "name": "latitude",
+      "title": "纬度",
+      "type": "Number"
+    },
+    {
+      "name": "description",
+      "title": "描述",
+      "type": "MultiLineString"
+    },
+    {
+      "name": "imageFileId",
+      "title": "图片文件ID",
+      "type": "String"
+    },
+    {
+      "name": "videoFileId",
+      "title": "视频文件ID",
+      "type": "String"
+    },
+    {
+      "name": "fontFamily",
+      "title": "字体",
+      "type": "String"
+    },
+    {
+      "name": "name",
+      "title": "名称",
+      "type": "String"
+    },
+    {
+      "name": "fontSize",
+      "title": "字号",
+      "type": "Number"
+    },
+    {
+      "name": "style",
+      "title": "显示风格",
+      "type": "String"
+    },
+    {
+      "name": "fontColor",
+      "title": "字体颜色",
+      "type": "String"
+    },
+    {
+      "name": "stereoEffect",
+      "title": "立体效果",
+      "type": "String"
+    },
+    {
+      "name": "height",
+      "title": "高度",
+      "type": "Number"
+    },
+    {
+      "name": "longitude",
+      "title": "经度",
+      "type": "Number"
+    }
+  ]
+}
+  

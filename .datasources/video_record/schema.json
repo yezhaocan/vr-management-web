@@ -1,0 +1,108 @@
+
+{
+  "name": "video_record",
+  "title": "录像记录管理",
+  "schemas": [
+    {
+      "name": "name",
+      "title": "录像名称",
+      "type": "String"
+    },
+    {
+      "name": "description",
+      "title": "录像描述",
+      "type": "MultiLineString"
+    },
+    {
+      "name": "startTime",
+      "title": "开始时间",
+      "type": "DateTime",
+      "format": "timestamp-ms"
+    },
+    {
+      "name": "endTime",
+      "title": "结束时间",
+      "type": "DateTime",
+      "format": "timestamp-ms"
+    },
+    {
+      "name": "uploadTime",
+      "title": "上传时间",
+      "type": "DateTime",
+      "format": "timestamp-ms"
+    },
+    {
+      "name": "imageFileId",
+      "title": "缩略图文件ID",
+      "type": "String"
+    },
+    {
+      "name": "videoFileId",
+      "title": "录像文件ID",
+      "type": "String"
+    },
+    {
+      "name": "videoUrl",
+      "title": "录像地址",
+      "type": "Url"
+    },
+    {
+      "name": "duration",
+      "title": "录像时长",
+      "type": "String"
+    },
+    {
+      "name": "hasVideo",
+      "title": "是否有录像",
+      "type": "Boolean"
+    },
+    {
+      "name": "hasBackgroundMusic",
+      "title": "是否有背景音乐",
+      "type": "Boolean"
+    },
+    {
+      "name": "isUpside",
+      "title": "视频朝向",
+      "type": "Boolean"
+    },
+    {
+      "name": "videoAngle",
+      "title": "视频角度",
+      "type": "Number"
+    },
+    {
+      "name": "isPlayOriginalSound",
+      "title": "是否播放视频原声",
+      "type": "Boolean"
+    },
+    {
+      "name": "broadcasts",
+      "title": "播报管理",
+      "type": "Array",
+      "items": {
+        "type": "Object",
+        "properties": {
+          "id": {
+            "type": "Number"
+          },
+          "triggerTime": {
+            "type": "Number"
+          },
+          "text": {
+            "type": "String"
+          },
+          "audioFileId": {
+            "type": "String"
+          }
+        }
+      }
+    },
+    {
+      "name": "backgroundMusicFileId",
+      "title": "背景音乐文件ID",
+      "type": "String"
+    }
+  ]
+}
+  
