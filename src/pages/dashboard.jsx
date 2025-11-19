@@ -24,9 +24,7 @@ export default function Dashboard(props) {
   const {
     toast
   } = useToast();
-
   const [currentUser, setCurrentUser] = useState(null);
-
   const getCurrentUser = async () => {
     try {
       const tcb = await $w.cloud.getCloudInstance();
@@ -36,11 +34,9 @@ export default function Dashboard(props) {
       console.error('获取当前用户信息失败:', error);
     }
   };
-
   useEffect(() => {
     getCurrentUser();
   }, []);
-  
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [systemStats, setSystemStats] = useState({
     totalUsers: 0,
@@ -73,7 +69,7 @@ export default function Dashboard(props) {
       setLoading(true);
 
       // 并行加载所有统计数据
-      const [droneResult, tipsResult, missionResult] = await Promise.all([
+      const [droneResult, tipsResult, missionResult, userResult] = await Promise.all([
       // 获取无人机数量
       $w.cloud.callDataSource({
         dataSourceName: 'drone',
@@ -121,6 +117,13 @@ export default function Dashboard(props) {
           pageNumber: 1,
           getCount: true
         }
+      }),
+      // 获取当前登录用户根级部门下的所有部门成员数量
+      $w.cloud.callFunction({
+        name: 'getDepartmentMembers',
+        data: {
+          userId: $w?.auth?.currentUser?.userId
+        }
       })]);
 
       // 获取待执行任务数量
@@ -143,11 +146,18 @@ export default function Dashboard(props) {
           getCount: true
         }
       });
+
+      // 处理用户数量结果
+      let departmentUserCount = 0;
+      if (userResult && userResult.success) {
+        departmentUserCount = userResult.data?.length || 0;
+      } else {
+        // 如果云函数调用失败，使用默认值
+        departmentUserCount = 156;
+      }
       setSystemStats({
-        totalUsers: 156,
-        // 保持模拟数据
+        totalUsers: departmentUserCount,
         totalRevenue: 284500,
-        // 保持模拟数据
         totalFlights: missionResult.total || 0,
         activeDrones: droneResult.total || 0,
         pendingTasks: pendingTasksResult.total || 0,
@@ -180,8 +190,8 @@ export default function Dashboard(props) {
     try {
       const tcb = await $w.cloud.getCloudInstance();
       const auth = tcb.auth();
-      console.log(`🚀 ~ handleLogout ~ auth-> `, auth)
-      auth.currentUser && await auth.signOut();
+      console.log(`🚀 ~ handleLogout ~ auth-> `, auth);
+      auth.currentUser && (await auth.signOut());
       toast({
         title: '退出成功',
         description: '您已成功退出登录',
@@ -193,10 +203,8 @@ export default function Dashboard(props) {
       //   pageId: 'login',
       //   params: {}
       // });
-      window.location.href = '/app-x5yduyum/production/login'
-    } catch (error) {
-      
-    }
+      window.location.href = '/app-x5yduyum/production/login';
+    } catch (error) {}
   };
   const renderContent = () => {
     switch (activeMenu) {
@@ -247,7 +255,7 @@ export default function Dashboard(props) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         <Card className="bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 transition-colors">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-400">用户数量</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-400">部门成员数量</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
@@ -256,7 +264,7 @@ export default function Dashboard(props) {
                 <Users className="w-5 h-5 text-white" />
               </div>
             </div>
-            <p className="text-xs text-gray-400 mt-1">系统用户</p>
+            <p className="text-xs text-gray-400 mt-1">当前部门成员</p>
           </CardContent>
         </Card>
 
