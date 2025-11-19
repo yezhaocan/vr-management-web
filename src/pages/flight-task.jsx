@@ -1,9 +1,9 @@
 // @ts-ignore;
 import React, { useState, useEffect } from 'react';
 // @ts-ignore;
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, useToast, Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, useToast, Dialog, DialogContent, DialogHeader, DialogTitle, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
 // @ts-ignore;
-import { Plus, Search, Filter, Edit, Trash2, Play, RefreshCw, Gauge, Repeat, Loader } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Play, RefreshCw, Gauge, Repeat, Loader, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 import { MissionForm } from '@/components/MissionForm';
 import { AuthGuard } from '@/components/AuthGuard';
@@ -22,6 +22,7 @@ export default function FlightTaskPage(props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [executingMissions, setExecutingMissions] = useState(new Set()); // 跟踪正在执行的任务
+  const [activeTab, setActiveTab] = useState('pending'); // 状态标签页
 
   useEffect(() => {
     loadMissions();
@@ -177,11 +178,25 @@ export default function FlightTaskPage(props) {
       }, 2000);
     }
   };
-  const filteredMissions = missions.filter(mission => {
-    const matchesSearch = mission.name?.toLowerCase().includes(searchTerm.toLowerCase()) || mission.description?.toLowerCase().includes(searchTerm.toLowerCase()) || mission.droneModelSn?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || mission.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+
+  // 根据状态标签页过滤任务
+  const getFilteredMissionsByTab = () => {
+    const filteredBySearch = missions.filter(mission => {
+      const matchesSearch = mission.name?.toLowerCase().includes(searchTerm.toLowerCase()) || mission.description?.toLowerCase().includes(searchTerm.toLowerCase()) || mission.droneModelSn?.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesSearch;
+    });
+    switch (activeTab) {
+      case 'pending':
+        return filteredBySearch.filter(mission => mission.status === 'pending');
+      case 'executing':
+        return filteredBySearch.filter(mission => mission.status === 'executing');
+      case 'completed':
+        return filteredBySearch.filter(mission => mission.status === 'completed');
+      default:
+        return filteredBySearch;
+    }
+  };
+  const filteredMissions = getFilteredMissionsByTab();
   const handleDelete = async mission => {
     try {
       await $w.cloud.callDataSource({
@@ -257,6 +272,23 @@ export default function FlightTaskPage(props) {
     // 只有状态为"待执行"的任务才允许执行
     return mission.status === 'pending';
   };
+
+  // 获取各状态任务数量
+  const getStatusCounts = () => {
+    const counts = {
+      pending: 0,
+      executing: 0,
+      completed: 0,
+      cancelled: 0
+    };
+    missions.forEach(mission => {
+      if (counts.hasOwnProperty(mission.status)) {
+        counts[mission.status]++;
+      }
+    });
+    return counts;
+  };
+  const statusCounts = getStatusCounts();
   return <AuthGuard $w={$w}>
       <div style={style} className="min-h-screen bg-gray-900">
         <div className="p-6 space-y-6">
@@ -293,98 +325,131 @@ export default function FlightTaskPage(props) {
             </select>
           </div>
 
-          {/* 任务列表 */}
-          {loading ? <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-3 text-gray-300">加载中...</span>
-            </div> : filteredMissions.length === 0 ? <div className="text-center py-12">
-              <div className="text-gray-500 mb-4">
-                <Play className="h-16 w-16 mx-auto opacity-30" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-300 mb-2">暂无飞行任务</h3>
-              <p className="text-gray-500 mb-4">创建第一个飞行任务开始管理</p>
-              <Button onClick={handleNewTask} className="bg-blue-500 hover:bg-blue-600">
-                <Plus className="h-4 w-4 mr-2" />
-                新建任务
-              </Button>
-            </div> : <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredMissions.map(mission => <Card key={mission._id} className="bg-gray-800/50 border-gray-700 hover:border-blue-500/30 transition-all duration-200">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-white text-lg">{mission.name}</CardTitle>
-                        <CardDescription className="text-gray-400">
-                          #{mission.missionID}
-                        </CardDescription>
-                      </div>
-                      {getStatusBadge(mission.status)}
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">无人机:</span>
-                        <span className="text-white font-medium text-sm">{mission.droneModelSn || mission.droneId || '未选择'}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">航线:</span>
-                        <span className="text-white font-medium text-sm">{mission.airlineName || mission.airlineId || '未选择'}</span>
-                      </div>
-                      
-                      {/* 显示最高飞行速度 */}
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">最高速度:</span>
-                        <div className="flex items-center space-x-1">
-                          <Gauge className="h-3 w-3 text-blue-400" />
-                          <span className="text-white font-medium text-sm">{mission.maxSpeed || 5} m/s</span>
-                        </div>
-                      </div>
-                      
-                      {/* 显示重复飞行次数 */}
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400 text-sm">重复次数:</span>
-                        <div className="flex items-center space-x-1">
-                          <Repeat className="h-3 w-3 text-green-400" />
-                          <span className="text-white font-medium text-sm">
-                            {mission.repeatCount === 0 ? '1次' : `${mission.repeatCount + 1}次`}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+          {/* 状态标签页 */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-gray-800/50 border border-gray-700 rounded-lg p-1">
+              <TabsTrigger value="pending" className="flex items-center space-x-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                <Clock className="h-4 w-4" />
+                <span>待执行</span>
+                {statusCounts.pending > 0 && <Badge variant="secondary" className="ml-1 bg-blue-500/20 text-blue-300">
+                    {statusCounts.pending}
+                  </Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="executing" className="flex items-center space-x-2 data-[state=active]:bg-orange-600 data-[state=active]:text-white">
+                <Loader className="h-4 w-4" />
+                <span>执行中</span>
+                {statusCounts.executing > 0 && <Badge variant="secondary" className="ml-1 bg-orange-500/20 text-orange-300">
+                    {statusCounts.executing}
+                  </Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="flex items-center space-x-2 data-[state=active]:bg-green-600 data-[state=active]:text-white">
+                <CheckCircle className="h-4 w-4" />
+                <span>已执行</span>
+                {statusCounts.completed > 0 && <Badge variant="secondary" className="ml-1 bg-green-500/20 text-green-300">
+                    {statusCounts.completed}
+                  </Badge>}
+              </TabsTrigger>
+            </TabsList>
 
-                    {mission.description && <div className="mt-3 pt-3 border-t border-gray-700">
-                        <p className="text-gray-400 text-sm line-clamp-2">{mission.description}</p>
-                      </div>}
-
-                    <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-700">
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEditTask(mission)} className="text-blue-400 border-blue-400 hover:bg-blue-400/10">
-                          <Edit className="h-3 w-3 mr-1" />
-                          编辑
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDelete(mission)} className="text-red-400 border-red-400 hover:bg-red-400/10">
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          删除
-                        </Button>
-                      </div>
+            {/* 任务列表区域 - 添加滚动条支持 */}
+            <div className="mt-4">
+              {loading ? <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <span className="ml-3 text-gray-300">加载中...</span>
+                </div> : filteredMissions.length === 0 ? <div className="text-center py-12">
+                  <div className="text-gray-500 mb-4">
+                    <Play className="h-16 w-16 mx-auto opacity-30" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-300 mb-2">
+                    {activeTab === 'pending' && '暂无待执行任务'}
+                    {activeTab === 'executing' && '暂无执行中任务'}
+                    {activeTab === 'completed' && '暂无已完成任务'}
+                  </h3>
+                  <p className="text-gray-500 mb-4">创建新的飞行任务开始管理</p>
+                  <Button onClick={handleNewTask} className="bg-blue-500 hover:bg-blue-600">
+                    <Plus className="h-4 w-4 mr-2" />
+                    新建任务
+                  </Button>
+                </div> : <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 max-h-[calc(100vh-300px)] overflow-y-auto pb-4">
+                  {filteredMissions.map(mission => <Card key={mission._id} className="bg-gray-800/50 border-gray-700 hover:border-blue-500/30 transition-all duration-200">
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-white text-lg">{mission.name}</CardTitle>
+                            <CardDescription className="text-gray-400">
+                              #{mission.missionID}
+                            </CardDescription>
+                          </div>
+                          {getStatusBadge(mission.status)}
+                        </div>
+                      </CardHeader>
                       
-                      <div className="flex space-x-1">
-                        {/* 立即执行按钮 - 根据状态控制是否可用 */}
-                        <Button variant="outline" size="sm" onClick={() => handleExecuteMission(mission)} disabled={!canExecuteMission(mission) || executingMissions.has(mission._id)} className="text-green-400 border-green-400 hover:bg-green-400/10 disabled:opacity-50 disabled:cursor-not-allowed">
-                          {executingMissions.has(mission._id) ? <>
-                              <Loader className="h-3 w-3 mr-1 animate-spin" />
-                              执行中
-                            </> : <>
-                              <Play className="h-3 w-3 mr-1" />
-                              立即执行
-                            </>}
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>)}
-            </div>}
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400 text-sm">无人机:</span>
+                            <span className="text-white font-medium text-sm">{mission.droneModelSn || mission.droneId || '未选择'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400 text-sm">航线:</span>
+                            <span className="text-white font-medium text-sm">{mission.airlineName || mission.airlineId || '未选择'}</span>
+                          </div>
+                          
+                          {/* 显示最高飞行速度 */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400 text-sm">最高速度:</span>
+                            <div className="flex items-center space-x-1">
+                              <Gauge className="h-3 w-3 text-blue-400" />
+                              <span className="text-white font-medium text-sm">{mission.maxSpeed || 5} m/s</span>
+                            </div>
+                          </div>
+                          
+                          {/* 显示重复飞行次数 */}
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400 text-sm">重复次数:</span>
+                            <div className="flex items-center space-x-1">
+                              <Repeat className="h-3 w-3 text-green-400" />
+                              <span className="text-white font-medium text-sm">
+                                {mission.repeatCount === 0 ? '1次' : `${mission.repeatCount + 1}次`}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {mission.description && <div className="mt-3 pt-3 border-t border-gray-700">
+                            <p className="text-gray-400 text-sm line-clamp-2">{mission.description}</p>
+                          </div>}
+
+                        <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-700">
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" onClick={() => handleEditTask(mission)} className="text-blue-400 border-blue-400 hover:bg-blue-400/10">
+                              <Edit className="h-3 w-3 mr-1" />
+                              编辑
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleDelete(mission)} className="text-red-400 border-red-400 hover:bg-red-400/10">
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              删除
+                            </Button>
+                          </div>
+                          
+                          <div className="flex space-x-1">
+                            {/* 立即执行按钮 - 根据状态控制是否可用 */}
+                            <Button variant="outline" size="sm" onClick={() => handleExecuteMission(mission)} disabled={!canExecuteMission(mission) || executingMissions.has(mission._id)} className="text-green-400 border-green-400 hover:bg-green-400/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                              {executingMissions.has(mission._id) ? <>
+                                  <Loader className="h-3 w-3 mr-1 animate-spin" />
+                                  执行中
+                                </> : <>
+                                  <Play className="h-3 w-3 mr-1" />
+                                  立即执行
+                                </>}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>)}
+                </div>}
+            </div>
+          </Tabs>
 
           {/* 任务表单弹窗 */}
           <Dialog open={showForm} onOpenChange={setShowForm}>
