@@ -27,7 +27,11 @@
       "name": "longitude",
       "title": "经度",
       "type": "Number"
+    },
+    {
+      "name": "backgroundImageId",
+      "title": "背景图ID",
+      "type": "String"
     }
   ]
 }
-  
