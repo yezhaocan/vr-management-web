@@ -29,6 +29,11 @@
       "type": "String"
     },
     {
+      "name": "subtitleFileId",
+      "title": "字幕文件ID",
+      "type": "String"
+    },
+    {
       "name": "fontFamily",
       "title": "字体",
       "type": "String"

@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 // @ts-ignore;
 import { Button, useToast } from '@/components/ui';
 // @ts-ignore;
-import { Volume2, Download, Upload, Play, Square } from 'lucide-react';
+import { Volume2, Download, Upload, Play, Square, FileText, Trash2 } from 'lucide-react';
 
 export function VoiceSynthesisComponent({
   text,
@@ -11,7 +11,8 @@ export function VoiceSynthesisComponent({
   onSynthesisComplete,
   $w,
   waypointName,
-  currentFileId = null
+  currentFileId = null,
+  onSubtitleFileChange
 }) {
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -20,6 +21,8 @@ export function VoiceSynthesisComponent({
   const [synthesizedAudio, setSynthesizedAudio] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioElement, setAudioElement] = useState(null);
+  const [subtitleFileId, setSubtitleFileId] = useState(null);
+  const [uploadingSubtitle, setUploadingSubtitle] = useState(false);
   const {
     toast
   } = useToast();
@@ -320,6 +323,82 @@ export function VoiceSynthesisComponent({
       event.target.value = '';
     }
   };
+
+  // 上传字幕文件到云存储
+  const handleSubtitleUpload = async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 校验字幕文件类型
+    const allowedTypes = ['text/plain', 'application/x-subrip', 'text/vtt'];
+    const allowedExtensions = ['srt', 'vtt', 'ass', 'ssa', 'txt', 'sub'];
+    const fileType = file.type.toLowerCase();
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    if (!allowedTypes.includes(fileType) && !allowedExtensions.includes(fileExtension)) {
+      toast({
+        title: '文件类型错误',
+        description: '请上传字幕文件（支持srt、vtt、ass、ssa、txt等格式）',
+        variant: 'destructive'
+      });
+      return;
+    }
+    try {
+      setUploadingSubtitle(true);
+      const tcb = await $w.cloud.getCloudInstance();
+
+      // 生成文件名
+      const timestamp = Date.now();
+      const fileName = `subtitles/${waypointName || 'subtitle'}_${timestamp}.${fileExtension || 'srt'}`;
+
+      // 上传到云存储
+      const uploadResult = await tcb.uploadFile({
+        cloudPath: fileName,
+        filePath: file
+      });
+
+      // 获取文件ID
+      const newFileId = uploadResult.fileID;
+      setSubtitleFileId(newFileId);
+
+      // 获取临时访问URL
+      const tempUrlResult = await tcb.getTempFileURL({
+        fileList: [newFileId]
+      });
+
+      // 回调通知父组件
+      if (onSubtitleFileChange) {
+        onSubtitleFileChange(newFileId, tempUrlResult.fileList[0].tempFileURL);
+      }
+      toast({
+        title: '字幕文件上传成功',
+        description: `文件已上传到云存储，ID: ${newFileId.substring(0, 12)}...`,
+        variant: 'default'
+      });
+    } catch (error) {
+      toast({
+        title: '文件上传失败',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setUploadingSubtitle(false);
+      // 清空文件输入
+      event.target.value = '';
+    }
+  };
+
+  // 移除字幕文件
+  const handleRemoveSubtitle = () => {
+    setSubtitleFileId(null);
+    if (onSubtitleFileChange) {
+      onSubtitleFileChange('', '');
+    }
+    toast({
+      title: '字幕文件已移除',
+      description: '字幕文件已从配置中移除',
+      variant: 'default'
+    });
+  };
   return <div className="space-y-4">
       {/* 隐藏的音频元素用于播放 */}
       <audio ref={audioRef} className="hidden" />
@@ -373,16 +452,51 @@ export function VoiceSynthesisComponent({
           </div>
         </label>
       </div>
+
+      {/* 字幕文件上传区域 */}
+      <div className="space-y-3">
+        <div className="text-sm text-white font-medium">字幕文件（可选）</div>
+        
+        {/* 字幕文件预览 */}
+        {subtitleFileId && <div className="relative">
+            <div className="flex items-center space-x-2 p-3 bg-purple-900/10 rounded-lg border border-purple-500/20">
+              <FileText className="h-4 w-4 text-purple-400" />
+              <div className="flex-1">
+                <span className="text-purple-400 text-sm font-medium">字幕文件已准备</span>
+                <p className="text-purple-400/70 text-xs mt-1">文件ID: {subtitleFileId.substring(0, 20)}...</p>
+              </div>
+              <Button type="button" onClick={handleRemoveSubtitle} className="px-2 py-1 border border-red-400 text-red-400 hover:bg-red-400/10 bg-transparent">
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>}
+
+        {/* 字幕文件上传控件 */}
+        <div className="relative">
+          <input type="file" accept=".srt,.vtt,.ass,.ssa,.txt,.sub" onChange={handleSubtitleUpload} className="hidden" id="subtitle-file-upload" disabled={uploadingSubtitle} />
+          <label htmlFor="subtitle-file-upload" className={`flex flex-col items-center justify-center w-full h-16 border-2 border-dashed rounded-xl transition-all duration-200 cursor-pointer group ${uploadingSubtitle ? 'border-gray-400/50 bg-gray-900/10 cursor-not-allowed' : 'border-purple-400/50 bg-purple-900/10 hover:bg-purple-900/20'}`}>
+            <div className="flex flex-col items-center justify-center">
+              <Upload className={`w-5 h-5 mb-1 transition-colors ${uploadingSubtitle ? 'text-gray-400' : 'text-purple-400 group-hover:text-purple-300'}`} />
+              <span className={`font-medium text-sm ${uploadingSubtitle ? 'text-gray-400' : 'text-purple-300'}`}>
+                {uploadingSubtitle ? '上传中...' : '选择字幕文件上传'}
+              </span>
+              <span className={`text-xs mt-1 ${uploadingSubtitle ? 'text-gray-400/70' : 'text-purple-400/70'}`}>
+                支持srt、vtt、ass、ssa、txt等格式
+              </span>
+            </div>
+          </label>
+        </div>
+      </div>
       
       {/* 文件信息显示 */}
       {fileId && <div className="p-3 bg-green-900/10 border border-green-500/20 rounded-lg">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-green-400 text-sm font-medium">文件ID:</span>
+              <span className="text-green-400 text-sm font-medium">音频文件ID:</span>
               <span className="text-gray-300 text-xs break-all">{fileId}</span>
             </div>
             {fileSize > 0 && <div className="flex items-center justify-between">
-                <span className="text-green-400 text-sm font-medium">文件大小:</span>
+                <span className="text-green-400 text-sm font-medium">音频文件大小:</span>
                 <span className="text-gray-300 text-xs">{(fileSize / 1024).toFixed(2)} KB</span>
               </div>}
           </div>

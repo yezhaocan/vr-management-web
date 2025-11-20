@@ -71,12 +71,6 @@
               },
               "audioUrl": {
                 "type": "String"
-              },
-              "subtitleFileId": {
-                "type": "String"
-              },
-              "subtitleUrl": {
-                "type": "String"
               }
             }
           }
@@ -84,29 +78,10 @@
       }
     },
     {
-      "name": "hasVoiceGuide",
-      "title": "是否启用语音讲解",
-      "type": "Boolean"
-    },
-    {
-      "name": "hasBackgroundMusic",
-      "title": "是否启用背景音乐",
-      "type": "Boolean"
-    },
-    {
       "name": "cloudStorageId",
       "title": "背景音乐文件ID",
       "type": "String"
-    },
-    {
-      "name": "createdAt",
-      "title": "创建时间",
-      "type": "Timestamp"
-    },
-    {
-      "name": "updatedAt",
-      "title": "更新时间",
-      "type": "Timestamp"
     }
   ]
 }
+  
