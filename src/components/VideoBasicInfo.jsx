@@ -10,7 +10,9 @@ export function VideoBasicInfo({
   handleInputChange,
   handleDurationChange,
   updateDuration,
-  $w
+  $w,
+  onBackgroundImageUpload,
+  onRemoveBackgroundImage
 }) {
   const {
     toast
@@ -66,9 +68,14 @@ export function VideoBasicInfo({
         setBackgroundPreview(e.target.result);
       };
       reader.readAsDataURL(file);
+
+      // 调用父组件上传函数
+      if (onBackgroundImageUpload) {
+        await onBackgroundImageUpload(file);
+      }
       toast({
         title: '图片已选择',
-        description: '点击保存按钮上传并应用背景图',
+        description: '背景图片已上传并保存',
         duration: 2000
       });
     } catch (error) {
@@ -87,7 +94,16 @@ export function VideoBasicInfo({
   const handleRemoveBackgroundImage = () => {
     setBackgroundImage(null);
     setBackgroundPreview('');
-    handleInputChange('backgroundImageId', '');
+
+    // 调用父组件移除函数
+    if (onRemoveBackgroundImage) {
+      onRemoveBackgroundImage();
+    }
+    toast({
+      title: '背景图片已移除',
+      description: '背景图片已从配置中移除',
+      variant: 'default'
+    });
   };
 
   // 检查是否应该显示时长字段（有开始时间和结束时间）

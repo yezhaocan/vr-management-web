@@ -36,6 +36,8 @@ export function VideoUploadForm({
     // 新增：时长字段，格式HH:MM:SS
     broadcasts: [],
     backgroundMusicFileId: '',
+    backgroundImageId: '',
+    // 新增：背景图片文件ID
     status: 'active',
     isUpside: true,
     videoAngle: 0,
@@ -94,6 +96,56 @@ export function VideoUploadForm({
       duration
     }));
   };
+
+  // 处理背景图片上传
+  const handleBackgroundImageUpload = async file => {
+    if (!file) return;
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: '文件类型错误',
+        description: '请上传图片文件',
+        variant: 'destructive'
+      });
+      return;
+    }
+    try {
+      const tcb = await $w.cloud.getCloudInstance();
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 8);
+      const fileName = `video_record/backgrounds/${timestamp}_${randomStr}_${file.name}`;
+      const uploadResult = await tcb.uploadFile({
+        cloudPath: fileName,
+        filePath: file
+      });
+      const fileID = uploadResult.fileID;
+      setFormData(prev => ({
+        ...prev,
+        backgroundImageId: fileID
+      }));
+      toast({
+        title: '背景图片上传成功',
+        description: '背景图片已上传到云存储',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('处理背景图片失败:', error);
+      toast({
+        title: '背景图片上传失败',
+        description: '请重新选择图片',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // 移除背景图
+  const handleRemoveBackgroundImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      backgroundImageId: ''
+    }));
+  };
   useEffect(() => {
     const initializeFormData = async () => {
       if (video) {
@@ -139,6 +191,8 @@ export function VideoUploadForm({
           duration: durationValue,
           broadcasts: broadcasts,
           backgroundMusicFileId: video.backgroundMusicFileId || '',
+          backgroundImageId: video.backgroundImageId || '',
+          // 初始化背景图片ID
           status: video.status || 'active',
           isUpside: isUpsideValue,
           videoAngle: videoAngleValue,
@@ -157,6 +211,8 @@ export function VideoUploadForm({
           duration: '00:00:00',
           broadcasts: [],
           backgroundMusicFileId: '',
+          backgroundImageId: '',
+          // 初始化背景图片ID
           status: 'active',
           isUpside: true,
           videoAngle: 0,
@@ -290,6 +346,8 @@ export function VideoUploadForm({
         endTime: formData.endTime ? new Date(formData.endTime).getTime() : null,
         broadcasts: formData.broadcasts.length > 0 ? formData.broadcasts : null,
         backgroundMusicFileId: formData.backgroundMusicFileId || null,
+        backgroundImageId: formData.backgroundImageId || null,
+        // 保存背景图片ID
         status: formData.status,
         isUpside: formData.isUpside === true || formData.isUpside === 'true' || formData.isUpside === 1,
         videoAngle: Number(formData.videoAngle) || 0,
@@ -298,6 +356,7 @@ export function VideoUploadForm({
         updatedAt: new Date().getTime()
       };
       console.log('保存的数据:', videoData);
+      console.log('背景图片ID:', videoData.backgroundImageId);
       console.log('时长:', formData.duration);
       if (video && video._id) {
         const result = await $w.cloud.callDataSource({
@@ -372,7 +431,9 @@ export function VideoUploadForm({
 
           <form onSubmit={handleSubmit} className="space-y-8 p-8 bg-gray-800/30 backdrop-blur-sm min-h-[600px]">
             <TabsContent value="basic" className="space-y-8">
-              <VideoBasicInfo formData={formData} handleInputChange={handleInputChange} handleDurationChange={handleDurationChange} updateDuration={updateDuration} />
+              <VideoBasicInfo formData={formData} handleInputChange={handleInputChange} handleDurationChange={handleDurationChange} updateDuration={updateDuration} $w={$w}
+            // 传递背景图片上传相关函数
+            onBackgroundImageUpload={handleBackgroundImageUpload} onRemoveBackgroundImage={handleRemoveBackgroundImage} />
             </TabsContent>
 
             <TabsContent value="video" className="space-y-8">
