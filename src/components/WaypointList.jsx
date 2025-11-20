@@ -3,7 +3,7 @@ import React from 'react';
 // @ts-ignore;
 import { Card, CardContent, Button, Badge } from '@/components/ui';
 // @ts-ignore;
-import { Trash2, Volume2, VolumeX, FileText } from 'lucide-react';
+import { Trash2, Volume2, VolumeX } from 'lucide-react';
 
 export function WaypointList({
   waypoints,
@@ -17,9 +17,6 @@ export function WaypointList({
         {waypoints.map((waypoint, index) => {
         // 检查是否有语音讲解录音
         const hasVoiceRecording = waypoint.voiceGuide && waypoint.voiceGuide.enabled && waypoint.voiceGuide.audioFileId && waypoint.voiceGuide.audioFileId.trim() !== '';
-
-        // 检查是否有字幕文件
-        const hasSubtitleFile = waypoint.voiceGuide && waypoint.voiceGuide.enabled && waypoint.voiceGuide.subtitleFileId && waypoint.voiceGuide.subtitleFileId.trim() !== '';
         return <Card key={waypoint.id} className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-xl cursor-pointer transition-all hover:bg-gray-700/50" onClick={() => onSelectWaypoint(index)}>
               <CardContent className="p-3">
                 <div className="flex justify-between items-start mb-2">
@@ -53,17 +50,6 @@ export function WaypointList({
                       <span className="text-yellow-400 text-xs">语音讲解已启用，但未生成录音</span>
                     </div>
                   </div> : null}
-                
-                {/* 字幕文件标识 */}
-                {hasSubtitleFile && <div className="mt-2 p-2 bg-purple-900/10 border border-purple-500/20 rounded">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-3 h-3 text-purple-400" />
-                      <span className="text-purple-400 text-xs font-medium">已上传字幕文件</span>
-                      <span className="text-gray-400 text-xs truncate" title={waypoint.voiceGuide.subtitleFileId}>
-                        ID: {waypoint.voiceGuide.subtitleFileId.substring(0, 8)}...
-                      </span>
-                    </div>
-                  </div>}
                 
                 {selectedVoiceIndex === index && <Badge variant="default" className="mt-2 bg-blue-500 text-white text-xs">
                     当前选中

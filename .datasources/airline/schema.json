@@ -71,6 +71,9 @@
               },
               "audioUrl": {
                 "type": "String"
+              },
+              "subtitleFileId": {
+                "type": "String"
               }
             }
           }

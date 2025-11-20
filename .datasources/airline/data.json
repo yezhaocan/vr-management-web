@@ -21,7 +21,8 @@
           "voice": "",
           "triggerType": "",
           "audioFileId": "",
-          "audioUrl": ""
+          "audioUrl": "",
+          "subtitleFileId": ""
         }
       },
       {
@@ -38,7 +39,8 @@
           "voice": "温柔女声",
           "triggerType": "到达航点",
           "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/duanqiao.mp3",
-          "audioUrl": "https://example.com/audio/duanqiao.mp3"
+          "audioUrl": "https://example.com/audio/duanqiao.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/duanqiao.srt"
         }
       },
       {
@@ -55,7 +57,8 @@
           "voice": "沉稳男声",
           "triggerType": "到达后5秒",
           "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/leifengta.mp3",
-          "audioUrl": "https://example.com/audio/leifengta.mp3"
+          "audioUrl": "https://example.com/audio/leifengta.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/leifengta.srt"
         }
       }
     ],
@@ -84,7 +87,8 @@
           "voice": "",
           "triggerType": "",
           "audioFileId": "",
-          "audioUrl": ""
+          "audioUrl": "",
+          "subtitleFileId": ""
         }
       },
       {
@@ -101,7 +105,8 @@
           "voice": "活力男声",
           "triggerType": "到达航点",
           "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/guangmingding.mp3",
-          "audioUrl": "https://example.com/audio/guangmingding.mp3"
+          "audioUrl": "https://example.com/audio/guangmingding.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/guangmingding.srt"
         }
       },
       {
@@ -118,7 +123,8 @@
           "voice": "知性女声",
           "triggerType": "到达后3秒",
           "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/yingkesong.mp3",
-          "audioUrl": "https://example.com/audio/yingkesong.mp3"
+          "audioUrl": "https://example.com/audio/yingkesong.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/yingkesong.srt"
         }
       }
     ],
@@ -147,7 +153,8 @@
           "voice": "",
           "triggerType": "",
           "audioFileId": "",
-          "audioUrl": ""
+          "audioUrl": "",
+          "subtitleFileId": ""
         }
       },
       {
@@ -164,7 +171,8 @@
           "voice": "磁性男声",
           "triggerType": "到达航点",
           "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/yuanjiajie.mp3",
-          "audioUrl": "https://example.com/audio/yuanjiajie.mp3"
+          "audioUrl": "https://example.com/audio/yuanjiajie.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/yuanjiajie.srt"
         }
       },
       {
@@ -181,7 +189,8 @@
           "voice": "沉稳男声",
           "triggerType": "到达后5秒",
           "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/tianzishan.mp3",
-          "audioUrl": "https://example.com/audio/tianzishan.mp3"
+          "audioUrl": "https://example.com/audio/tianzishan.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/tianzishan.srt"
         }
       },
       {
@@ -198,7 +207,8 @@
           "voice": "亲切女声",
           "triggerType": "到达航点",
           "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/huangshizhai.mp3",
-          "audioUrl": "https://example.com/audio/huangshizhai.mp3"
+          "audioUrl": "https://example.com/audio/huangshizhai.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/huangshizhai.srt"
         }
       }
     ],

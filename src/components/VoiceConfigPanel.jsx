@@ -1,7 +1,9 @@
 // @ts-ignore;
-import React from 'react';
+import React, { useState } from 'react';
 // @ts-ignore;
-import { Card, CardContent, CardHeader, CardTitle, Textarea, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch } from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle, Textarea, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Button, useToast } from '@/components/ui';
+// @ts-ignore;
+import { Upload, FileText, X } from 'lucide-react';
 
 // @ts-ignore;
 import { VoiceSynthesisComponent } from './VoiceSynthesisComponent';
@@ -9,9 +11,12 @@ export function VoiceConfigPanel({
   waypoint,
   onVoiceConfigChange,
   onSynthesisComplete,
-  onSubtitleFileChange,
   $w
 }) {
+  const [uploadingSubtitle, setUploadingSubtitle] = useState(false);
+  const {
+    toast
+  } = useToast();
   if (!waypoint) {
     return <div className="text-center py-8">
         <p className="text-gray-400">请选择一个航点进行语音配置</p>
@@ -27,24 +32,82 @@ export function VoiceConfigPanel({
     triggerType: 'time',
     audioFileId: '',
     audioUrl: '',
-    subtitleFileId: '',
-    subtitleUrl: ''
+    subtitleFileId: ''
   };
 
-  // 处理字幕文件变化
-  const handleSubtitleFileChange = (fileId, fileUrl) => {
-    // 更新语音配置中的字幕文件信息
-    const updatedVoiceGuide = {
-      ...voiceGuide,
-      subtitleFileId: fileId,
-      subtitleUrl: fileUrl
-    };
-    onVoiceConfigChange('voiceGuide', updatedVoiceGuide);
+  // 检查文件是否为字幕文件
+  const isSubtitleFile = file => {
+    if (!file) return false;
 
-    // 调用父组件的回调
-    if (onSubtitleFileChange) {
-      onSubtitleFileChange(fileId, fileUrl);
+    // 获取文件扩展名（小写）
+    const extension = file.name.toLowerCase().split('.').pop();
+
+    // 支持的字幕文件扩展名
+    const subtitleExtensions = ['srt', 'vtt', 'ass', 'ssa', 'txt', 'sub'];
+
+    // 检查文件类型或扩展名
+    const fileType = file.type.toLowerCase();
+    const isTextType = fileType.startsWith('text/') || fileType.includes('subtitle');
+    const isSubtitleExtension = subtitleExtensions.includes(extension);
+    return isTextType || isSubtitleExtension;
+  };
+
+  // 上传字幕文件到云存储
+  const handleSubtitleUpload = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // 校验字幕文件类型
+    if (!isSubtitleFile(file)) {
+      toast({
+        title: '文件类型错误',
+        description: '请上传字幕文件（支持srt、vtt、ass、ssa、txt等格式）',
+        variant: 'destructive'
+      });
+      return;
     }
+    try {
+      setUploadingSubtitle(true);
+      const tcb = await $w.cloud.getCloudInstance();
+      // 生成文件名
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop() || 'srt';
+      const fileName = `airline_subtitles/subtitle_${timestamp}_${Math.random().toString(36).substring(2, 8)}.${fileExtension}`;
+      // 上传到云存储
+      const uploadResult = await tcb.uploadFile({
+        cloudPath: fileName,
+        filePath: file
+      });
+      // 获取文件ID
+      const fileId = uploadResult.fileID;
+      // 更新航点配置
+      onVoiceConfigChange('subtitleFileId', fileId);
+      toast({
+        title: '字幕文件上传成功',
+        description: `文件已上传到云存储，ID: ${fileId.substring(0, 12)}...`,
+        variant: 'default'
+      });
+    } catch (error) {
+      toast({
+        title: '文件上传失败',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setUploadingSubtitle(false);
+      // 清空文件输入
+      event.target.value = '';
+    }
+  };
+
+  // 移除字幕文件
+  const handleRemoveSubtitle = () => {
+    onVoiceConfigChange('subtitleFileId', '');
+    toast({
+      title: '字幕文件已移除',
+      description: '字幕文件已从配置中移除',
+      variant: 'default'
+    });
   };
   return <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
       <CardHeader className="pb-3">
@@ -106,8 +169,46 @@ export function VoiceConfigPanel({
               </div>
             </div>
 
-            {/* 语音合成组件 - 传递当前航点的文件ID和字幕文件回调 */}
-            <VoiceSynthesisComponent text={voiceGuide.text} voice={voiceGuide.voice} onSynthesisComplete={onSynthesisComplete} onSubtitleFileChange={handleSubtitleFileChange} $w={$w} waypointName={waypoint.name} currentFileId={voiceGuide.audioFileId} />
+            {/* 语音合成组件 - 传递当前航点的文件ID */}
+            <VoiceSynthesisComponent text={voiceGuide.text} voice={voiceGuide.voice} onSynthesisComplete={onSynthesisComplete} $w={$w} waypointName={waypoint.name} currentFileId={voiceGuide.audioFileId} />
+
+            {/* 字幕文件上传区域（新增） */}
+            <div className="space-y-3 pt-4 border-t border-gray-600">
+              <Label className="text-gray-300 text-xs font-medium flex items-center">
+                <FileText className="h-4 w-4 mr-2 text-purple-400" />
+                字幕文件（可选）
+              </Label>
+              
+              {/* 字幕文件预览 */}
+              {voiceGuide.subtitleFileId && <div className="relative">
+                  <div className="flex items-center space-x-2 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                    <FileText className="h-4 w-4 text-purple-400" />
+                    <div className="flex-1">
+                      <span className="text-purple-400 text-sm font-medium">字幕文件已关联</span>
+                      <p className="text-purple-400/70 text-xs mt-1">云存储ID: {voiceGuide.subtitleFileId.substring(0, 20)}...</p>
+                    </div>
+                    <Button type="button" onClick={handleRemoveSubtitle} className="px-2 py-1 border border-red-400 text-red-400 hover:bg-red-400/10 bg-transparent">
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>}
+
+              {/* 字幕文件上传控件 */}
+              <div className="relative">
+                <input type="file" accept=".srt,.vtt,.ass,.ssa,.txt,.sub" onChange={handleSubtitleUpload} className="hidden" id="subtitle-file-upload" disabled={uploadingSubtitle} />
+                <label htmlFor="subtitle-file-upload" className={`flex flex-col items-center justify-center w-full h-16 border-2 border-dashed rounded-xl transition-all duration-200 cursor-pointer group ${uploadingSubtitle ? 'border-gray-400/50 bg-gray-900/10 cursor-not-allowed' : 'border-purple-400/50 bg-purple-900/10 hover:bg-purple-900/20'}`}>
+                  <div className="flex flex-col items-center justify-center">
+                    <Upload className={`w-5 h-5 mb-1 transition-colors ${uploadingSubtitle ? 'text-gray-400' : 'text-purple-400 group-hover:text-purple-300'}`} />
+                    <span className={`font-medium text-sm ${uploadingSubtitle ? 'text-gray-400' : 'text-purple-300'}`}>
+                      {uploadingSubtitle ? '上传中...' : '选择字幕文件上传'}
+                    </span>
+                    <span className={`text-xs mt-1 ${uploadingSubtitle ? 'text-gray-400/70' : 'text-purple-400/70'}`}>
+                      支持srt、vtt、ass、ssa、txt等格式
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
           </div>}
       </CardContent>
     </Card>;
