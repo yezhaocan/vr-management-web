@@ -35,6 +35,11 @@ export function VoiceConfigPanel({
     subtitleFileId: '',
     subtitleUrl: ''
   };
+  console.log('当前航点语音配置:', {
+    name: waypoint.name,
+    subtitleFileId: voiceGuide.subtitleFileId,
+    audioFileId: voiceGuide.audioFileId
+  });
 
   // 检查文件是否为字幕文件
   const isSubtitleFile = file => {
@@ -178,17 +183,18 @@ export function VoiceConfigPanel({
             {/* 语音合成组件 - 传递当前航点的文件ID */}
             <VoiceSynthesisComponent text={voiceGuide.text} voice={voiceGuide.voice} onSynthesisComplete={onSynthesisComplete} $w={$w} waypointName={waypoint.name} currentFileId={voiceGuide.audioFileId} />
 
-            {/* 字幕文件上传区域（新增） */}
+            {/* 字幕文件上传区域 */}
             <div className="space-y-3 pt-4 border-t border-gray-600">
               <Label className="text-gray-300 text-xs font-medium">字幕文件（可选）</Label>
               
-              {/* 字幕文件预览 */}
+              {/* 字幕文件预览 - 显示已上传的文件ID */}
               {voiceGuide.subtitleFileId && <div className="relative">
                   <div className="flex items-center space-x-2 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
                     <FileText className="h-4 w-4 text-purple-400" />
                     <div className="flex-1">
-                      <span className="text-purple-400 text-sm font-medium">字幕文件已准备</span>
-                      <p className="text-purple-400/70 text-xs mt-1">文件ID: {voiceGuide.subtitleFileId.substring(0, 20)}...</p>
+                      <span className="text-purple-400 text-sm font-medium">字幕文件已上传</span>
+                      <p className="text-purple-400/70 text-xs mt-1">文件ID: {voiceGuide.subtitleFileId}</p>
+                      <p className="text-purple-400/50 text-xs">保存后再次进入可查看此信息</p>
                     </div>
                     <Button type="button" onClick={handleRemoveSubtitle} className="px-2 py-1 border border-red-400 text-red-400 hover:bg-red-400/10 bg-transparent">
                       <X className="h-3 w-3" />

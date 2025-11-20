@@ -200,7 +200,7 @@ export function RouteEditor(props) {
     waypoints: [],
     hasVoiceGuide: false,
     hasBackgroundMusic: false,
-    cloudStorageId: '' // 修复：使用正确的字段名
+    cloudStorageId: ''
   });
   const [newWaypoint, setNewWaypoint] = useState({
     name: '航点1',
@@ -231,11 +231,15 @@ export function RouteEditor(props) {
         console.error('初始化景区中心点失败:', error);
       }
       if (route) {
+        console.log('原始航线数据:', route);
+
         // 修复：确保正确初始化航点数据，包括voiceGuide字段
         const waypoints = route.waypoints ? route.waypoints.map((wp, index) => {
-          // 修复：确保voiceGuide字段存在且包含所有必要的子字段，包括subtitleFileId
+          console.log(`航点${index}数据:`, wp);
+
+          // 修复：确保voiceGuide字段存在且包含所有必要的子字段
           const voiceGuide = wp.voiceGuide || {};
-          return {
+          const waypointData = {
             id: wp.id || Date.now() + index,
             name: wp.name || `航点${index + 1}`,
             flightSpeed: wp.flightSpeed || 5,
@@ -252,20 +256,22 @@ export function RouteEditor(props) {
               audioFileId: voiceGuide.audioFileId || '',
               audioUrl: voiceGuide.audioUrl || '',
               subtitleFileId: voiceGuide.subtitleFileId || '',
-              // 修复：初始化subtitleFileId字段
-              subtitleUrl: voiceGuide.subtitleUrl || '' // 修复：初始化subtitleUrl字段
+              subtitleUrl: voiceGuide.subtitleUrl || ''
             }
           };
+          console.log(`初始化航点${index}语音配置:`, waypointData.voiceGuide);
+          return waypointData;
         }) : [];
 
         // 修复：如果cloudStorageId有值，自动开启背景音乐
         const hasBackgroundMusic = route.cloudStorageId && route.cloudStorageId.trim() !== '';
+        const hasVoiceGuide = route.hasVoiceGuide || false;
         setFormData({
           name: route.name || '',
           description: route.description || '',
           estimated_duration: route.estimated_duration || 0,
           waypoints: waypoints,
-          hasVoiceGuide: route.hasVoiceGuide || false,
+          hasVoiceGuide: hasVoiceGuide,
           hasBackgroundMusic: hasBackgroundMusic,
           cloudStorageId: route.cloudStorageId || ''
         });
@@ -273,7 +279,15 @@ export function RouteEditor(props) {
           ...prev,
           name: `航点${waypoints.length + 1}`
         }));
-        console.log('初始化航点数据:', waypoints);
+        console.log('初始化航线数据完成:', {
+          waypointsCount: waypoints.length,
+          hasVoiceGuide: hasVoiceGuide,
+          hasBackgroundMusic: hasBackgroundMusic,
+          waypoints: waypoints.map(wp => ({
+            name: wp.name,
+            subtitleFileId: wp.voiceGuide.subtitleFileId
+          }))
+        });
       }
     };
     initializeData();
@@ -332,8 +346,7 @@ export function RouteEditor(props) {
         audioFileId: '',
         audioUrl: '',
         subtitleFileId: '',
-        // 修复：初始化subtitleFileId字段
-        subtitleUrl: '' // 修复：初始化subtitleUrl字段
+        subtitleUrl: ''
       }
     };
     setFormData(prev => ({
@@ -363,29 +376,29 @@ export function RouteEditor(props) {
     }));
   };
 
-  // 更新航点语音配置 - 修复：确保audioFileId和subtitleFileId正确保存
+  // 更新航点语音配置 - 修复：确保所有字段正确保存
   const updateWaypointVoiceConfig = (index, field, value) => {
     const updatedWaypoints = [...formData.waypoints];
-    updatedWaypoints[index] = {
-      ...updatedWaypoints[index],
-      voiceGuide: {
-        ...updatedWaypoints[index].voiceGuide,
-        [field]: value
-      }
-    };
-    setFormData(prev => ({
-      ...prev,
-      waypoints: updatedWaypoints
-    }));
-    console.log(`更新航点${index}的${field}:`, value);
+    if (updatedWaypoints[index]) {
+      updatedWaypoints[index] = {
+        ...updatedWaypoints[index],
+        voiceGuide: {
+          ...updatedWaypoints[index].voiceGuide,
+          [field]: value
+        }
+      };
+      setFormData(prev => ({
+        ...prev,
+        waypoints: updatedWaypoints
+      }));
+      console.log(`更新航点${index}的${field}:`, value, '当前语音配置:', updatedWaypoints[index].voiceGuide);
+    }
   };
 
-  // 处理语音合成完成 - 修复：只保存audioFileId，不保存audioUrl
+  // 处理语音合成完成
   const handleSpeechSynthesisComplete = (fileId, audioUrl) => {
     if (selectedVoiceIndex !== null) {
-      // 修复：只保存云存储ID到audioFileId字段
       updateWaypointVoiceConfig(selectedVoiceIndex, 'audioFileId', fileId);
-      // 不保存临时链接到audioUrl字段
       toast({
         title: '语音文件ID已保存',
         description: `航点${selectedVoiceIndex + 1}的语音文件ID已保存到audioFileId字段`,
@@ -423,7 +436,7 @@ export function RouteEditor(props) {
         return;
       }
 
-      // 修复：准备保存数据，确保包含所有航点语音配置和背景音乐云存储ID
+      // 修复：准备保存数据，确保包含所有航点语音配置
       const saveData = {
         name: formData.name,
         description: formData.description,
@@ -442,25 +455,29 @@ export function RouteEditor(props) {
             voice: waypoint.voiceGuide.voice,
             triggerType: waypoint.voiceGuide.triggerType,
             audioFileId: waypoint.voiceGuide.audioFileId,
-            audioUrl: '',
-            // 修复：不保存临时链接，只保存云存储ID
+            audioUrl: waypoint.voiceGuide.audioUrl,
             subtitleFileId: waypoint.voiceGuide.subtitleFileId,
-            // 修复：保存字幕文件ID
-            subtitleUrl: '' // 修复：不保存临时链接，只保存云存储ID
+            subtitleUrl: waypoint.voiceGuide.subtitleUrl
           }
         })),
         waypointCount: formData.waypoints.length,
         hasVoiceGuide: formData.hasVoiceGuide,
         hasBackgroundMusic: formData.hasBackgroundMusic,
-        cloudStorageId: formData.cloudStorageId
+        cloudStorageId: formData.cloudStorageId,
+        updatedAt: new Date().getTime()
       };
-      console.log('保存数据:', saveData);
-      console.log('航点语音配置检查:', formData.waypoints.map((wp, i) => ({
-        index: i,
-        name: wp.name,
-        audioFileId: wp.voiceGuide.audioFileId,
-        subtitleFileId: wp.voiceGuide.subtitleFileId // 修复：检查字幕文件ID
-      })));
+      if (!route) {
+        saveData.createdAt = new Date().getTime();
+      }
+      console.log('保存数据详细检查:', {
+        waypoints: saveData.waypoints.map((wp, i) => ({
+          index: i,
+          name: wp.name,
+          audioFileId: wp.voiceGuide.audioFileId,
+          subtitleFileId: wp.voiceGuide.subtitleFileId,
+          subtitleUrl: wp.voiceGuide.subtitleUrl
+        }))
+      });
       if (route) {
         // 更新现有航线
         const result = await $w.cloud.callDataSource({
