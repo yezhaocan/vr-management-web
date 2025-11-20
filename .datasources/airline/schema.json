@@ -69,9 +69,6 @@
               "audioFileId": {
                 "type": "String"
               },
-              "audioUrl": {
-                "type": "String"
-              },
               "subtitleFileId": {
                 "type": "String"
               }
