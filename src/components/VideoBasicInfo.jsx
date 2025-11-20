@@ -1,16 +1,95 @@
 // @ts-ignore;
 import React from 'react';
 // @ts-ignore;
-import { Input, Label, Textarea, Button } from '@/components/ui';
+import { Input, Label, Textarea, Button, useToast } from '@/components/ui';
 // @ts-ignore;
-import { Clock } from 'lucide-react';
+import { Clock, Upload, X } from 'lucide-react';
 
 export function VideoBasicInfo({
   formData,
   handleInputChange,
   handleDurationChange,
-  updateDuration
+  updateDuration,
+  $w
 }) {
+  const {
+    toast
+  } = useToast();
+  const [backgroundImage, setBackgroundImage] = React.useState(null);
+  const [backgroundPreview, setBackgroundPreview] = React.useState('');
+  const [uploading, setUploading] = React.useState(false);
+
+  // 加载背景图预览
+  const loadBackgroundImagePreview = async fileId => {
+    if (!fileId) return;
+    try {
+      const tcb = await $w.cloud.getCloudInstance();
+      const fileUrl = await tcb.getTempFileURL({
+        fileList: [fileId]
+      });
+      if (fileUrl && fileUrl.fileList && fileUrl.fileList[0]) {
+        setBackgroundPreview(fileUrl.fileList[0].tempFileURL);
+      }
+    } catch (error) {
+      console.error('加载背景图预览失败:', error);
+    }
+  };
+
+  // 初始化时加载背景图预览
+  React.useEffect(() => {
+    if (formData.backgroundImageId) {
+      loadBackgroundImagePreview(formData.backgroundImageId);
+    }
+  }, [formData.backgroundImageId]);
+
+  // 处理背景图上传
+  const handleBackgroundImageUpload = async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: '文件类型错误',
+        description: '请上传图片文件',
+        variant: 'destructive'
+      });
+      return;
+    }
+    try {
+      setUploading(true);
+      setBackgroundImage(file);
+
+      // 创建预览
+      const reader = new FileReader();
+      reader.onload = e => {
+        setBackgroundPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+      toast({
+        title: '图片已选择',
+        description: '点击保存按钮上传并应用背景图',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('处理图片失败:', error);
+      toast({
+        title: '图片处理失败',
+        description: '请重新选择图片',
+        variant: 'destructive'
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // 移除背景图
+  const handleRemoveBackgroundImage = () => {
+    setBackgroundImage(null);
+    setBackgroundPreview('');
+    handleInputChange('backgroundImageId', '');
+  };
+
   // 检查是否应该显示时长字段（有开始时间和结束时间）
   const shouldShowDuration = formData.startTime && formData.endTime;
   return <div className="space-y-6">
@@ -23,6 +102,41 @@ export function VideoBasicInfo({
         <div>
           <Label htmlFor="description" className="text-white text-lg font-medium">描述</Label>
           <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入录像描述" className="bg-gray-800 border-gray-700 text-white mt-2 p-3 rounded-lg h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        </div>
+
+        {/* 背景图片上传 */}
+        <div>
+          <Label className="text-white text-lg font-medium">背景图片</Label>
+          <div className="mt-2 space-y-3">
+            {/* 背景图预览 */}
+            {backgroundPreview && <div className="relative">
+                <div className="text-sm text-gray-400 mb-2">背景图预览</div>
+                <div className="relative bg-gray-700 rounded-lg overflow-hidden border border-gray-600">
+                  <img src={backgroundPreview} alt="背景图预览" className="w-full h-32 object-cover" />
+                  <Button variant="destructive" size="sm" className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-700/80" onClick={handleRemoveBackgroundImage}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>}
+
+            {/* 上传控件 */}
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
+              <input type="file" id="background-upload" accept="image/*" onChange={handleBackgroundImageUpload} className="hidden" />
+              <label htmlFor="background-upload" className="cursor-pointer">
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <Upload className="h-6 w-6 text-gray-400" />
+                  <div>
+                    <div className="text-white font-medium text-sm">点击上传背景图</div>
+                    <div className="text-gray-400 text-xs">支持 JPG、PNG、GIF 等格式</div>
+                  </div>
+                  {uploading && <div className="text-blue-400 text-sm flex items-center">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-400 mr-1"></div>
+                      上传中...
+                    </div>}
+                </div>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

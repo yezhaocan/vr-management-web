@@ -1,0 +1,121 @@
+
+[
+  {
+    "_id": "1",
+    "name": "西湖晨光航拍",
+    "description": "清晨西湖的航拍录像，展现湖光山色的美景",
+    "startTime": 1730390400000,
+    "endTime": 1730394000000,
+    "uploadTime": 1730397600000,
+    "imageFileId": "cloud://example-12345.6578-example-12345-1324567890/videos/west-lake-morning.jpg",
+    "videoFileId": "cloud://example-12345.6578-example-12345-1324567890/videos/west-lake-morning.mp4",
+    "videoUrl": "https://example.com/videos/west-lake-morning.mp4",
+    "duration": "01:00:00",
+    "backgroundImageId": "cloud://example-12345.6578-example-12345-1324567890/videos/west-lake-background.jpg",
+    "hasVideo": true,
+    "hasBackgroundMusic": true,
+    "isUpside": true,
+    "videoAngle": 0,
+    "isPlayOriginalSound": true,
+    "broadcasts": [
+      {
+        "id": 1,
+        "triggerTime": 10,
+        "text": "现在我们正飞越西湖断桥，这是西湖十景之一，冬季雪后桥身若隐若现，宛如断了一般。",
+        "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/duanqiao-intro.mp3",
+        "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/duanqiao-intro.srt"
+      },
+      {
+        "id": 2,
+        "triggerTime": 1800,
+        "text": "前方是雷峰塔，始建于北宋，是西湖的标志性建筑之一，民间传说中白娘子被镇压于此。",
+        "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/leifengta-intro.mp3",
+        "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/leifengta-intro.srt"
+      }
+    ],
+    "backgroundMusicFileId": "cloud://example-12345.6578-example-12345-1324567890/music/xihu-background.mp3",
+    "createdAt": 1730397600000,
+    "updatedAt": 1730397600000
+  },
+  {
+    "_id": "2",
+    "name": "黄山云海奇观",
+    "description": "黄山云海翻腾的壮观景象，无人机高空拍摄",
+    "startTime": 1730476800000,
+    "endTime": 1730480400000,
+    "uploadTime": 1730484000000,
+    "imageFileId": "cloud://example-12345.6578-example-12345-1324567890/videos/huangshan-cloud-sea.jpg",
+    "videoFileId": "cloud://example-12345.6578-example-12345-1324567890/videos/huangshan-cloud-sea.mp4",
+    "videoUrl": "https://example.com/videos/huangshan-cloud-sea.mp4",
+    "duration": "01:00:00",
+    "backgroundImageId": "cloud://example-12345.6578-example-12345-1324567890/videos/huangshan-background.jpg",
+    "hasVideo": true,
+    "hasBackgroundMusic": true,
+    "isUpside": true,
+    "videoAngle": 0,
+    "isPlayOriginalSound": false,
+    "broadcasts": [
+      {
+        "id": 1,
+        "triggerTime": 5,
+        "text": "欢迎来到黄山，我们现在正飞越光明顶，海拔1860米，是观赏日出、云海的绝佳位置。",
+        "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/huangshan-welcome.mp3",
+        "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/huangshan-welcome.srt"
+      },
+      {
+        "id": 2,
+        "triggerTime": 1200,
+        "text": "前方是著名的迎客松，树龄已有800多年，姿态优美，仿佛在欢迎远道而来的客人。",
+        "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/yingkesong-intro.mp3",
+        "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/yingkesong-intro.srt"
+      }
+    ],
+    "backgroundMusicFileId": "cloud://example-12345.6578-example-12345-1324567890/music/huangshan-background.mp3",
+    "createdAt": 1730484000000,
+    "updatedAt": 1730484000000
+  },
+  {
+    "_id": "3",
+    "name": "张家界峰林航拍",
+    "description": "张家界国家森林公园的峰林景观航线，可俯瞰独特的石英砂岩峰林地貌",
+    "startTime": 1730563200000,
+    "endTime": 1730566800000,
+    "uploadTime": 1730568600000,
+    "imageFileId": "cloud://example-12345.6578-example-12345-1324567890/videos/zhangjiajie-peaks.jpg",
+    "videoFileId": "cloud://example-12345.6578-example-12345-1324567890/videos/zhangjiajie-peaks.mp4",
+    "videoUrl": "https://example.com/videos/zhangjiajie-peaks.mp4",
+    "duration": "01:00:00",
+    "backgroundImageId": "cloud://example-12345.6578-example-12345-1324567890/videos/zhangjiajie-background.jpg",
+    "hasVideo": true,
+    "hasBackgroundMusic": true,
+    "isUpside": true,
+    "videoAngle": 0,
+    "isPlayOriginalSound": true,
+    "broadcasts": [
+      {
+        "id": 1,
+        "triggerTime": 8,
+        "text": "我们现在进入袁家界景区，这里是张家界的核心景区，电影《阿凡达》中的哈利路亚山就取景于此。",
+        "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/yuanjiajie-intro.mp3",
+        "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/yuanjiajie-intro.srt"
+      },
+      {
+        "id": 2,
+        "triggerTime": 1800,
+        "text": "前方是天子山，因明初土家族领袖向大坤在此举义旗而得名，峰林景观壮丽无比。",
+        "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/tianzishan-intro.mp3",
+        "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/tianzishan-intro.srt"
+      },
+      {
+        "id": 3,
+        "triggerTime": 3600,
+        "text": "现在我们到达黄石寨，这是张家界最大的凌空观景台，有'不上黄石寨，枉到张家界'之说。",
+        "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/huangshizhai-intro.mp3",
+        "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/huangshizhai-intro.srt"
+      }
+    ],
+    "backgroundMusicFileId": "cloud://example-12345.6578-example-12345-1324567890/music/zhangjiajie-background.mp3",
+    "createdAt": 1730568600000,
+    "updatedAt": 1730568600000
+  }
+]

@@ -52,6 +52,11 @@
       "type": "String"
     },
     {
+      "name": "backgroundImageId",
+      "title": "背景图片文件ID",
+      "type": "String"
+    },
+    {
       "name": "hasVideo",
       "title": "是否有录像",
       "type": "Boolean"
@@ -94,6 +99,9 @@
           },
           "audioFileId": {
             "type": "String"
+          },
+          "subtitleFileId": {
+            "type": "String"
           }
         }
       }
@@ -105,4 +113,3 @@
     }
   ]
 }
-  
