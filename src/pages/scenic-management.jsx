@@ -332,14 +332,14 @@ export default function ScenicManagement(props) {
           {/* 页面标题和操作按钮 */}
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <MapPin className="h-8 w-8 text-green-400" />
+              <MapPin className="h-8 w-8 text-blue-400" />
               <div>
                 <h1 className="text-2xl font-bold text-white">景区管理</h1>
                 <p className="text-gray-400">管理景区基本信息和坐标位置</p>
               </div>
             </div>
             <div className="flex space-x-3">
-              <Button onClick={handleSaveScenicData} disabled={saving || uploading} className="bg-green-500 hover:bg-green-600">
+              <Button onClick={handleSaveScenicData} disabled={saving || uploading} className="bg-blue-500 hover:bg-blue-600">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? '保存中...' : '保存信息'}
               </Button>
@@ -353,7 +353,7 @@ export default function ScenicManagement(props) {
               <Card className="bg-gray-800/50 border-gray-700">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center">
-                    <MapPin className="h-5 w-5 mr-2 text-green-400" />
+                    <MapPin className="h-5 w-5 mr-2 text-blue-400" />
                     景区基本信息
                   </CardTitle>
                   <CardDescription className="text-gray-400">
@@ -403,7 +403,7 @@ export default function ScenicManagement(props) {
               <Card className="bg-gray-800/50 border-gray-700">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center">
-                    <Image className="h-5 w-5 mr-2 text-purple-400" />
+                    <MapPin className="h-5 w-5 mr-2 text-blue-400" />
                     背景图设置
                   </CardTitle>
                   <CardDescription className="text-gray-400">
@@ -423,7 +423,7 @@ export default function ScenicManagement(props) {
                     </div>}
 
                   {/* 上传控件 */}
-                  <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                  <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
                     <input type="file" id="background-upload" accept="image/*" onChange={handleBackgroundImageUpload} className="hidden" />
                     <label htmlFor="background-upload" className="cursor-pointer">
                       <div className="flex flex-col items-center justify-center space-y-3">
@@ -448,7 +448,7 @@ export default function ScenicManagement(props) {
               <Card className="bg-gray-800/50 border-gray-700">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center">
-                    <Map className="h-5 w-5 mr-2 text-orange-400" />
+                    <MapPin className="h-5 w-5 mr-2 text-blue-400" />
                     地图坐标选择
                   </CardTitle>
                   <CardDescription className="text-gray-400">
@@ -456,7 +456,9 @@ export default function ScenicManagement(props) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ScenicMap onPositionSelect={handleMapPositionSelect} initialPosition={selectedPosition} disabled={false} />
+                  <div className="h-64"> {/* 缩小地图高度 */}
+                    <ScenicMap onPositionSelect={handleMapPositionSelect} initialPosition={selectedPosition} disabled={false} />
+                  </div>
                   <p className="text-sm text-gray-400 mt-3">
                     提示：左键点击地图上的位置可以设置景区坐标，坐标会自动更新到表单中
                   </p>
