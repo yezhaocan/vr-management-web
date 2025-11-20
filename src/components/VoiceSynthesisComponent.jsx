@@ -1,9 +1,9 @@
 // @ts-ignore;
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 // @ts-ignore;
-import { Card, CardContent, CardHeader, CardTitle, Button, useToast } from '@/components/ui';
+import { Button, useToast } from '@/components/ui';
 // @ts-ignore;
-import { Upload, FileText, Trash2, Volume2, Download, Play, X } from 'lucide-react';
+import { Volume2, Download, Upload, Play, Square } from 'lucide-react';
 
 export function VoiceSynthesisComponent({
   text,
@@ -11,29 +11,64 @@ export function VoiceSynthesisComponent({
   onSynthesisComplete,
   $w,
   waypointName,
-  currentFileId
+  currentFileId = null
 }) {
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [fileId, setFileId] = useState(currentFileId);
+  const [fileSize, setFileSize] = useState(0);
   const [synthesizedAudio, setSynthesizedAudio] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
-  const [showDownloadButton, setShowDownloadButton] = useState(false);
-  const [uploadingAudio, setUploadingAudio] = useState(false);
-  const [uploadingSubtitle, setUploadingSubtitle] = useState(false);
-  const [subtitleFile, setSubtitleFile] = useState(null);
-  const [subtitleFileId, setSubtitleFileId] = useState(currentFileId || '');
+  const [audioElement, setAudioElement] = useState(null);
   const {
     toast
   } = useToast();
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const audioRef = useRef(null);
 
-  // 语音合成功能
-  const handleVoiceSynthesis = async () => {
+  // 初始化语音列表
+  useEffect(() => {
+    // 确保语音列表加载完成
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length === 0) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+    };
+    loadVoices();
+  }, []);
+
+  // 播放音频
+  const playAudio = () => {
+    if (audioRef.current && synthesizedAudio) {
+      audioRef.current.play();
+      setIsPlaying(true);
+      audioRef.current.onended = () => setIsPlaying(false);
+    }
+  };
+
+  // 停止播放音频
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+  };
+
+  // 使用Web Speech API进行语音合成（优化版本）
+  const handleSpeechSynthesis = async () => {
     if (!text || text.trim() === '') {
       toast({
-        title: '文字稿为空',
-        description: '请先输入要合成的文字稿',
+        title: '提示',
+        description: '请先输入文字稿内容',
         variant: 'destructive'
       });
       return;
     }
+
+    // 检查浏览器支持
     if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
       toast({
         title: '浏览器不支持',
@@ -42,6 +77,8 @@ export function VoiceSynthesisComponent({
       });
       return;
     }
+
+    // 检查MediaRecorder支持
     if (!window.MediaRecorder) {
       toast({
         title: '浏览器不支持',
@@ -51,12 +88,11 @@ export function VoiceSynthesisComponent({
       return;
     }
     try {
-      setUploadingAudio(true);
+      setIsSynthesizing(true);
+
       // 停止当前播放
-      if (synthesizedAudio) {
-        setSynthesizedAudio(null);
-        setAudioBlob(null);
-      }
+      stopAudio();
+
       // 获取媒体流权限
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -65,32 +101,45 @@ export function VoiceSynthesisComponent({
           sampleRate: 44100
         }
       });
+
       // 创建MediaRecorder
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
       });
-      const audioChunks = [];
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      // 处理数据可用事件
       mediaRecorder.ondataavailable = event => {
         if (event.data && event.data.size > 0) {
-          audioChunks.push(event.data);
+          audioChunksRef.current.push(event.data);
         }
       };
+
+      // 处理录制停止事件
       mediaRecorder.onstop = async () => {
         try {
-          if (audioChunks.length === 0) {
+          if (audioChunksRef.current.length === 0) {
             throw new Error('录制数据为空');
           }
-          const audioBlob = new Blob(audioChunks, {
+          const audioBlob = new Blob(audioChunksRef.current, {
             type: 'audio/webm;codecs=opus'
           });
-          // 创建音频URL
+
+          // 创建音频URL并设置状态
           const audioUrl = URL.createObjectURL(audioBlob);
           setAudioBlob(audioBlob);
           setSynthesizedAudio(audioUrl);
-          setShowDownloadButton(true);
+
+          // 创建音频元素用于播放
+          const audio = new Audio(audioUrl);
+          setAudioElement(audio);
+
+          // 上传到云存储
+          await uploadAudioToCloud(audioBlob, 'synthesized');
           toast({
             title: '语音合成成功',
-            description: '语音已合成，请下载音频文件后上传',
+            description: '语音已合成并上传到云存储',
             variant: 'default'
           });
         } catch (error) {
@@ -103,55 +152,110 @@ export function VoiceSynthesisComponent({
         } finally {
           // 停止所有媒体流
           stream.getTracks().forEach(track => track.stop());
-          setUploadingAudio(false);
+          setIsSynthesizing(false);
         }
       };
+
       // 开始录制
-      mediaRecorder.start(100);
-      // 等待录制开始
+      mediaRecorder.start(100); // 每100ms收集一次数据
+
+      // 等待一小段时间确保录制开始
       await new Promise(resolve => setTimeout(resolve, 100));
+
       // 创建语音合成实例
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'zh-CN';
-      utterance.rate = 0.8;
+      utterance.rate = 0.8; // 稍慢的语速，提高清晰度
       utterance.pitch = 1;
       utterance.volume = 1;
-      // 获取语音
+
+      // 获取可用的语音
       const voices = window.speechSynthesis.getVoices();
-      const selectedVoice = voices.find(v => v.lang === 'zh-CN') || voices[0];
+      let selectedVoice = voices.find(v => v.lang === 'zh-CN');
+
+      // 根据选择的语音类型选择语音
+      if (voice === '男声') {
+        selectedVoice = voices.find(v => v.name.includes('Male') || v.name.includes('男') || v.lang === 'zh-CN');
+      } else if (voice === '童声') {
+        selectedVoice = voices.find(v => v.name.includes('Child') || v.name.includes('Kid') || v.name.includes('童'));
+      } else if (voice === '老人声') {
+        selectedVoice = voices.find(v => v.name.includes('Senior') || v.name.includes('Old') || v.name.includes('老'));
+      } else {
+        // 默认使用女声
+        selectedVoice = voices.find(v => v.name.includes('Female') || v.name.includes('女') || v.lang === 'zh-CN');
+      }
       if (selectedVoice) {
         utterance.voice = selectedVoice;
       }
+
       // 语音合成事件处理
       utterance.onend = () => {
         setTimeout(() => {
-          if (mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
+          if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            mediaRecorderRef.current.stop();
           }
-        }, 500);
+        }, 500); // 给录制留一点缓冲时间
       };
       utterance.onerror = error => {
         console.error('语音合成错误:', error);
-        if (mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop();
         }
-        setUploadingAudio(false);
+        setIsSynthesizing(false);
         toast({
           title: '语音合成失败',
           description: '语音合成过程中出现错误',
           variant: 'destructive'
         });
       };
+
       // 开始语音合成
       window.speechSynthesis.speak(utterance);
     } catch (error) {
       console.error('语音合成初始化失败:', error);
-      setUploadingAudio(false);
+      setIsSynthesizing(false);
       toast({
         title: '语音合成失败',
         description: error.message || '请检查麦克风权限和浏览器支持',
         variant: 'destructive'
       });
+    }
+  };
+
+  // 上传音频到云存储
+  const uploadAudioToCloud = async (audioBlob, source) => {
+    try {
+      const tcb = await $w.cloud.getCloudInstance();
+
+      // 生成文件名
+      const timestamp = Date.now();
+      const fileExtension = source === 'synthesized' ? 'webm' : 'webm';
+      const fileName = `audio/${waypointName || 'voice'}_${timestamp}.${fileExtension}`;
+
+      // 上传到云存储
+      const uploadResult = await tcb.uploadFile({
+        cloudPath: fileName,
+        filePath: audioBlob
+      });
+
+      // 获取文件ID
+      const newFileId = uploadResult.fileID;
+      setFileId(newFileId);
+      setFileSize(audioBlob.size);
+
+      // 获取临时访问URL
+      const tempUrlResult = await tcb.getTempFileURL({
+        fileList: [newFileId]
+      });
+
+      // 回调通知父组件
+      if (onSynthesisComplete) {
+        onSynthesisComplete(newFileId, tempUrlResult.fileList[0].tempFileURL);
+      }
+      return newFileId;
+    } catch (error) {
+      console.error('音频上传失败:', error);
+      throw error;
     }
   };
 
@@ -161,13 +265,13 @@ export function VoiceSynthesisComponent({
     try {
       const link = document.createElement('a');
       link.href = synthesizedAudio;
-      link.download = `语音讲解_${waypointName || '未命名'}_${Date.now()}.webm`;
+      link.download = `语音讲解_${waypointName || 'audio'}_${Date.now()}.webm`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       toast({
         title: '下载成功',
-        description: '音频文件已开始下载，请上传到云存储',
+        description: '音频文件已开始下载',
         variant: 'default'
       });
     } catch (error) {
@@ -180,69 +284,28 @@ export function VoiceSynthesisComponent({
     }
   };
 
-  // 检查文件是否为音频文件
-  const isAudioFile = file => {
-    if (!file) return false;
-    const extension = file.name.toLowerCase().split('.').pop();
-    const audioExtensions = ['webm', 'mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'mpeg'];
-    const fileType = file.type.toLowerCase();
-    const isAudioType = fileType.startsWith('audio/');
-    const isAudioExtension = audioExtensions.includes(extension);
-    return isAudioType || isAudioExtension;
-  };
-
-  // 检查文件是否为字幕文件
-  const isSubtitleFile = file => {
-    if (!file) return false;
-    const extension = file.name.toLowerCase().split('.').pop();
-    const subtitleExtensions = ['srt', 'vtt', 'ass', 'ssa', 'txt', 'sub'];
-    const fileType = file.type.toLowerCase();
-    const isTextType = fileType.startsWith('text/') || fileType.includes('subtitle');
-    const isSubtitleExtension = subtitleExtensions.includes(extension);
-    return isTextType || isSubtitleExtension;
-  };
-
-  // 上传音频文件到云存储
-  const handleAudioUpload = async event => {
-    const file = event.target.files?.[0];
+  // 手动上传音频文件
+  const handleManualUpload = async event => {
+    const file = event.target.files[0];
     if (!file) return;
-    if (!isAudioFile(file)) {
+
+    // 支持多种音频格式
+    const allowedTypes = ['audio/webm', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg'];
+    const fileType = file.type.toLowerCase();
+    if (!allowedTypes.includes(fileType)) {
       toast({
         title: '文件类型错误',
-        description: '请上传音频文件（支持webm、mp3、wav、ogg、m4a等格式）',
+        description: '请上传支持的音频文件格式',
         variant: 'destructive'
       });
       return;
     }
     try {
-      setUploadingAudio(true);
-      const tcb = await $w.cloud.getCloudInstance();
-      const timestamp = Date.now();
-      const fileExtension = file.name.split('.').pop() || 'webm';
-      const fileName = `airline_voice/audio_${timestamp}_${Math.random().toString(36).substring(2, 8)}.${fileExtension}`;
-      const uploadResult = await tcb.uploadFile({
-        cloudPath: fileName,
-        filePath: file
-      });
-      const fileId = uploadResult.fileID;
-      const tempUrlResult = await tcb.getTempFileURL({
-        fileList: [fileId]
-      });
-      // 通知父组件音频文件已上传
-      if (onSynthesisComplete) {
-        onSynthesisComplete({
-          audioFileId: fileId,
-          audioUrl: tempUrlResult.fileList[0].tempFileURL,
-          subtitleFileId: subtitleFileId,
-          subtitleUrl: subtitleFileId ? await getSubtitleFileUrl(subtitleFileId) : ''
-        });
-      }
-      setSynthesizedAudio(null);
-      setAudioBlob(null);
-      setShowDownloadButton(false);
+      setIsSynthesizing(true);
+      await uploadAudioToCloud(file, 'manual');
       toast({
         title: '音频文件上传成功',
-        description: `文件已上传到云存储，ID: ${fileId.substring(0, 12)}...`,
+        description: `文件已上传到云存储`,
         variant: 'default'
       });
     } catch (error) {
@@ -252,176 +315,77 @@ export function VoiceSynthesisComponent({
         variant: 'destructive'
       });
     } finally {
-      setUploadingAudio(false);
+      setIsSynthesizing(false);
+      // 清空文件输入
       event.target.value = '';
     }
   };
-
-  // 上传字幕文件到云存储
-  const handleSubtitleUpload = async event => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!isSubtitleFile(file)) {
-      toast({
-        title: '文件类型错误',
-        description: '请上传字幕文件（支持srt、vtt、ass、ssa、txt等格式）',
-        variant: 'destructive'
-      });
-      return;
-    }
-    try {
-      setUploadingSubtitle(true);
-      const tcb = await $w.cloud.getCloudInstance();
-      const timestamp = Date.now();
-      const fileExtension = file.name.split('.').pop() || 'srt';
-      const fileName = `airline_voice/subtitle_${timestamp}_${Math.random().toString(36).substring(2, 8)}.${fileExtension}`;
-      const uploadResult = await tcb.uploadFile({
-        cloudPath: fileName,
-        filePath: file
-      });
-      const fileId = uploadResult.fileID;
-      const tempUrlResult = await tcb.getTempFileURL({
-        fileList: [fileId]
-      });
-      setSubtitleFileId(fileId);
-      setSubtitleFile(file);
-      // 通知父组件字幕文件已上传
-      if (onSynthesisComplete) {
-        onSynthesisComplete({
-          audioFileId: '',
-          audioUrl: '',
-          subtitleFileId: fileId,
-          subtitleUrl: tempUrlResult.fileList[0].tempFileURL
-        });
-      }
-      toast({
-        title: '字幕文件上传成功',
-        description: `文件已上传到云存储，ID: ${fileId.substring(0, 12)}...`,
-        variant: 'default'
-      });
-    } catch (error) {
-      toast({
-        title: '文件上传失败',
-        description: error.message,
-        variant: 'destructive'
-      });
-    } finally {
-      setUploadingSubtitle(false);
-      event.target.value = '';
-    }
-  };
-
-  // 获取字幕文件URL
-  const getSubtitleFileUrl = async fileId => {
-    if (!fileId) return '';
-    try {
-      const tcb = await $w.cloud.getCloudInstance();
-      const tempUrlResult = await tcb.getTempFileURL({
-        fileList: [fileId]
-      });
-      return tempUrlResult.fileList[0].tempFileURL;
-    } catch (error) {
-      console.error('获取字幕文件URL失败:', error);
-      return '';
-    }
-  };
-
-  // 移除字幕文件
-  const handleRemoveSubtitle = () => {
-    setSubtitleFile(null);
-    setSubtitleFileId('');
-    // 通知父组件字幕文件已移除
-    if (onSynthesisComplete) {
-      onSynthesisComplete({
-        audioFileId: '',
-        audioUrl: '',
-        subtitleFileId: '',
-        subtitleUrl: ''
-      });
-    }
-    toast({
-      title: '字幕文件已移除',
-      description: '字幕文件已从配置中移除',
-      variant: 'default'
-    });
-  };
-  return <Card className="bg-gray-800/30 border border-gray-600">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-blue-400 text-sm font-semibold">语音合成与文件上传</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* 语音合成区域 */}
-        <div className="space-y-3">
-          <Button type="button" onClick={handleVoiceSynthesis} disabled={uploadingAudio || !text} className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-lg">
-            {uploadingAudio ? <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                合成中...
+  return <div className="space-y-4">
+      {/* 隐藏的音频元素用于播放 */}
+      <audio ref={audioRef} className="hidden" />
+      
+      {/* 语音合成和播放控制区域 */}
+      <div className="grid grid-cols-4 gap-3">
+        {/* 语音合成按钮 */}
+        <Button onClick={handleSpeechSynthesis} disabled={isSynthesizing || !text} className="col-span-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white">
+          {isSynthesizing ? <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              合成中
+            </> : <>
+              <Volume2 className="w-4 h-4 mr-2" />
+              语音合成
+            </>}
+        </Button>
+        
+        {/* 播放/停止按钮 */}
+        {synthesizedAudio && <Button onClick={isPlaying ? stopAudio : playAudio} className={`col-span-1 ${isPlaying ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700' : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'} text-white`}>
+            {isPlaying ? <>
+                <Square className="w-4 h-4 mr-2" />
+                停止
               </> : <>
-                <Volume2 className="h-4 w-4 mr-2" />
-                语音合成
+                <Play className="w-4 h-4 mr-2" />
+                播放
               </>}
-          </Button>
+          </Button>}
+        
+        {/* 下载按钮 */}
+        {synthesizedAudio && <Button onClick={handleDownloadAudio} className="col-span-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white">
+            <Download className="w-4 h-4 mr-2" />
+            下载
+          </Button>}
+        
+        {/* 占位空间 */}
+        {!synthesizedAudio && <div className="col-span-2"></div>}
+      </div>
 
-          {/* 下载按钮（合成后显示） */}
-          {showDownloadButton && <Button type="button" onClick={handleDownloadAudio} className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg">
-              <Download className="h-4 w-4 mr-2" />
-              下载音频文件
-            </Button>}
-        </div>
-
-        {/* 音频文件上传区域 */}
-        <div className="space-y-3">
-          <div className="text-gray-300 text-xs font-medium">音频文件上传</div>
-          <div className="relative">
-            <input type="file" accept="audio/*,.webm,.mp3,.wav,.ogg,.m4a,.aac,.flac,.mpeg" onChange={handleAudioUpload} className="hidden" id="audio-file-upload" disabled={uploadingAudio} />
-            <label htmlFor="audio-file-upload" className={`flex flex-col items-center justify-center w-full h-16 border-2 border-dashed rounded-xl transition-all duration-200 cursor-pointer group ${uploadingAudio ? 'border-gray-400/50 bg-gray-900/10 cursor-not-allowed' : 'border-blue-400/50 bg-blue-900/10 hover:bg-blue-900/20'}`}>
-              <div className="flex flex-col items-center justify-center">
-                <Upload className={`w-5 h-5 mb-1 transition-colors ${uploadingAudio ? 'text-gray-400' : 'text-blue-400 group-hover:text-blue-300'}`} />
-                <span className={`font-medium text-sm ${uploadingAudio ? 'text-gray-400' : 'text-blue-300'}`}>
-                  {uploadingAudio ? '上传中...' : '选择音频文件上传'}
-                </span>
-                <span className={`text-xs mt-1 ${uploadingAudio ? 'text-gray-400/70' : 'text-blue-400/70'}`}>
-                  支持webm、mp3、wav、ogg、m4a等格式
-                </span>
-              </div>
-            </label>
+      {/* 手动上传音频文件 */}
+      <div className="relative">
+        <input type="file" accept="audio/*,.webm,.mp3,.wav,.ogg,.m4a" onChange={handleManualUpload} className="hidden" id="manual-audio-upload" disabled={isSynthesizing} />
+        <label htmlFor="manual-audio-upload" className={`flex flex-col items-center justify-center w-full h-20 border-2 border-dashed rounded-xl transition-all duration-200 cursor-pointer group ${isSynthesizing ? 'border-gray-400/50 bg-gray-900/10 cursor-not-allowed' : 'border-blue-400/50 bg-blue-900/10 hover:bg-blue-900/20'}`}>
+          <div className="flex flex-col items-center justify-center">
+            <Upload className={`w-6 h-6 mb-1 transition-colors ${isSynthesizing ? 'text-gray-400' : 'text-blue-400 group-hover:text-blue-300'}`} />
+            <span className={`font-medium text-sm ${isSynthesizing ? 'text-gray-400' : 'text-blue-300'}`}>
+              {isSynthesizing ? '处理中...' : '上传音频文件'}
+            </span>
+            <span className={`text-xs mt-1 ${isSynthesizing ? 'text-gray-400/70' : 'text-blue-400/70'}`}>
+              支持webm、mp3、wav等格式
+            </span>
           </div>
-        </div>
-
-        {/* 字幕文件上传区域（新增） */}
-        <div className="space-y-3">
-          <div className="text-gray-300 text-xs font-medium">字幕文件上传（可选）</div>
-          
-          {/* 字幕文件预览 */}
-          {subtitleFileId && <div className="relative">
-              <div className="flex items-center space-x-2 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                <FileText className="h-4 w-4 text-purple-400" />
-                <div className="flex-1">
-                  <span className="text-purple-400 text-sm font-medium">字幕文件已准备</span>
-                  <p className="text-purple-400/70 text-xs mt-1">文件ID: {subtitleFileId.substring(0, 20)}...</p>
-                </div>
-                <Button type="button" onClick={handleRemoveSubtitle} className="px-2 py-1 border border-red-400 text-red-400 hover:bg-red-400/10 bg-transparent">
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>}
-
-          {/* 字幕文件上传控件 */}
-          <div className="relative">
-            <input type="file" accept=".srt,.vtt,.ass,.ssa,.txt,.sub" onChange={handleSubtitleUpload} className="hidden" id="subtitle-file-upload" disabled={uploadingSubtitle} />
-            <label htmlFor="subtitle-file-upload" className={`flex flex-col items-center justify-center w-full h-16 border-2 border-dashed rounded-xl transition-all duration-200 cursor-pointer group ${uploadingSubtitle ? 'border-gray-400/50 bg-gray-900/10 cursor-not-allowed' : 'border-purple-400/50 bg-purple-900/10 hover:bg-purple-900/20'}`}>
-              <div className="flex flex-col items-center justify-center">
-                <Upload className={`w-5 h-5 mb-1 transition-colors ${uploadingSubtitle ? 'text-gray-400' : 'text-purple-400 group-hover:text-purple-300'}`} />
-                <span className={`font-medium text-sm ${uploadingSubtitle ? 'text-gray-400' : 'text-purple-300'}`}>
-                  {uploadingSubtitle ? '上传中...' : '选择字幕文件上传'}
-                </span>
-                <span className={`text-xs mt-1 ${uploadingSubtitle ? 'text-gray-400/70' : 'text-purple-400/70'}`}>
-                  支持srt、vtt、ass、ssa、txt等格式
-                </span>
-              </div>
-            </label>
+        </label>
+      </div>
+      
+      {/* 文件信息显示 */}
+      {fileId && <div className="p-3 bg-green-900/10 border border-green-500/20 rounded-lg">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-green-400 text-sm font-medium">文件ID:</span>
+              <span className="text-gray-300 text-xs break-all">{fileId}</span>
+            </div>
+            {fileSize > 0 && <div className="flex items-center justify-between">
+                <span className="text-green-400 text-sm font-medium">文件大小:</span>
+                <span className="text-gray-300 text-xs">{(fileSize / 1024).toFixed(2)} KB</span>
+              </div>}
           </div>
-        </div>
-      </CardContent>
-    </Card>;
+        </div>}
+    </div>;
 }
