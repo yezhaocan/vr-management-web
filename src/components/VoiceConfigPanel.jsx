@@ -25,7 +25,19 @@ export function VoiceConfigPanel({
     voice: '女声',
     triggerType: 'time',
     audioFileId: '',
-    audioUrl: ''
+    audioUrl: '',
+    subtitleFileId: '',
+    subtitleUrl: ''
+  };
+
+  // 处理语音合成完成回调
+  const handleSynthesisComplete = fileData => {
+    if (onSynthesisComplete) {
+      onSynthesisComplete({
+        ...voiceGuide,
+        ...fileData
+      });
+    }
   };
   return <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
       <CardHeader className="pb-3">
@@ -88,7 +100,7 @@ export function VoiceConfigPanel({
             </div>
 
             {/* 语音合成组件 - 传递当前航点的文件ID */}
-            <VoiceSynthesisComponent text={voiceGuide.text} voice={voiceGuide.voice} onSynthesisComplete={onSynthesisComplete} $w={$w} waypointName={waypoint.name} currentFileId={voiceGuide.audioFileId} />
+            <VoiceSynthesisComponent text={voiceGuide.text} voice={voiceGuide.voice} onSynthesisComplete={handleSynthesisComplete} $w={$w} waypointName={waypoint.name} currentFileId={voiceGuide.audioFileId} />
           </div>}
       </CardContent>
     </Card>;
