@@ -348,7 +348,7 @@ export default function ScenicManagement(props) {
 
           {/* 主要内容区域 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 左侧：基本信息卡片（整合背景图功能） */}
+            {/* 左侧：基本信息卡片 */}
             <div className="space-y-6">
               <Card className="bg-gray-800/50 border-gray-700">
                 <CardHeader>
@@ -356,77 +356,79 @@ export default function ScenicManagement(props) {
                     <MapPin className="h-5 w-5 mr-2 text-blue-400" />
                     基本信息
                   </CardTitle>
-                  <CardDescription className="text-gray-400">
-                    直接修改景区信息，完成后点击保存按钮
-                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
-                  {/* 背景图预览和上传 */}
-                  <div className="space-y-4">
-                    <div className="text-sm text-white">背景图设置</div>
-                    {backgroundPreview && <div className="relative">
-                        <div className="text-sm text-gray-400 mb-2">背景图预览</div>
-                        <div className="relative bg-gray-700 rounded-lg overflow-hidden border border-gray-600">
-                          <img src={backgroundPreview} alt="背景图预览" className="w-full h-32 object-cover" />
-                          <Button variant="destructive" size="sm" className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-700/80" onClick={handleRemoveBackgroundImage}>
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>}
-
-                    {/* 上传控件 */}
-                    <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
-                      <input type="file" id="background-upload" accept="image/*" onChange={handleBackgroundImageUpload} className="hidden" />
-                      <label htmlFor="background-upload" className="cursor-pointer">
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                          <Upload className="h-6 w-6 text-gray-400" />
-                          <div>
-                            <div className="text-white font-medium text-sm">点击上传背景图</div>
-                            <div className="text-gray-400 text-xs">支持 JPG、PNG、GIF 等格式</div>
-                          </div>
-                          {uploading && <div className="text-blue-400 text-sm flex items-center">
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-400 mr-1"></div>
-                              上传中...
-                            </div>}
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 景区名称 */}
+                <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+                  {/* 1. 景区名称 */}
                   <div>
                     <Label htmlFor="name" className="text-white">景区名称 *</Label>
-                    <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入景区名称" className="bg-gray-800 border-gray-600 text-white mt-1" />
+                    <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入景区名称" className="bg-gray-800 border-gray-600 text-white mt-2" />
                   </div>
 
-                  {/* 坐标信息 */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-white text-sm">纬度</Label>
-                      <div className="flex items-center space-x-1 mt-1">
-                        <Navigation className="h-3 w-3 text-blue-400" />
-                        <span className="text-white text-sm">{selectedPosition?.lat.toFixed(6) || '未选择'}</span>
+                  {/* 2. 经纬度坐标 */}
+                  <div>
+                    <Label className="text-white">坐标位置</Label>
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      <div className="flex items-center space-x-2 p-3 bg-gray-800 rounded-lg border border-gray-600">
+                        <Navigation className="h-4 w-4 text-blue-400" />
+                        <div>
+                          <div className="text-gray-400 text-xs">纬度</div>
+                          <div className="text-white text-sm font-medium">{selectedPosition?.lat.toFixed(6) || '未选择'}</div>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <Label className="text-white text-sm">经度</Label>
-                      <div className="flex items-center space-x-1 mt-1">
-                        <Navigation className="h-3 w-3 text-blue-400" />
-                        <span className="text-white text-sm">{selectedPosition?.lng.toFixed(6) || '未选择'}</span>
+                      <div className="flex items-center space-x-2 p-3 bg-gray-800 rounded-lg border border-gray-600">
+                        <Navigation className="h-4 w-4 text-blue-400" />
+                        <div>
+                          <div className="text-gray-400 text-xs">经度</div>
+                          <div className="text-white text-sm font-medium">{selectedPosition?.lng.toFixed(6) || '未选择'}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* 详细地址 */}
+                  {/* 3. 背景图片 */}
+                  <div>
+                    <Label className="text-white">背景图片</Label>
+                    <div className="mt-2 space-y-3">
+                      {/* 背景图预览 */}
+                      {backgroundPreview && <div className="relative">
+                          <div className="relative bg-gray-700 rounded-lg overflow-hidden border border-gray-600">
+                            <img src={backgroundPreview} alt="背景图预览" className="w-full h-32 object-cover" />
+                            <Button variant="destructive" size="sm" className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-700/80" onClick={handleRemoveBackgroundImage}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>}
+
+                      {/* 上传控件 */}
+                      <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
+                        <input type="file" id="background-upload" accept="image/*" onChange={handleBackgroundImageUpload} className="hidden" />
+                        <label htmlFor="background-upload" className="cursor-pointer">
+                          <div className="flex flex-col items-center justify-center space-y-2">
+                            <Upload className="h-6 w-6 text-gray-400" />
+                            <div>
+                              <div className="text-white font-medium text-sm">点击上传背景图</div>
+                              <div className="text-gray-400 text-xs">支持 JPG、PNG、GIF 等格式</div>
+                            </div>
+                            {uploading && <div className="text-blue-400 text-sm flex items-center">
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-400 mr-1"></div>
+                                上传中...
+                              </div>}
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. 详细地址 */}
                   <div>
                     <Label htmlFor="address" className="text-white">详细地址</Label>
-                    <Input id="address" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} placeholder="请输入详细地址" className="bg-gray-800 border-gray-600 text-white mt-1" />
+                    <Input id="address" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} placeholder="请输入详细地址" className="bg-gray-800 border-gray-600 text-white mt-2" />
                   </div>
 
-                  {/* 景区描述 */}
+                  {/* 5. 景区描述 */}
                   <div>
                     <Label htmlFor="description" className="text-white">景区描述</Label>
-                    <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入景区描述" className="bg-gray-800 border-gray-600 text-white mt-1 h-24" />
+                    <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入景区描述" className="bg-gray-800 border-gray-600 text-white mt-2 h-24" />
                   </div>
                 </CardContent>
               </Card>
@@ -440,17 +442,11 @@ export default function ScenicManagement(props) {
                     <MapPin className="h-5 w-5 mr-2 text-blue-400" />
                     地图坐标选择
                   </CardTitle>
-                  <CardDescription className="text-gray-400">
-                    左键点击地图选择景区坐标位置
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64">
                     <ScenicMap onPositionSelect={handleMapPositionSelect} initialPosition={selectedPosition} disabled={false} />
                   </div>
-                  <p className="text-sm text-gray-400 mt-3">
-                    提示：左键点击地图上的位置可以设置景区坐标，坐标会自动更新到表单中
-                  </p>
                 </CardContent>
               </Card>
             </div>
