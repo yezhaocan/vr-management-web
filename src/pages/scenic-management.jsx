@@ -28,11 +28,11 @@ export default function ScenicManagement(props) {
     latitude: 0,
     longitude: 0,
     address: '',
-    description: '',
-    backgroundImageId: ''
+    description: ''
   });
   const [selectedPosition, setSelectedPosition] = useState(null);
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+  const [backgroundImage, setBackgroundImage] = useState(null);
+  const [backgroundPreview, setBackgroundPreview] = useState('');
 
   // 保存景区数据到本地存储
   const saveScenicDataToLocal = data => {
@@ -53,21 +53,6 @@ export default function ScenicManagement(props) {
       return null;
     }
   };
-
-  // 获取背景图URL
-  const getBackgroundImageUrl = async fileId => {
-    if (!fileId) return '';
-    try {
-      const tcb = await $w.cloud.getCloudInstance();
-      const result = await tcb.getTempFileURL({
-        fileList: [fileId]
-      });
-      return result.fileList[0]?.tempFileURL || '';
-    } catch (error) {
-      console.error('获取背景图URL失败:', error);
-      return '';
-    }
-  };
   useEffect(() => {
     loadScenicData();
   }, []);
@@ -86,18 +71,16 @@ export default function ScenicManagement(props) {
           latitude: localData.latitude || 0,
           longitude: localData.longitude || 0,
           address: localData.address || '',
-          description: localData.description || '',
-          backgroundImageId: localData.backgroundImageId || ''
+          description: localData.description || ''
         });
         setSelectedPosition({
           lat: localData.latitude || 39.9042,
           lng: localData.longitude || 116.4074
         });
 
-        // 加载背景图URL
+        // 加载背景图预览
         if (localData.backgroundImageId) {
-          const imageUrl = await getBackgroundImageUrl(localData.backgroundImageId);
-          setBackgroundImageUrl(imageUrl);
+          loadBackgroundImagePreview(localData.backgroundImageId);
         }
       }
 
@@ -128,18 +111,16 @@ export default function ScenicManagement(props) {
           latitude: latestScenic.latitude || 0,
           longitude: latestScenic.longitude || 0,
           address: latestScenic.address || '',
-          description: latestScenic.description || '',
-          backgroundImageId: latestScenic.backgroundImageId || ''
+          description: latestScenic.description || ''
         });
         setSelectedPosition({
           lat: latestScenic.latitude || 39.9042,
           lng: latestScenic.longitude || 116.4074
         });
 
-        // 加载背景图URL
+        // 加载背景图预览
         if (latestScenic.backgroundImageId) {
-          const imageUrl = await getBackgroundImageUrl(latestScenic.backgroundImageId);
-          setBackgroundImageUrl(imageUrl);
+          loadBackgroundImagePreview(latestScenic.backgroundImageId);
         }
 
         // 保存到本地存储
@@ -163,6 +144,21 @@ export default function ScenicManagement(props) {
     }
   };
 
+  // 加载背景图预览
+  const loadBackgroundImagePreview = async fileId => {
+    try {
+      const tcb = await $w.cloud.getCloudInstance();
+      const fileUrl = await tcb.getTempFileURL({
+        fileList: [fileId]
+      });
+      if (fileUrl && fileUrl.fileList && fileUrl.fileList[0]) {
+        setBackgroundPreview(fileUrl.fileList[0].tempFileURL);
+      }
+    } catch (error) {
+      console.error('加载背景图预览失败:', error);
+    }
+  };
+
   // 处理地图坐标选择
   const handleMapPositionSelect = position => {
     setSelectedPosition(position);
@@ -178,7 +174,7 @@ export default function ScenicManagement(props) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // 检查文件类型
+    // 验证文件类型
     if (!file.type.startsWith('image/')) {
       toast({
         title: '文件类型错误',
@@ -189,71 +185,39 @@ export default function ScenicManagement(props) {
     }
     try {
       setUploading(true);
+      setBackgroundImage(file);
 
-      // 上传到云存储
-      const tcb = await $w.cloud.getCloudInstance();
-      const uploadResult = await tcb.uploadFile({
-        cloudPath: `scenic-backgrounds/${Date.now()}-${file.name}`,
-        filePath: file
-      });
-      if (uploadResult.fileID) {
-        // 更新表单数据
-        setFormData(prev => ({
-          ...prev,
-          backgroundImageId: uploadResult.fileID
-        }));
-
-        // 获取临时URL并显示预览
-        const tempUrlResult = await tcb.getTempFileURL({
-          fileList: [uploadResult.fileID]
-        });
-        setBackgroundImageUrl(tempUrlResult.fileList[0]?.tempFileURL || '');
-        toast({
-          title: '上传成功',
-          description: '背景图已上传成功'
-        });
-      }
-    } catch (error) {
-      console.error('背景图上传失败:', error);
+      // 创建预览
+      const reader = new FileReader();
+      reader.onload = e => {
+        setBackgroundPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
       toast({
-        title: '上传失败',
-        description: error.message || '请检查网络连接',
+        title: '图片已选择',
+        description: '点击保存按钮上传并应用背景图',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('处理图片失败:', error);
+      toast({
+        title: '图片处理失败',
+        description: '请重新选择图片',
         variant: 'destructive'
       });
     } finally {
       setUploading(false);
-      // 清空文件输入
-      event.target.value = '';
     }
   };
 
-  // 删除背景图
-  const handleRemoveBackgroundImage = async () => {
-    try {
-      if (formData.backgroundImageId) {
-        // 从云存储删除文件
-        const tcb = await $w.cloud.getCloudInstance();
-        await tcb.deleteFile({
-          fileList: [formData.backgroundImageId]
-        });
-      }
-
-      // 更新表单数据
-      setFormData(prev => ({
-        ...prev,
-        backgroundImageId: ''
-      }));
-      setBackgroundImageUrl('');
-      toast({
-        title: '删除成功',
-        description: '背景图已删除'
-      });
-    } catch (error) {
-      console.error('删除背景图失败:', error);
-      toast({
-        title: '删除失败',
-        description: error.message || '请检查网络连接',
-        variant: 'destructive'
+  // 移除背景图
+  const handleRemoveBackgroundImage = () => {
+    setBackgroundImage(null);
+    setBackgroundPreview('');
+    if (scenicData) {
+      setScenicData({
+        ...scenicData,
+        backgroundImageId: null
       });
     }
   };
@@ -278,13 +242,31 @@ export default function ScenicManagement(props) {
     }
     try {
       setSaving(true);
+      let backgroundImageId = scenicData?.backgroundImageId || null;
+
+      // 如果有新上传的背景图，先上传到云存储
+      if (backgroundImage) {
+        const tcb = await $w.cloud.getCloudInstance();
+        const uploadResult = await tcb.uploadFile({
+          cloudPath: `scenic-backgrounds/${Date.now()}-${backgroundImage.name}`,
+          filePath: backgroundImage
+        });
+        if (uploadResult && uploadResult.fileID) {
+          backgroundImageId = uploadResult.fileID;
+          toast({
+            title: '背景图上传成功',
+            description: '图片已保存到云存储',
+            duration: 2000
+          });
+        }
+      }
       const scenicDataToSave = {
         name: formData.name,
         latitude: selectedPosition.lat,
         longitude: selectedPosition.lng,
         address: formData.address,
         description: formData.description,
-        backgroundImageId: formData.backgroundImageId,
+        backgroundImageId: backgroundImageId,
         updatedAt: new Date().getTime()
       };
       if (scenicData) {
@@ -305,7 +287,7 @@ export default function ScenicManagement(props) {
         });
         toast({
           title: '更新成功',
-          description: '景区信息已更新'
+          description: '景区信息和背景图已更新'
         });
       } else {
         // 新增数据
@@ -319,7 +301,7 @@ export default function ScenicManagement(props) {
         });
         toast({
           title: '创建成功',
-          description: '景区信息已创建'
+          description: '景区信息和背景图已创建'
         });
       }
 
@@ -357,7 +339,7 @@ export default function ScenicManagement(props) {
               </div>
             </div>
             <div className="flex space-x-3">
-              <Button onClick={handleSaveScenicData} disabled={saving} className="bg-green-500 hover:bg-green-600">
+              <Button onClick={handleSaveScenicData} disabled={saving || uploading} className="bg-green-500 hover:bg-green-600">
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? '保存中...' : '保存信息'}
               </Button>
@@ -414,29 +396,48 @@ export default function ScenicManagement(props) {
                     <Label htmlFor="description" className="text-white">景区描述</Label>
                     <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入景区描述" className="bg-gray-800 border-gray-600 text-white mt-1 h-20" />
                   </div>
+                </CardContent>
+              </Card>
 
-                  {/* 背景图上传 */}
-                  <div>
-                    <Label className="text-white">景区背景图</Label>
-                    <div className="mt-2">
-                      {backgroundImageUrl ? <div className="relative">
-                          <img src={backgroundImageUrl} alt="景区背景图" className="w-full h-32 object-cover rounded-lg border border-gray-600" />
-                          <Button variant="destructive" size="sm" className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600/80" onClick={handleRemoveBackgroundImage}>
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div> : <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center">
-                          <input type="file" id="background-image" accept="image/*" onChange={handleBackgroundImageUpload} className="hidden" />
-                          <label htmlFor="background-image" className="cursor-pointer">
-                            <div className="flex flex-col items-center justify-center space-y-2">
-                              <Upload className="h-8 w-8 text-gray-400" />
-                              <span className="text-gray-400 text-sm">
-                                {uploading ? '上传中...' : '点击上传背景图'}
-                              </span>
-                              <span className="text-gray-500 text-xs">支持所有图片格式，无大小限制</span>
-                            </div>
-                          </label>
-                        </div>}
-                    </div>
+              {/* 背景图上传区域 */}
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <Image className="h-5 w-5 mr-2 text-purple-400" />
+                    背景图设置
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    上传景区背景图片，支持所有图片格式
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* 背景图预览 */}
+                  {backgroundPreview && <div className="relative">
+                      <div className="text-sm text-white mb-2">背景图预览</div>
+                      <div className="relative bg-gray-700 rounded-lg overflow-hidden border border-gray-600">
+                        <img src={backgroundPreview} alt="背景图预览" className="w-full h-32 object-cover" />
+                        <Button variant="destructive" size="sm" className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-700/80" onClick={handleRemoveBackgroundImage}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>}
+
+                  {/* 上传控件 */}
+                  <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                    <input type="file" id="background-upload" accept="image/*" onChange={handleBackgroundImageUpload} className="hidden" />
+                    <label htmlFor="background-upload" className="cursor-pointer">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <Upload className="h-8 w-8 text-gray-400" />
+                        <div>
+                          <div className="text-white font-medium">点击上传背景图</div>
+                          <div className="text-gray-400 text-sm">支持 JPG、PNG、GIF 等格式</div>
+                        </div>
+                        {uploading && <div className="text-blue-400 text-sm flex items-center">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400 mr-2"></div>
+                            上传中...
+                          </div>}
+                      </div>
+                    </label>
                   </div>
                 </CardContent>
               </Card>

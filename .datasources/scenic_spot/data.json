@@ -7,6 +7,7 @@
     "description": "中国著名的风景名胜区，以湖光山色和众多的名胜古迹闻名中外",
     "name": "西湖风景区",
     "longitude": 120.1378,
+    "backgroundImageId": "cloud://example-12345.6578-example-12345-1324567890/scenic/xihu-background.jpg",
     "createdAt": 1730390400000,
     "updatedAt": 1730390400000
   },
@@ -17,6 +18,7 @@
     "description": "世界文化与自然双重遗产，以奇松、怪石、云海、温泉、冬雪\"五绝\"著称",
     "name": "黄山风景区",
     "longitude": 118.1667,
+    "backgroundImageId": "cloud://example-12345.6578-example-12345-1324567890/scenic/huangshan-background.jpg",
     "createdAt": 1730476800000,
     "updatedAt": 1730476800000
   },
@@ -27,6 +29,7 @@
     "description": "中国第一个国家森林公园，以独特的石英砂岩峰林地貌闻名世界",
     "name": "张家界国家森林公园",
     "longitude": 110.5422,
+    "backgroundImageId": "cloud://example-12345.6578-example-12345-1324567890/scenic/zhangjiajie-background.jpg",
     "createdAt": 1730563200000,
     "updatedAt": 1730563200000
   }

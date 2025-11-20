@@ -30,8 +30,9 @@
     },
     {
       "name": "backgroundImageId",
-      "title": "背景图ID",
+      "title": "背景图文件ID",
       "type": "String"
     }
   ]
 }
+  
