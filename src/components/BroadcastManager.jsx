@@ -35,7 +35,7 @@ export function BroadcastManager({
     }));
   };
 
-  // 添加播报
+  // 添加播报 - 修复：只保存subtitleFileId，不保存subtitleUrl
   const addBroadcast = () => {
     // 在保存时统一校验
     if (!newBroadcast.triggerTime || !newBroadcast.text || !newBroadcast.audioFileId) {
@@ -51,9 +51,9 @@ export function BroadcastManager({
       triggerTime: parseInt(newBroadcast.triggerTime),
       text: newBroadcast.text,
       audioFileId: newBroadcast.audioFileId,
-      audioUrl: newBroadcast.audioUrl,
-      subtitleFileId: newBroadcast.subtitleFileId,
-      subtitleUrl: newBroadcast.subtitleUrl
+      // 修复：不保存audioUrl临时链接
+      subtitleFileId: newBroadcast.subtitleFileId
+      // 修复：不保存subtitleUrl临时链接，只保存文件ID
     };
     onBroadcastsChange([...broadcasts, broadcast]);
     setNewBroadcast({
@@ -304,11 +304,11 @@ export function BroadcastManager({
       const tempUrlResult = await tcb.getTempFileURL({
         fileList: [fileId]
       });
-      // 更新播报配置
+      // 更新播报配置 - 只保存文件ID，临时URL仅用于预览
       setNewBroadcast(prev => ({
         ...prev,
         audioFileId: fileId,
-        audioUrl: tempUrlResult.fileList[0].tempFileURL
+        audioUrl: tempUrlResult.fileList[0].tempFileURL // 仅用于预览，不保存到数据库
       }));
       // 重置合成状态
       setSynthesizedAudio(null);
@@ -363,11 +363,11 @@ export function BroadcastManager({
       const tempUrlResult = await tcb.getTempFileURL({
         fileList: [fileId]
       });
-      // 更新播报配置
+      // 更新播报配置 - 只保存文件ID，临时URL仅用于预览
       setNewBroadcast(prev => ({
         ...prev,
         subtitleFileId: fileId,
-        subtitleUrl: tempUrlResult.fileList[0].tempFileURL
+        subtitleUrl: tempUrlResult.fileList[0].tempFileURL // 仅用于预览，不保存到数据库
       }));
       toast({
         title: '字幕文件上传成功',
