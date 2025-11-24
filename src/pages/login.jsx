@@ -36,17 +36,22 @@ export default function LoginPage(props) {
       if (!auth.currentUser) return;
       console.log(`🚀 检查 ~ checkLoginStatus ~ auth-> `, auth)
       const loginState = auth.hasLoginState();
-      console.log(`🚀 检查 ~ checkLoginStatus ~ loginState-> `, loginState && loginState.user.name !== 'anonymous')
-      if (loginState && loginState.user.name !== 'anonymous') {
+      console.log(`🚀 检查 ~ checkLoginStatus ~ loginState-> `, loginState)
+      if (loginState && loginState.user?.name !== 'anonymous') {
         // 已登录，跳转到dashboard
         $w.utils.redirectTo({
           pageId: 'dashboard',
           params: {}
         });
       } else {
-        $w.utils.redirectTo({
-          pageId: 'login',
-          params: {}
+
+        // $w.utils.redirectTo({
+        //   pageId: 'login',
+        //   params: {}
+        // });
+        auth.toDefaultLoginPage({
+            // redirect_uri: 'https://vr.genew.com',
+            redirect_uri: 'https://cloud1-1grrg77xa07045b0-1362525855.tcloudbaseapp.com/app-x5yduyum/production',
         });
       }
     } catch (error) {
@@ -159,7 +164,7 @@ export default function LoginPage(props) {
         }
       `}</style>
       
-      <Card className="login-card w-full max-w-md">
+      {/* <Card className="login-card w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
             <User className="w-8 h-8 text-white" />
@@ -207,6 +212,6 @@ export default function LoginPage(props) {
             </p>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>;
 }
