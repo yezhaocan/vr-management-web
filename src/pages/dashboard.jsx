@@ -29,9 +29,14 @@ export default function Dashboard(props) {
 
   const getCurrentUser = async () => {
     try {
+      window.cloudbase = $w.cloud;
       const tcb = await $w.cloud.getCloudInstance();
       const auth = tcb.auth();
-      setCurrentUser(auth.currentUser);
+      console.log(`🚀 ~ getCurrentUser ~ auth-> `, auth)
+      const user = await auth.getCurrentUser();
+      const userInfo = await auth.getUserInfo();
+      console.log(`🚀 ~ getCurrentUser ~ userInfo-> `, user, userInfo)
+      setCurrentUser(user || {});
     } catch (error) {
       console.error('获取当前用户信息失败:', error);
     }
