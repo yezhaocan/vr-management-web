@@ -374,8 +374,8 @@ export default function DroneManagement(props) {
               <span className="ml-2 text-gray-300">加载中...</span>
             </div>}
 
-          {/* 统计卡片 - 优化为暗色主题 */}
-          {!loading && <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* 统计卡片 - 优化为暗色主题，移除平均电量统计 */}
+          {!loading && <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-green-400">在线设备</CardTitle>
@@ -401,21 +401,6 @@ export default function DroneManagement(props) {
                 <CardContent>
                   <div className="text-2xl font-bold text-white">{drones.length}</div>
                   <p className="text-xs text-gray-400">已注册设备</p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-orange-400">平均电量</CardTitle>
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-full flex items-center justify-center border border-orange-500/30">
-                    <Battery className="h-4 w-4 text-orange-400" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">
-                    {drones.filter(d => d.status === 'online').length > 0 ? Math.round(drones.filter(d => d.status === 'online').reduce((sum, d) => sum + (d.battery || 0), 0) / drones.filter(d => d.status === 'online').length) : 0}%
-                  </div>
-                  <p className="text-xs text-gray-400">在线设备平均</p>
                 </CardContent>
               </Card>
             </div>}
