@@ -15,7 +15,6 @@ export function Sidebar(props) {
 
   const [currentUser, setCurrentUser] = React.useState({});
   React.useEffect(() => {
-    getCurrentUser();
     checkAuthStatus();
   }, []);
 
@@ -25,7 +24,8 @@ export function Sidebar(props) {
       const auth = tcb.auth();
 
       // 获取当前用户信息
-      const user = await  auth.getCurrentUser();
+      const user = await auth.getUserInfo();
+      setCurrentUser(user || {});
       console.log(`🚀 ~ 获取当前用户信息 checkAuthStatus ~ user-> `, user)
       const isAnonymous = user?.name?.toLocaleLowerCase() === 'anonymous';
       if (user && !isAnonymous) {
@@ -71,19 +71,10 @@ export function Sidebar(props) {
       }
     }
     };
-  
-  const getCurrentUser = async () => {
-      const tcb = await $w.cloud.getCloudInstance();
-      const auth = tcb.auth();
-
-      // 获取当前用户信息
-      const user = await auth.getCurrentUser();
-      console.log(`🚀 ~ getCurrentUser ~ user-> `, user)
-      setCurrentUser(user || {});
-  }
 
   // 安全获取用户信息 - 使用腾讯云认证的真实用户信息
   // const currentUser = $w?.auth?.currentUser || {};
+  console.log(`🚀 ~ Sidebar ~ currentUser-> `, currentUser)
   const userName = currentUser.name || '用户';
   const userNickName = currentUser.nickName || '';
   const userAvatar = currentUser.avatarUrl || currentUser.picture || null;

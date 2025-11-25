@@ -26,6 +26,7 @@ export default function Dashboard(props) {
   } = useToast();
 
   const [currentUser, setCurrentUser] = useState(null);
+  console.log(`🚀 ~ Dashboard ~ 重新执行-> `, currentUser)
 
   const getCurrentUser = async () => {
     try {
@@ -36,7 +37,7 @@ export default function Dashboard(props) {
       const user = await auth.getCurrentUser();
       const userInfo = await auth.getUserInfo();
       console.log(`🚀 ~ getCurrentUser ~ userInfo-> `, user, userInfo)
-      setCurrentUser(user || {});
+      setCurrentUser(userInfo || {});
     } catch (error) {
       console.error('获取当前用户信息失败:', error);
     }
