@@ -51,7 +51,7 @@ export default function LoginPage(props) {
         // });
         auth.toDefaultLoginPage({
             // redirect_uri: 'https://vr.genew.com',
-            redirect_uri: 'https://cloud1-1grrg77xa07045b0-1362525855.tcloudbaseapp.com/app-x5yduyum/production',
+            redirect_uri: 'https://vr-manage.genew.com/',
         });
       }
     } catch (error) {
