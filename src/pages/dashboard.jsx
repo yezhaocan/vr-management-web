@@ -30,7 +30,6 @@ export default function Dashboard(props) {
 
   const getCurrentUser = async () => {
     try {
-      window.cloudbase = $w.cloud;
       const tcb = await $w.cloud.getCloudInstance();
       const auth = tcb.auth();
       console.log(`🚀 ~ getCurrentUser ~ auth-> `, auth)
