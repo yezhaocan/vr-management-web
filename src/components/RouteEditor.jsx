@@ -14,7 +14,7 @@ import { WaypointList } from './WaypointList';
 // @ts-ignore;
 import { VoiceConfigPanel } from './VoiceConfigPanel';
 // @ts-ignore;
-import { SimpleMap } from './SimpleMap';
+import { TiandituMap } from './TiandituMap';
 
 // 获取景区中心点（从scenic_spot数据源获取）
 const getScenicCenter = async $w => {
@@ -399,6 +399,13 @@ export function RouteEditor(props) {
     }));
   };
 
+  // 处理航点点击事件
+  const handleWaypointClick = (index, waypoint) => {
+    setSelectedVoiceIndex(index);
+    // 自动切换到语音讲解标签页
+    setActiveTab('voice');
+  };
+
   // 保存航线 - 确保所有数据正确保存到数据库
   const handleSave = async () => {
     try {
@@ -515,14 +522,11 @@ export function RouteEditor(props) {
       <div>
         <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
           <CardHeader className="pb-3">
-            <CardTitle className="text-blue-400 text-sm font-semibold">地图拾取坐标</CardTitle>
-            <p className="text-gray-400 text-xs">地图中心点已设置为景区坐标</p>
+            <CardTitle className="text-blue-400 text-sm font-semibold">航线地图预览</CardTitle>
+            <p className="text-gray-400 text-xs">已添加的航点将在地图上显示并连线</p>
           </CardHeader>
           <CardContent className="p-0">
-            <SimpleMap center={scenicCenter} onLocationSelect={handleMapLocationSelect} currentLocation={{
-            lat: newWaypoint.lat,
-            lng: newWaypoint.lng
-          }} className="h-80" />
+            <TiandituMap center={scenicCenter} waypoints={formData.waypoints} onLocationSelect={handleMapLocationSelect} onWaypointClick={handleWaypointClick} className="h-80" showControls={true} readonly={false} enableClick={true} />
           </CardContent>
         </Card>
       </div>

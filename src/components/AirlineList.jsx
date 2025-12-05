@@ -1,19 +1,16 @@
 // @ts-ignore;
-import React, { useState } from 'react';
+import React from 'react';
 // @ts-ignore;
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui';
+import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from '@/components/ui';
 // @ts-ignore;
-import { Edit, Trash2, Music, Volume2, MapPin, Clock, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Edit, Trash2, Music, Volume2, MapPin, Clock, Calendar } from 'lucide-react';
 
-// @ts-ignore;
-import { AirlineMap } from './AirlineMap';
 export function AirlineList({
   routes,
   onEdit,
   onDelete,
   hasVoiceGuide
 }) {
-  const [expandedRoutes, setExpandedRoutes] = useState(new Set());
   if (!routes || routes.length === 0) {
     return <div className="text-center py-12">
         <div className="text-gray-500 text-lg">暂无航线数据</div>
@@ -26,37 +23,17 @@ export function AirlineList({
     if (!route.waypoints || !Array.isArray(route.waypoints)) return false;
     return route.waypoints.some(waypoint => waypoint.voiceGuide && waypoint.voiceGuide.enabled === true);
   };
-  const toggleRouteExpansion = routeId => {
-    setExpandedRoutes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(routeId)) {
-        newSet.delete(routeId);
-      } else {
-        newSet.add(routeId);
-      }
-      return newSet;
-    });
-  };
   return <div className="max-h-[600px] overflow-y-auto">
-      <div className="grid grid-cols-1 gap-6 p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
         {routes.map(route => {
         const routeHasVoiceGuide = checkRouteVoiceGuide(route);
         const routeHasBackgroundMusic = route.cloudStorageId && route.cloudStorageId.trim() !== '';
-        const isExpanded = expandedRoutes.has(route._id);
-        const hasWaypoints = route.waypoints && route.waypoints.length > 0;
-        return <Collapsible key={route._id} open={isExpanded} onOpenChange={() => toggleRouteExpansion(route._id)} className="bg-gray-700/30 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl hover:border-gray-500 transition-all duration-300 hover:shadow-xl">
+        return <Card key={route._id} className="bg-gray-700/30 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl hover:border-gray-500 transition-all duration-300 hover:shadow-xl">
               <CardContent className="p-6">
-                {/* 航线基本信息 */}
+                {/* 航线名称和状态标签 */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{route.name}</h3>
-                      <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm" className="p-1 h-6 w-6">
-                          {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-                        </Button>
-                      </CollapsibleTrigger>
-                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{route.name}</h3>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
                         {route.waypointCount || 0}个航点
@@ -115,18 +92,7 @@ export function AirlineList({
                   </Button>
                 </div>
               </CardContent>
-
-              {/* 展开内容 - 地图显示 */}
-              <CollapsibleContent>
-                <div className="border-t border-gray-600/50 pt-4">
-                  {hasWaypoints ? <AirlineMap route={route} className="mt-4" /> : <div className="text-center py-8 text-gray-500">
-                      <MapPin className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <div>暂无航点数据</div>
-                      <div className="text-sm text-gray-400 mt-1">请在编辑航线时添加航点坐标</div>
-                    </div>}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>;
+            </Card>;
       })}
       </div>
     </div>;
