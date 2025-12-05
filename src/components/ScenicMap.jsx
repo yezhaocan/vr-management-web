@@ -7,10 +7,60 @@ import { MapPin, Navigation, Loader } from 'lucide-react';
 
 // 本地存储键名
 const SCENIC_SPOT_STORAGE_KEY = 'scenic_spot_data';
+
+// 获取景区中心点（从scenic_spot数据源获取）
+const getScenicCenter = async $w => {
+  try {
+    // 尝试从数据库获取最新的景区数据
+    const result = await $w.cloud.callDataSource({
+      dataSourceName: 'scenic_spot',
+      methodName: 'wedaGetRecordsV2',
+      params: {
+        select: {
+          $master: true
+        },
+        filter: {
+          where: {}
+        },
+        pageSize: 1,
+        pageNumber: 1,
+        orderBy: [{
+          createdAt: 'desc'
+        }],
+        getCount: true
+      }
+    });
+    if (result.records && result.records.length > 0) {
+      const scenicSpot = result.records[0];
+      if (scenicSpot.latitude && scenicSpot.longitude) {
+        return [scenicSpot.latitude, scenicSpot.longitude];
+      }
+    }
+
+    // 如果没有景区数据，尝试从本地存储获取
+    try {
+      const storedData = localStorage.getItem(SCENIC_SPOT_STORAGE_KEY);
+      if (storedData) {
+        const scenicData = JSON.parse(storedData);
+        if (scenicData.latitude && scenicData.longitude) {
+          return [scenicData.latitude, scenicData.longitude];
+        }
+      }
+    } catch (error) {
+      console.warn('从本地存储获取景区数据失败:', error);
+    }
+  } catch (error) {
+    console.error('获取景区中心点失败:', error);
+  }
+
+  // 默认使用北京天安门作为中心点
+  return [39.9042, 116.4074];
+};
 export function ScenicMap({
   onPositionSelect,
   initialPosition,
-  disabled = false
+  disabled = false,
+  $w
 }) {
   const {
     toast
@@ -25,6 +75,7 @@ export function ScenicMap({
   });
   const [marker, setMarker] = useState(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [scenicCenter, setScenicCenter] = useState([39.9042, 116.4074]);
 
   // 天地图API密钥
   const TIAN_DI_TU_KEY = 'eaa119242fd58a04007ad66abc2546f7';
@@ -39,6 +90,27 @@ export function ScenicMap({
       return null;
     }
   };
+
+  // 获取景区中心点
+  useEffect(() => {
+    const fetchScenicCenter = async () => {
+      try {
+        const centerPoint = await getScenicCenter($w);
+        setScenicCenter(centerPoint);
+
+        // 如果没有初始位置，使用景区中心点
+        if (!initialPosition) {
+          setSelectedPosition({
+            lat: centerPoint[0],
+            lng: centerPoint[1]
+          });
+        }
+      } catch (error) {
+        console.error('获取景区中心点失败:', error);
+      }
+    };
+    fetchScenicCenter();
+  }, [$w, initialPosition]);
   useEffect(() => {
     setSelectedPosition(initialPosition);
   }, [initialPosition]);
@@ -90,11 +162,10 @@ export function ScenicMap({
   useEffect(() => {
     if (!mapContainerRef.current || !scriptLoaded || mapLoaded) return;
     try {
-      // 获取景区数据作为地图中心点
-      const scenicData = getScenicDataFromLocal();
+      // 使用景区数据作为地图中心点
       let mapCenter;
-      if (scenicData && scenicData.latitude && scenicData.longitude) {
-        mapCenter = new T.LngLat(scenicData.longitude, scenicData.latitude);
+      if (scenicCenter && scenicCenter[0] && scenicCenter[1]) {
+        mapCenter = new T.LngLat(scenicCenter[1], scenicCenter[0]);
       } else if (selectedPosition && selectedPosition.lat && selectedPosition.lng) {
         mapCenter = new T.LngLat(selectedPosition.lng, selectedPosition.lat);
       } else {
@@ -167,7 +238,7 @@ export function ScenicMap({
         }
       }
     };
-  }, [scriptLoaded, mapLoaded, disabled]);
+  }, [scriptLoaded, mapLoaded, disabled, scenicCenter]);
 
   // 添加地图标记 - 使用React状态管理
   const addMarker = (position, mapInstance = mapInstanceRef.current) => {
@@ -256,6 +327,13 @@ export function ScenicMap({
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 支持手动输入坐标或点击地图拾取
+              </div>
+            </div>}
+            
+          {scenicCenter && <div className="mt-2 pt-2 border-t border-gray-600">
+              <div className="text-xs text-cyan-400 flex items-center space-x-1">
+                <Navigation className="h-3 w-3" />
+                <span>景区中心：纬度 {scenicCenter[0].toFixed(6)}，经度 {scenicCenter[1].toFixed(6)}</span>
               </div>
             </div>}
         </div>

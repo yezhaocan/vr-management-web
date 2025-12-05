@@ -526,7 +526,7 @@ export function RouteEditor(props) {
             <p className="text-gray-400 text-xs">已添加的航点将在地图上显示并连线</p>
           </CardHeader>
           <CardContent className="p-0">
-            <TiandituMap center={scenicCenter} waypoints={formData.waypoints} onLocationSelect={handleMapLocationSelect} onWaypointClick={handleWaypointClick} className="h-80" showControls={true} readonly={false} enableClick={true} />
+            <TiandituMap center={scenicCenter} waypoints={formData.waypoints} onLocationSelect={handleMapLocationSelect} onWaypointClick={handleWaypointClick} className="h-80" showControls={true} readonly={false} enableClick={true} $w={$w} />
           </CardContent>
         </Card>
       </div>
