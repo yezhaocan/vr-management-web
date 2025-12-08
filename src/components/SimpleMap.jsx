@@ -80,13 +80,14 @@ export function SimpleMap({
       mapInstance.addControl(new T.Control.Zoom());
       mapInstance.addControl(new T.Control.MapType());
 
-      // 地图点击事件
+      // 地图点击事件 - 修复经纬度精度问题
       const handleMapClick = e => {
         try {
           const lngLat = e.lnglat;
+          // 确保经纬度精确到8位小数
           const location = {
-            lat: lngLat.lat,
-            lng: lngLat.lng
+            lat: parseFloat(lngLat.lat.toFixed(8)),
+            lng: parseFloat(lngLat.lng.toFixed(8))
           };
           setSelectedLocation(location);
           onLocationSelect && onLocationSelect(location);
@@ -144,7 +145,7 @@ export function SimpleMap({
   return <div className={`w-full ${className} bg-gray-800 rounded-lg border border-gray-600 overflow-hidden`}>
       <div className="bg-blue-900/20 border-b border-blue-500/30 p-3">
         <p className="text-blue-300 text-sm">
-          <strong>操作说明：</strong>左键点击地图拾取坐标
+          <strong>操作说明：</strong>左键点击地图拾取坐标（精度：8位小数）
         </p>
       </div>
       
@@ -157,7 +158,7 @@ export function SimpleMap({
       {selectedLocation && <div className="bg-blue-900/20 border-t border-blue-500/30 p-3">
           <div className="flex items-center space-x-2 text-blue-400 text-sm">
             <MapPin className="h-4 w-4" />
-            <span>当前坐标：纬度 {selectedLocation.lat.toFixed(6)}，经度 {selectedLocation.lng.toFixed(6)}</span>
+            <span>当前坐标：纬度 {selectedLocation.lat.toFixed(8)}，经度 {selectedLocation.lng.toFixed(8)}</span>
           </div>
         </div>}
     </div>;

@@ -8,50 +8,7 @@ import { MapPin, Navigation, ZoomIn, ZoomOut, LocateFixed, X, Search, RefreshCw 
 const TIAN_DI_TU_KEY = 'eaa119242fd58a04007ad66abc2546f7';
 
 // 获取景区中心点（从scenic_spot数据源获取）
-const getScenicCenter = async $w => {
-  try {
-    // 尝试从数据库获取最新的景区数据
-    const result = await $w.cloud.callDataSource({
-      dataSourceName: 'scenic_spot',
-      methodName: 'wedaGetRecordsV2',
-      params: {
-        select: {
-          $master: true
-        },
-        filter: {
-          where: {}
-        },
-        pageSize: 1,
-        pageNumber: 1,
-        orderBy: [{
-          createdAt: 'desc'
-        }],
-        getCount: true
-      }
-    });
-    if (result.records && result.records.length > 0) {
-      const scenicSpot = result.records[0];
-      if (scenicSpot.latitude && scenicSpot.longitude) {
-        return [scenicSpot.latitude, scenicSpot.longitude];
-      }
-    }
-
-    // 如果没有景区数据，尝试从本地存储获取
-    try {
-      const storedData = localStorage.getItem('scenic_spot_data');
-      if (storedData) {
-        const scenicData = JSON.parse(storedData);
-        if (scenicData.latitude && scenicData.longitude) {
-          return [scenicData.latitude, scenicData.longitude];
-        }
-      }
-    } catch (error) {
-      console.warn('从本地存储获取景区数据失败:', error);
-    }
-  } catch (error) {
-    console.error('获取景区中心点失败:', error);
-  }
-
+const getScenicCenter = () => {
   // 默认使用北京天安门作为中心点
   return [39.9042, 116.4074];
 };
@@ -102,7 +59,7 @@ const loadTiandituAPI = () => {
   });
 };
 export function TiandituMap({
-  center,
+  center = getScenicCenter(),
   zoom = 11,
   waypoints = [],
   onLocationSelect,
@@ -110,8 +67,7 @@ export function TiandituMap({
   showControls = true,
   className = "h-96",
   readonly = false,
-  enableClick = true,
-  $w
+  enableClick = true
 }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -123,25 +79,6 @@ export function TiandituMap({
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [scenicCenter, setScenicCenter] = useState([39.9042, 116.4074]);
-
-  // 获取景区中心点
-  useEffect(() => {
-    const fetchScenicCenter = async () => {
-      try {
-        const centerPoint = await getScenicCenter($w);
-        setScenicCenter(centerPoint);
-
-        // 如果没有传入center参数，使用景区中心点
-        if (!center) {
-          setCurrentCenter(centerPoint);
-        }
-      } catch (error) {
-        console.error('获取景区中心点失败:', error);
-      }
-    };
-    fetchScenicCenter();
-  }, [$w, center]);
 
   // 初始化天地图
   useEffect(() => {
@@ -170,9 +107,7 @@ export function TiandituMap({
         }
       }
     };
-    if (scenicCenter) {
-      initializeMap();
-    }
+    initializeMap();
 
     // 清理函数
     return () => {
@@ -185,7 +120,7 @@ export function TiandituMap({
         console.error('清理地图时出错:', error);
       }
     };
-  }, [retryCount, scenicCenter]);
+  }, [retryCount]);
 
   // 重试加载
   const handleRetry = () => {
@@ -204,7 +139,7 @@ export function TiandituMap({
         projection: 'EPSG:4326'
       });
 
-      // 设置中心点和缩放级别 - 使用景区中心点
+      // 设置中心点和缩放级别
       const centerPoint = new window.T.LngLat(currentCenter[1], currentCenter[0]);
       mapInstance.current.centerAndZoom(centerPoint, currentZoom);
 
@@ -365,9 +300,9 @@ export function TiandituMap({
   // 重置到景区中心
   const handleLocate = () => {
     if (mapInstance.current && checkTiandituLoaded()) {
-      const centerPoint = new window.T.LngLat(scenicCenter[1], scenicCenter[0]);
+      const centerPoint = new window.T.LngLat(center[1], center[0]);
       mapInstance.current.centerAndZoom(centerPoint, zoom);
-      setCurrentCenter(scenicCenter);
+      setCurrentCenter(center);
       setCurrentZoom(zoom);
     }
   };
@@ -444,29 +379,17 @@ export function TiandituMap({
           <p className="text-slate-400">
             缩放: {currentZoom}
           </p>
-          <p className="text-cyan-400 text-xs">
-            景区中心: {scenicCenter[0].toFixed(4)}, {scenicCenter[1].toFixed(4)}
-          </p>
         </div>}
     </div>;
 }
 
 // 简化版地图组件（用于弹窗）
 export function TiandituMapLite({
-  center,
+  center = getScenicCenter(),
   onLocationSelect,
-  className = "h-64",
-  $w
+  className = "h-64"
 }) {
   const [showMap, setShowMap] = useState(false);
-  const [scenicCenter, setScenicCenter] = useState([39.9042, 116.4074]);
-  useEffect(() => {
-    const fetchScenicCenter = async () => {
-      const centerPoint = await getScenicCenter($w);
-      setScenicCenter(centerPoint);
-    };
-    fetchScenicCenter();
-  }, [$w]);
   const handleLocationSelect = location => {
     onLocationSelect(location);
     setShowMap(false);
@@ -491,7 +414,7 @@ export function TiandituMapLite({
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <TiandituMap center={center || scenicCenter} onLocationSelect={handleLocationSelect} className="h-96" showControls={true} $w={$w} />
+            <TiandituMap center={center} onLocationSelect={handleLocationSelect} className="h-96" showControls={true} />
           </div>
         </div>}
     </div>;
@@ -503,18 +426,9 @@ export function MapPickerModal({
   onClose,
   onLocationSelect,
   currentLocation,
-  center,
-  $w
+  center = getScenicCenter()
 }) {
   const [selectedLocation, setSelectedLocation] = useState(currentLocation || center);
-  const [scenicCenter, setScenicCenter] = useState([39.9042, 116.4074]);
-  useEffect(() => {
-    const fetchScenicCenter = async () => {
-      const centerPoint = await getScenicCenter($w);
-      setScenicCenter(centerPoint);
-    };
-    fetchScenicCenter();
-  }, [$w]);
   const handleLocationSelect = location => {
     setSelectedLocation(location);
     onLocationSelect(location);
@@ -534,7 +448,7 @@ export function MapPickerModal({
             当前选择: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
           </p>
         </div>
-        <TiandituMap center={center || scenicCenter} onLocationSelect={handleLocationSelect} className="h-96" showControls={true} $w={$w} />
+        <TiandituMap center={center} onLocationSelect={handleLocationSelect} className="h-96" showControls={true} />
       </div>
     </div>;
 }
