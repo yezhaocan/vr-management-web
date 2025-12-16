@@ -1,7 +1,7 @@
 // @ts-ignore;
 import React, { useState, useEffect } from 'react';
 // @ts-ignore;
-import { Button, Card, CardContent, CardHeader, CardTitle, useToast, Badge } from '@/components/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, useToast, Badge, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui';
 // @ts-ignore;
 import { Plus, Edit, Trash2, Play, Music, Volume2 } from 'lucide-react';
 
@@ -18,6 +18,8 @@ export default function RoutePage(props) {
   const [showEditor, setShowEditor] = useState(false);
   const [editingRoute, setEditingRoute] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [routeToDelete, setRouteToDelete] = useState(null);
   const {
     toast
   } = useToast();
@@ -68,8 +70,15 @@ export default function RoutePage(props) {
     setShowEditor(true);
   };
 
-  // 删除航线
-  const handleDeleteRoute = async route => {
+  // 打开删除确认对话框
+  const handleDeleteRoute = route => {
+    setRouteToDelete(route);
+    setDeleteConfirmOpen(true);
+  };
+
+  // 确认删除航线
+  const confirmDeleteRoute = async () => {
+    if (!routeToDelete) return;
     try {
       const result = await $w.cloud.callDataSource({
         dataSourceName: 'airline',
@@ -78,7 +87,7 @@ export default function RoutePage(props) {
           filter: {
             where: {
               _id: {
-                $eq: route._id
+                $eq: routeToDelete._id
               }
             }
           }
@@ -87,7 +96,7 @@ export default function RoutePage(props) {
       if (result.count > 0) {
         toast({
           title: '删除成功',
-          description: '航线已删除',
+          description: `航线"${routeToDelete.name}"已删除`,
           variant: 'default'
         });
         loadRoutes();
@@ -99,7 +108,16 @@ export default function RoutePage(props) {
         description: error.message || '请稍后重试',
         variant: 'destructive'
       });
+    } finally {
+      setDeleteConfirmOpen(false);
+      setRouteToDelete(null);
     }
+  };
+
+  // 取消删除
+  const cancelDelete = () => {
+    setDeleteConfirmOpen(false);
+    setRouteToDelete(null);
   };
 
   // 处理编辑器关闭
@@ -210,6 +228,30 @@ export default function RoutePage(props) {
 
         {/* 航线编辑器弹窗 */}
         {showEditor && <RouteEditor route={editingRoute} onClose={handleEditorClose} onSuccess={handleEditorSuccess} $w={$w} />}
+
+        {/* 删除确认对话框 */}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent className="bg-gray-800 border border-gray-600">
+            <DialogHeader>
+              <DialogTitle className="text-white">确认删除航线</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                确定要删除航线 "{routeToDelete?.name}" 吗？此操作不可恢复。
+                {routeToDelete?.waypointCount && <span className="block mt-2 text-yellow-400 text-sm">
+                    该航线包含 {routeToDelete.waypointCount} 个航点，删除后将无法恢复。
+                  </span>}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={cancelDelete} className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
+                取消
+              </Button>
+              <Button onClick={confirmDeleteRoute} className="bg-red-500 hover:bg-red-600 text-white">
+                <Trash2 className="w-4 h-4 mr-2" />
+                确认删除
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>;
 }
