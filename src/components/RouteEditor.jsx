@@ -42,6 +42,25 @@ const getScenicCenter = async $w => {
   return [39.9042, 116.4074];
 };
 
+// 坐标精度验证函数 - 确保8位小数精度
+const validateCoordinate = (value, type) => {
+  const num = parseFloat(value);
+  if (isNaN(num)) {
+    throw new Error(`无效的${type}坐标值`);
+  }
+
+  // 验证坐标范围
+  if (type === '纬度' && (num < -90 || num > 90)) {
+    throw new Error('纬度范围应在-90到90之间');
+  }
+  if (type === '经度' && (num < -180 || num > 180)) {
+    throw new Error('经度范围应在-180到180之间');
+  }
+
+  // 返回8位小数精度
+  return parseFloat(num.toFixed(8));
+};
+
 // 背景音乐上传组件
 function BackgroundMusicUploader({
   cloudStorageId,
@@ -242,8 +261,10 @@ export function RouteEditor(props) {
             flightSpeed: wp.flightSpeed || 5,
             hoverDuration: wp.hoverDuration || 0,
             altitude: wp.altitude || 100,
-            lat: wp.lat || 39.9042,
-            lng: wp.lng || 116.4074,
+            lat: validateCoordinate(wp.lat || 39.9042, '纬度'),
+            // 确保8位小数精度
+            lng: validateCoordinate(wp.lng || 116.4074, '经度'),
+            // 确保8位小数精度
             voiceGuide: {
               enabled: voiceGuide.enabled || false,
               text: voiceGuide.text || '',
@@ -304,9 +325,9 @@ export function RouteEditor(props) {
     }));
   };
 
-  // 添加航点
-  const addWaypoint = () => {
-    if (!newWaypoint.name.trim()) {
+  // 添加航点 - 确保8位小数精度
+  const addWaypoint = validatedWaypoint => {
+    if (!validatedWaypoint.name.trim()) {
       toast({
         title: '提示',
         description: '请输入航点名称',
@@ -316,12 +337,14 @@ export function RouteEditor(props) {
     }
     const waypoint = {
       id: Date.now(),
-      name: newWaypoint.name,
-      flightSpeed: Number(newWaypoint.flightSpeed),
-      hoverDuration: Number(newWaypoint.hoverDuration),
-      altitude: Number(newWaypoint.altitude),
-      lat: Number(newWaypoint.lat),
-      lng: Number(newWaypoint.lng),
+      name: validatedWaypoint.name,
+      flightSpeed: Number(validatedWaypoint.flightSpeed),
+      hoverDuration: Number(validatedWaypoint.hoverDuration),
+      altitude: Number(validatedWaypoint.altitude),
+      lat: validatedWaypoint.lat,
+      // 已经验证过的8位小数精度
+      lng: validatedWaypoint.lng,
+      // 已经验证过的8位小数精度
       voiceGuide: {
         enabled: false,
         text: '',
@@ -401,13 +424,28 @@ export function RouteEditor(props) {
     }
   };
 
-  // 处理地图选择
+  // 处理地图选择 - 确保8位小数精度
   const handleMapLocationSelect = location => {
-    setNewWaypoint(prev => ({
-      ...prev,
-      lat: location.lat,
-      lng: location.lng
-    }));
+    try {
+      const validatedLat = validateCoordinate(location.lat, '纬度');
+      const validatedLng = validateCoordinate(location.lng, '经度');
+      setNewWaypoint(prev => ({
+        ...prev,
+        lat: validatedLat,
+        lng: validatedLng
+      }));
+      toast({
+        title: '坐标已更新',
+        description: `纬度: ${validatedLat.toFixed(8)}, 经度: ${validatedLng.toFixed(8)}`,
+        variant: 'default'
+      });
+    } catch (error) {
+      toast({
+        title: '坐标验证失败',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
   };
 
   // 保存航线 - 确保所有数据正确保存到数据库
@@ -430,18 +468,19 @@ export function RouteEditor(props) {
         return;
       }
 
-      // 修复：准备保存数据，确保包含所有航点语音配置和背景音乐云存储ID
-      const saveData = {
-        name: formData.name,
-        description: formData.description,
-        estimated_duration: Number(formData.estimated_duration),
-        waypoints: formData.waypoints.map((waypoint, index) => ({
+      // 验证所有航点的坐标精度
+      const validatedWaypoints = formData.waypoints.map((waypoint, index) => {
+        const validatedLat = validateCoordinate(waypoint.lat, '纬度');
+        const validatedLng = validateCoordinate(waypoint.lng, '经度');
+        return {
           name: waypoint.name,
           flightSpeed: waypoint.flightSpeed,
           hoverDuration: waypoint.hoverDuration,
           altitude: waypoint.altitude,
-          lat: waypoint.lat,
-          lng: waypoint.lng,
+          lat: validatedLat,
+          // 确保8位小数精度
+          lng: validatedLng,
+          // 确保8位小数精度
           voiceGuide: {
             enabled: waypoint.voiceGuide.enabled,
             text: waypoint.voiceGuide.text,
@@ -453,18 +492,26 @@ export function RouteEditor(props) {
             // 修复：不保存临时链接，只保存云存储ID
             subtitleFileId: waypoint.voiceGuide.subtitleFileId // 新增：保存字幕文件ID
           }
-        })),
+        };
+      });
+
+      // 修复：准备保存数据，确保包含所有航点语音配置和背景音乐云存储ID
+      const saveData = {
+        name: formData.name,
+        description: formData.description,
+        estimated_duration: Number(formData.estimated_duration),
+        waypoints: validatedWaypoints,
         waypointCount: formData.waypoints.length,
         hasVoiceGuide: formData.hasVoiceGuide,
         hasBackgroundMusic: formData.hasBackgroundMusic,
         cloudStorageId: formData.cloudStorageId
       };
       console.log('保存数据:', saveData);
-      console.log('航点语音配置检查:', formData.waypoints.map((wp, i) => ({
+      console.log('航点坐标精度验证:', validatedWaypoints.map((wp, i) => ({
         index: i,
         name: wp.name,
-        audioFileId: wp.voiceGuide.audioFileId,
-        subtitleFileId: wp.voiceGuide.subtitleFileId
+        lat: wp.lat.toFixed(8),
+        lng: wp.lng.toFixed(8)
       })));
       if (route) {
         // 更新现有航线
@@ -485,7 +532,7 @@ export function RouteEditor(props) {
         console.log('更新航线结果:', result);
         toast({
           title: '更新成功',
-          description: '航线、语音文件ID、字幕文件ID和背景音乐云存储ID已更新到数据库',
+          description: '航线、语音文件ID、字幕文件ID和背景音乐云存储ID已更新到数据库，坐标精度: 8位小数',
           variant: 'default'
         });
       } else {
@@ -500,7 +547,7 @@ export function RouteEditor(props) {
         console.log('创建航线结果:', result);
         toast({
           title: '创建成功',
-          description: '航线、语音文件ID、字幕文件ID和背景音乐云存储ID已保存到数据库',
+          description: '航线、语音文件ID、字幕文件ID和背景音乐云存储ID已保存到数据库，坐标精度: 8位小数',
           variant: 'default'
         });
       }
@@ -528,7 +575,7 @@ export function RouteEditor(props) {
         <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
           <CardHeader className="pb-3">
             <CardTitle className="text-blue-400 text-sm font-semibold">地图拾取坐标</CardTitle>
-            <p className="text-gray-400 text-xs">地图中心点已设置为景区坐标</p>
+            <p className="text-gray-400 text-xs">地图中心点已设置为景区坐标，坐标精度: 8位小数</p>
           </CardHeader>
           <CardContent className="p-0">
             <SimpleMap center={scenicCenter} onLocationSelect={handleMapLocationSelect} currentLocation={{

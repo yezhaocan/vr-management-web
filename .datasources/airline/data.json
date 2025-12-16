@@ -1,3 +1,210 @@
 
-[]
+[
+  {
+    "_id": "1",
+    "name": "西湖环湖航线",
+    "description": "环绕西湖的经典航线，途经断桥残雪、雷峰塔等著名景点",
+    "waypointCount": 3,
+    "estimated_duration": 45,
+    "waypoints": [
+      {
+        "name": "起点",
+        "lat": 30.24441234,
+        "lng": 120.13781234,
+        "flightSpeed": 5,
+        "hoverDuration": 0,
+        "altitude": 100,
+        "voiceGuide": {
+          "enabled": false,
+          "text": "",
+          "character": "",
+          "voice": "",
+          "triggerType": "",
+          "audioFileId": "",
+          "subtitleFileId": ""
+        }
+      },
+      {
+        "name": "断桥残雪",
+        "lat": 30.24501234,
+        "lng": 120.14001234,
+        "flightSpeed": 8,
+        "hoverDuration": 30,
+        "altitude": 120,
+        "voiceGuide": {
+          "enabled": true,
+          "text": "这里是著名的断桥残雪，是西湖十景之一，冬季雪后桥身若隐若现，宛如断了一般。",
+          "character": "导游小姐姐",
+          "voice": "温柔女声",
+          "triggerType": "到达航点",
+          "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/duanqiao.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/duanqiao.srt"
+        }
+      },
+      {
+        "name": "雷峰塔",
+        "lat": 30.24601234,
+        "lng": 120.14201234,
+        "flightSpeed": 6,
+        "hoverDuration": 45,
+        "altitude": 150,
+        "voiceGuide": {
+          "enabled": true,
+          "text": "雷峰塔始建于北宋，是西湖的标志性建筑之一，民间传说中白娘子被镇压于此。",
+          "character": "历史讲解员",
+          "voice": "沉稳男声",
+          "triggerType": "到达后5秒",
+          "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/leifengta.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/leifengta.srt"
+        }
+      }
+    ],
+    "cloudStorageId": "cloud://example-12345.6578-example-12345-1324567890/music/xihu-chunxiao.mp3",
+    "createdAt": 1730390400000,
+    "updatedAt": 1730390400000
+  },
+  {
+    "_id": "2",
+    "name": "黄山主峰航线",
+    "description": "黄山主峰区域的航线，可俯瞰云海和奇松怪石",
+    "waypointCount": 3,
+    "estimated_duration": 60,
+    "waypoints": [
+      {
+        "name": "起点",
+        "lat": 30.13331234,
+        "lng": 118.16671234,
+        "flightSpeed": 4,
+        "hoverDuration": 0,
+        "altitude": 1800,
+        "voiceGuide": {
+          "enabled": false,
+          "text": "",
+          "character": "",
+          "voice": "",
+          "triggerType": "",
+          "audioFileId": "",
+          "subtitleFileId": ""
+        }
+      },
+      {
+        "name": "光明顶",
+        "lat": 30.13501234,
+        "lng": 118.16801234,
+        "flightSpeed": 7,
+        "hoverDuration": 60,
+        "altitude": 1850,
+        "voiceGuide": {
+          "enabled": true,
+          "text": "光明顶是黄山的主峰之一，海拔1860米，是观赏日出、云海的绝佳位置。",
+          "character": "登山向导",
+          "voice": "活力男声",
+          "triggerType": "到达航点",
+          "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/guangmingding.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/guangmingding.srt"
+        }
+      },
+      {
+        "name": "迎客松",
+        "lat": 30.13701234,
+        "lng": 118.17001234,
+        "flightSpeed": 5,
+        "hoverDuration": 90,
+        "altitude": 1820,
+        "voiceGuide": {
+          "enabled": true,
+          "text": "迎客松是黄山的象征，树龄已有800多年，姿态优美，仿佛在欢迎远道而来的客人。",
+          "character": "植物学家",
+          "voice": "知性女声",
+          "triggerType": "到达后3秒",
+          "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/yingkesong.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/yingkesong.srt"
+        }
+      }
+    ],
+    "cloudStorageId": "cloud://example-12345.6578-example-12345-1324567890/music/huangshan-yunhai.mp3",
+    "createdAt": 1730476800000,
+    "updatedAt": 1730476800000
+  },
+  {
+    "_id": "3",
+    "name": "张家界峰林航线",
+    "description": "张家界国家森林公园的峰林景观航线，可俯瞰独特的石英砂岩峰林地貌",
+    "waypointCount": 4,
+    "estimated_duration": 75,
+    "waypoints": [
+      {
+        "name": "起点",
+        "lat": 29.35441234,
+        "lng": 110.54221234,
+        "flightSpeed": 6,
+        "hoverDuration": 0,
+        "altitude": 1200,
+        "voiceGuide": {
+          "enabled": false,
+          "text": "",
+          "character": "",
+          "voice": "",
+          "triggerType": "",
+          "audioFileId": "",
+          "subtitleFileId": ""
+        }
+      },
+      {
+        "name": "袁家界",
+        "lat": 29.35601234,
+        "lng": 110.54401234,
+        "flightSpeed": 9,
+        "hoverDuration": 45,
+        "altitude": 1250,
+        "voiceGuide": {
+          "enabled": true,
+          "text": "袁家界是张家界的核心景区，电影《阿凡达》中的哈利路亚山就取景于此。",
+          "character": "电影解说员",
+          "voice": "磁性男声",
+          "triggerType": "到达航点",
+          "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/yuanjiajie.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/yuanjiajie.srt"
+        }
+      },
+      {
+        "name": "天子山",
+        "lat": 29.35801234,
+        "lng": 110.54601234,
+        "flightSpeed": 7,
+        "hoverDuration": 60,
+        "altitude": 1300,
+        "voiceGuide": {
+          "enabled": true,
+          "text": "天子山因明初土家族领袖向大坤在此举义旗而得名，峰林景观壮丽无比。",
+          "character": "历史学者",
+          "voice": "沉稳男声",
+          "triggerType": "到达后5秒",
+          "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/tianzishan.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/tianzishan.srt"
+        }
+      },
+      {
+        "name": "黄石寨",
+        "lat": 29.36001234,
+        "lng": 110.54801234,
+        "flightSpeed": 5,
+        "hoverDuration": 90,
+        "altitude": 1280,
+        "voiceGuide": {
+          "enabled": true,
+          "text": "黄石寨是张家界最大的凌空观景台，有\"不上黄石寨，枉到张家界\"之说。",
+          "character": "旅游达人",
+          "voice": "亲切女声",
+          "triggerType": "到达航点",
+          "audioFileId": "cloud://example-12345.6578-example-12345-1324567890/audio/huangshizhai.mp3",
+          "subtitleFileId": "cloud://example-12345.6578-example-12345-1324567890/subtitles/huangshizhai.srt"
+        }
+      }
+    ],
+    "cloudStorageId": "",
+    "createdAt": 1730563200000,
+    "updatedAt": 1730563200000
+  }
+]
   

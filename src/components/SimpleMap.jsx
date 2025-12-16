@@ -74,6 +74,25 @@ export function SimpleMap({
     });
   };
 
+  // 坐标精度验证函数 - 确保8位小数精度
+  const validateCoordinate = (value, type) => {
+    const num = parseFloat(value);
+    if (isNaN(num)) {
+      throw new Error(`无效的${type}坐标值`);
+    }
+
+    // 验证坐标范围
+    if (type === '纬度' && (num < -90 || num > 90)) {
+      throw new Error('纬度范围应在-90到90之间');
+    }
+    if (type === '经度' && (num < -180 || num > 180)) {
+      throw new Error('经度范围应在-180到180之间');
+    }
+
+    // 返回8位小数精度
+    return parseFloat(num.toFixed(8));
+  };
+
   // 绘制航点连线
   const drawWaypointConnections = (mapInstance, waypoints) => {
     if (!mapInstance || !waypoints || waypoints.length < 2) {
@@ -199,12 +218,12 @@ export function SimpleMap({
         position: 'topright'
       }).addTo(mapInstance);
 
-      // 地图点击事件
+      // 地图点击事件 - 确保8位小数精度
       const handleMapClick = e => {
         try {
           const location = {
-            lat: parseFloat(e.latlng.lat.toFixed(8)),
-            lng: parseFloat(e.latlng.lng.toFixed(8))
+            lat: validateCoordinate(e.latlng.lat.toFixed(8), '纬度'),
+            lng: validateCoordinate(e.latlng.lng.toFixed(8), '经度')
           };
           setSelectedLocation(location);
           onLocationSelect && onLocationSelect(location);
