@@ -17,7 +17,8 @@ function TipsForm({
   onSave,
   onCancel,
   open,
-  onOpenChange
+  onOpenChange,
+  existingTips = []
 }) {
   const {
     toast
@@ -52,6 +53,21 @@ function TipsForm({
     value: 'videoRecordingExperience',
     label: '限定体验视频页'
   }];
+
+  // 获取已使用的页面类型
+  const getUsedPageTypes = () => {
+    return existingTips.filter(t => t._id !== tip?._id) // 排除当前编辑的tip
+    .map(t => t.type).filter(Boolean);
+  };
+
+  // 获取可用的页面类型选项
+  const getAvailablePageTypes = () => {
+    const usedTypes = getUsedPageTypes();
+    return pageTypes.map(pageType => ({
+      ...pageType,
+      disabled: usedTypes.includes(pageType.value)
+    }));
+  };
 
   // 获取文件临时链接
   const getFileUrl = async fileId => {
@@ -190,7 +206,18 @@ function TipsForm({
     if (!formData.type) {
       toast({
         title: '表单验证失败',
-        description: '请选择Tips类型',
+        description: '请选择页面类型',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // 检查页面类型是否已被使用
+    const usedTypes = getUsedPageTypes();
+    if (usedTypes.includes(formData.type)) {
+      toast({
+        title: '页面类型已被使用',
+        description: '该页面类型已被其他Tips使用，请选择其他类型',
         variant: 'destructive'
       });
       return;
@@ -320,6 +347,7 @@ function TipsForm({
         </div>
       </div>;
   };
+  const availablePageTypes = getAvailablePageTypes();
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
         <DialogHeader>
@@ -343,8 +371,9 @@ function TipsForm({
                   <SelectValue placeholder="请选择页面类型" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
-                  {pageTypes.map(pageType => <SelectItem key={pageType.value} value={pageType.value}>
+                  {availablePageTypes.map(pageType => <SelectItem key={pageType.value} value={pageType.value} disabled={pageType.disabled} className="text-white hover:bg-gray-700 data-[disabled]:text-gray-500 data-[disabled]:cursor-not-allowed">
                       {pageType.label}
+                      {pageType.disabled && <span className="ml-2 text-gray-500 text-xs">(已使用)</span>}
                     </SelectItem>)}
                 </SelectContent>
               </Select>
@@ -482,7 +511,7 @@ export default function TipsPage(props) {
     return pageType ? pageType.label : type;
   };
 
-  // 获取类型徽章
+  // 获取类型徽章 - 修改文字颜色为白色
   const getTypeBadge = type => {
     const variants = {
       'homePage': 'default',
@@ -492,7 +521,9 @@ export default function TipsPage(props) {
       'limitedExperience': 'default',
       'videoRecordingExperience': 'secondary'
     };
-    return <Badge variant={variants[type] || 'secondary'}>{getPageTypeLabel(type)}</Badge>;
+    return <Badge variant={variants[type] || 'secondary'} className="text-white">
+        {getPageTypeLabel(type)}
+      </Badge>;
   };
 
   // 处理删除Tips - 使用真实数据模型
@@ -638,7 +669,7 @@ export default function TipsPage(props) {
             </div>}
 
           {/* Tips表单弹窗 */}
-          <TipsForm tip={editingTip} $w={$w} onSave={handleFormSuccess} onCancel={handleFormCancel} open={showForm} onOpenChange={setShowForm} />
+          <TipsForm tip={editingTip} $w={$w} onSave={handleFormSuccess} onCancel={handleFormCancel} open={showForm} onOpenChange={setShowForm} existingTips={tipsList} />
 
           {/* 删除确认弹窗 */}
           <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
