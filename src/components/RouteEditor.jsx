@@ -212,6 +212,7 @@ export function RouteEditor(props) {
   });
   const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(null);
   const [scenicCenter, setScenicCenter] = useState([39.9042, 116.4074]);
+  const [clearConnectionsTrigger, setClearConnectionsTrigger] = useState(false);
   const {
     toast
   } = useToast();
@@ -357,6 +358,16 @@ export function RouteEditor(props) {
       ...prev,
       name: `航点${updatedWaypoints.length + 1}`
     }));
+  };
+
+  // 清除所有连线
+  const handleClearConnections = () => {
+    setClearConnectionsTrigger(prev => !prev);
+    toast({
+      title: '连线已清除',
+      description: '所有航点连线已从地图上移除',
+      variant: 'default'
+    });
   };
 
   // 更新航点语音配置 - 修复：确保audioFileId和subtitleFileId正确保存
@@ -509,7 +520,8 @@ export function RouteEditor(props) {
       <div className="space-y-4">
         <WaypointForm newWaypoint={newWaypoint} onWaypointChange={handleWaypointChange} onAddWaypoint={addWaypoint} scenicCenter={scenicCenter} />
         <div className="h-64 overflow-y-auto border border-gray-600 rounded-lg">
-          <WaypointList waypoints={formData.waypoints} onDeleteWaypoint={deleteWaypoint} onSelectWaypoint={setSelectedVoiceIndex} selectedVoiceIndex={selectedVoiceIndex} />
+          <WaypointList waypoints={formData.waypoints} onDeleteWaypoint={deleteWaypoint} onSelectWaypoint={setSelectedVoiceIndex} selectedVoiceIndex={selectedVoiceIndex} locked={true} // 启用列表锁定功能
+        />
         </div>
       </div>
       <div>
@@ -522,7 +534,7 @@ export function RouteEditor(props) {
             <SimpleMap center={scenicCenter} onLocationSelect={handleMapLocationSelect} currentLocation={{
             lat: newWaypoint.lat,
             lng: newWaypoint.lng
-          }} className="h-80" />
+          }} waypoints={formData.waypoints} onClearConnections={clearConnectionsTrigger} className="h-80" />
           </CardContent>
         </Card>
       </div>
@@ -533,7 +545,8 @@ export function RouteEditor(props) {
       <div>
         <h4 className="text-blue-400 text-sm font-semibold mb-3">选择航点配置语音</h4>
         <div className="h-96 overflow-y-auto border border-gray-600 rounded-lg">
-          <WaypointList waypoints={formData.waypoints} onDeleteWaypoint={deleteWaypoint} onSelectWaypoint={setSelectedVoiceIndex} selectedVoiceIndex={selectedVoiceIndex} />
+          <WaypointList waypoints={formData.waypoints} onDeleteWaypoint={deleteWaypoint} onSelectWaypoint={setSelectedVoiceIndex} selectedVoiceIndex={selectedVoiceIndex} locked={true} // 启用列表锁定功能
+        />
         </div>
       </div>
       <div className="h-96 overflow-y-auto">

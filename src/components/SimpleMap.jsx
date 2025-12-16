@@ -1,7 +1,7 @@
 // @ts-ignore;
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore;
-import { MapPin } from 'lucide-react';
+import { MapPin, Trash2 } from 'lucide-react';
 
 // Leaflet CSS 和 JS
 const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -10,11 +10,14 @@ export function SimpleMap({
   center = [39.9042, 116.4074],
   onLocationSelect,
   currentLocation,
-  className = "h-64"
+  waypoints = [],
+  className = "h-64",
+  onClearConnections
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
+  const polylineRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(currentLocation || {
     lat: center[0],
@@ -71,6 +74,103 @@ export function SimpleMap({
     });
   };
 
+  // 绘制航点连线
+  const drawWaypointConnections = (mapInstance, waypoints) => {
+    if (!mapInstance || !waypoints || waypoints.length < 2) {
+      return;
+    }
+
+    // 清除之前的连线
+    if (polylineRef.current) {
+      mapInstance.removeLayer(polylineRef.current);
+    }
+
+    // 创建航点坐标数组
+    const latLngs = waypoints.map(wp => window.L.latLng(wp.lat, wp.lng));
+
+    // 创建连线
+    polylineRef.current = window.L.polyline(latLngs, {
+      color: '#3b82f6',
+      weight: 2,
+      opacity: 0.8,
+      lineJoin: 'round',
+      dashArray: null,
+      className: 'route-connection-line'
+    }).addTo(mapInstance);
+
+    // 添加点击事件高亮
+    polylineRef.current.on('click', e => {
+      // 高亮显示连线
+      polylineRef.current.setStyle({
+        color: '#f59e0b',
+        weight: 3,
+        opacity: 1
+      });
+
+      // 3秒后恢复原样
+      setTimeout(() => {
+        polylineRef.current.setStyle({
+          color: '#3b82f6',
+          weight: 2,
+          opacity: 0.8
+        });
+      }, 3000);
+    });
+  };
+
+  // 清除所有连线
+  const clearConnections = () => {
+    if (mapInstanceRef.current && polylineRef.current) {
+      mapInstanceRef.current.removeLayer(polylineRef.current);
+      polylineRef.current = null;
+    }
+  };
+
+  // 添加航点标记
+  const addWaypointMarkers = (mapInstance, waypoints) => {
+    if (!mapInstance || !waypoints) return;
+
+    // 清除之前的标记
+    if (markerRef.current) {
+      mapInstance.removeLayer(markerRef.current);
+    }
+
+    // 为每个航点添加标记
+    waypoints.forEach((waypoint, index) => {
+      const marker = window.L.marker([waypoint.lat, waypoint.lng], {
+        icon: window.L.divIcon({
+          className: 'waypoint-marker',
+          html: `
+            <div style="
+              background: ${index === 0 ? '#10b981' : index === waypoints.length - 1 ? '#ef4444' : '#3b82f6'};
+              width: 24px;
+              height: 24px;
+              border-radius: 50%;
+              border: 3px solid white;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: bold;
+              font-size: 10px;
+            ">
+              ${index + 1}
+            </div>
+          `,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        })
+      }).addTo(mapInstance);
+
+      // 添加点击事件
+      marker.on('click', () => {
+        // 可以在这里添加航点点击事件处理
+        console.log(`点击航点 ${index + 1}:`, waypoint);
+      });
+    });
+  };
+
   // 初始化地图
   const initializeMap = async () => {
     if (!mapContainerRef.current || mapLoaded) return;
@@ -122,6 +222,12 @@ export function SimpleMap({
         const latLng = window.L.latLng(currentLocation.lat, currentLocation.lng);
         addMarker(latLng, mapInstance);
       }
+
+      // 绘制航点连线
+      if (waypoints && waypoints.length >= 2) {
+        drawWaypointConnections(mapInstance, waypoints);
+        addWaypointMarkers(mapInstance, waypoints);
+      }
     } catch (error) {
       console.error('地图初始化失败:', error);
     }
@@ -140,7 +246,7 @@ export function SimpleMap({
       markerRef.current = window.L.marker(latLng, {
         icon: window.L.divIcon({
           className: 'custom-marker',
-          html: '<div style="background: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+          html: '<div style="background: #8b5cf6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
           iconSize: [20, 20],
           iconAnchor: [10, 10]
         })
@@ -160,21 +266,46 @@ export function SimpleMap({
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
         markerRef.current = null;
+        polylineRef.current = null;
       } catch (error) {
         console.error('清理地图资源失败:', error);
       }
     }
     setMapLoaded(false);
   };
+
+  // 监听航点变化，实时更新连线
+  useEffect(() => {
+    if (mapInstanceRef.current && waypoints && waypoints.length >= 2) {
+      drawWaypointConnections(mapInstanceRef.current, waypoints);
+      addWaypointMarkers(mapInstanceRef.current, waypoints);
+    } else if (mapInstanceRef.current && polylineRef.current) {
+      // 如果航点少于2个，清除连线
+      clearConnections();
+    }
+  }, [waypoints]);
+
+  // 监听清除连线事件
+  useEffect(() => {
+    if (onClearConnections) {
+      clearConnections();
+    }
+  }, [onClearConnections]);
   useEffect(() => {
     setTimeout(() => initializeMap(), 300);
     return () => cleanupMap();
   }, []);
   return <div className={`w-full ${className} bg-gray-800 rounded-lg border border-gray-600 overflow-hidden`}>
       <div className="bg-blue-900/20 border-b border-blue-500/30 p-3">
-        <p className="text-blue-300 text-sm">
-          <strong>操作说明：</strong>左键点击地图拾取坐标（精度：8位小数）
-        </p>
+        <div className="flex justify-between items-center">
+          <p className="text-blue-300 text-sm">
+            <strong>操作说明：</strong>左键点击地图拾取坐标（精度：8位小数）
+          </p>
+          {waypoints && waypoints.length >= 2 && <button onClick={clearConnections} className="flex items-center space-x-1 text-red-400 hover:text-red-300 text-sm bg-red-900/20 px-2 py-1 rounded">
+              <Trash2 className="h-3 w-3" />
+              <span>清除连线</span>
+            </button>}
+        </div>
       </div>
       
       <div ref={mapContainerRef} className="w-full h-full bg-gray-800" style={{
