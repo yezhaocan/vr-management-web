@@ -32,19 +32,25 @@ function TipsForm({
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  // Tips类型选项
-  const tipTypes = [{
-    value: 'fixed_follow',
-    label: '固定跟随'
+  // 页面类型选项
+  const pageTypes = [{
+    value: 'homePage',
+    label: '首页'
   }, {
-    value: 'semi_follow',
-    label: '半跟随'
+    value: 'realTimeWaitingPage',
+    label: '实飞体验等待页'
   }, {
-    value: 'scene_follow',
-    label: '场景跟随'
+    value: 'realFlightExperience',
+    label: '实飞体验视频页'
   }, {
-    value: 'semi_fixed',
-    label: '半固定'
+    value: 'limitWaitingPage',
+    label: '限定体验等待页'
+  }, {
+    value: 'limitedExperience',
+    label: '限定体验卡片页'
+  }, {
+    value: 'videoRecordingExperience',
+    label: '限定体验视频页'
   }];
 
   // 获取文件临时链接
@@ -331,14 +337,14 @@ function TipsForm({
             </div>
 
             <div>
-              <Label htmlFor="type" className="text-white">类型 *</Label>
+              <Label htmlFor="type" className="text-white">页面类型 *</Label>
               <Select value={formData.type} onValueChange={value => handleInputChange('type', value)}>
                 <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-1">
-                  <SelectValue placeholder="请选择Tips类型" />
+                  <SelectValue placeholder="请选择页面类型" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
-                  {tipTypes.map(type => <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                  {pageTypes.map(pageType => <SelectItem key={pageType.value} value={pageType.value}>
+                      {pageType.label}
                     </SelectItem>)}
                 </SelectContent>
               </Select>
@@ -381,6 +387,27 @@ export default function TipsPage(props) {
   const [editingTip, setEditingTip] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [tipToDelete, setTipToDelete] = useState(null);
+
+  // 页面类型选项
+  const pageTypes = [{
+    value: 'homePage',
+    label: '首页'
+  }, {
+    value: 'realTimeWaitingPage',
+    label: '实飞体验等待页'
+  }, {
+    value: 'realFlightExperience',
+    label: '实飞体验视频页'
+  }, {
+    value: 'limitWaitingPage',
+    label: '限定体验等待页'
+  }, {
+    value: 'limitedExperience',
+    label: '限定体验卡片页'
+  }, {
+    value: 'videoRecordingExperience',
+    label: '限定体验视频页'
+  }];
 
   // 获取文件临时链接
   const getFileUrl = async fileId => {
@@ -449,26 +476,23 @@ export default function TipsPage(props) {
   // 搜索Tips
   const filteredTipsList = tipsList.filter(tip => tip.name?.toLowerCase().includes(searchTerm.toLowerCase()) || tip.description?.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  // 获取类型标签
-  const getTypeLabel = type => {
-    const typeLabels = {
-      'fixed_follow': '固定跟随',
-      'semi_follow': '半跟随',
-      'scene_follow': '场景跟随',
-      'semi_fixed': '半固定'
-    };
-    return typeLabels[type] || type;
+  // 获取页面类型标签
+  const getPageTypeLabel = type => {
+    const pageType = pageTypes.find(pt => pt.value === type);
+    return pageType ? pageType.label : type;
   };
 
   // 获取类型徽章
   const getTypeBadge = type => {
     const variants = {
-      'fixed_follow': 'default',
-      'semi_follow': 'secondary',
-      'scene_follow': 'outline',
-      'semi_fixed': 'destructive'
+      'homePage': 'default',
+      'realTimeWaitingPage': 'secondary',
+      'realFlightExperience': 'outline',
+      'limitWaitingPage': 'destructive',
+      'limitedExperience': 'default',
+      'videoRecordingExperience': 'secondary'
     };
-    return <Badge variant={variants[type] || 'secondary'}>{getTypeLabel(type)}</Badge>;
+    return <Badge variant={variants[type] || 'secondary'}>{getPageTypeLabel(type)}</Badge>;
   };
 
   // 处理删除Tips - 使用真实数据模型
