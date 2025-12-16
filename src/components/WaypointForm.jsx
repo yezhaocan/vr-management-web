@@ -54,7 +54,7 @@ export function WaypointForm({
     }
   };
 
-  // 处理添加航点 - 验证所有数据
+  // 处理添加航点 - 验证所有数据（静默添加，不显示成功提示）
   const handleAddWaypoint = () => {
     try {
       if (!newWaypoint.name.trim()) {
@@ -94,13 +94,8 @@ export function WaypointForm({
         altitude: altitude
       };
 
-      // 调用添加航点函数
+      // 调用添加航点函数（静默完成，不显示成功提示）
       onAddWaypoint(validatedWaypoint);
-      toast({
-        title: '航点添加成功',
-        description: `航点"${newWaypoint.name}"已添加，坐标精度: 8位小数`,
-        variant: 'default'
-      });
     } catch (error) {
       toast({
         title: '数据验证失败',

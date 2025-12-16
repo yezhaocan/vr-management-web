@@ -35,7 +35,8 @@ export function WaypointList({
                   </div>
                   <div>
                     <p className="text-white font-medium text-sm">{waypoint.name}</p>
-                    <p className="text-gray-400 text-xs">{waypoint.lat.toFixed(4)}, {waypoint.lng.toFixed(4)}</p>
+                    {/* 显示8位小数精度 */}
+                    <p className="text-gray-400 text-xs">{waypoint.lat.toFixed(8)}, {waypoint.lng.toFixed(8)}</p>
                   </div>
                 </div>
                 <div className="flex space-x-1">

@@ -18,6 +18,7 @@ export function SimpleMap({
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
   const polylineRef = useRef(null);
+  const waypointMarkersRef = useRef([]); // 新增：存储所有航点标记引用
   const [mapLoaded, setMapLoaded] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(currentLocation || {
     lat: center[0],
@@ -102,6 +103,7 @@ export function SimpleMap({
     // 清除之前的连线
     if (polylineRef.current) {
       mapInstance.removeLayer(polylineRef.current);
+      polylineRef.current = null;
     }
 
     // 创建航点坐标数组
@@ -145,14 +147,24 @@ export function SimpleMap({
     }
   };
 
+  // 清除所有航点标记
+  const clearWaypointMarkers = () => {
+    if (mapInstanceRef.current && waypointMarkersRef.current.length > 0) {
+      waypointMarkersRef.current.forEach(marker => {
+        if (marker) {
+          mapInstanceRef.current.removeLayer(marker);
+        }
+      });
+      waypointMarkersRef.current = [];
+    }
+  };
+
   // 添加航点标记
   const addWaypointMarkers = (mapInstance, waypoints) => {
     if (!mapInstance || !waypoints) return;
 
     // 清除之前的标记
-    if (markerRef.current) {
-      mapInstance.removeLayer(markerRef.current);
-    }
+    clearWaypointMarkers();
 
     // 为每个航点添加标记
     waypoints.forEach((waypoint, index) => {
@@ -187,6 +199,9 @@ export function SimpleMap({
         // 可以在这里添加航点点击事件处理
         console.log(`点击航点 ${index + 1}:`, waypoint);
       });
+
+      // 存储标记引用
+      waypointMarkersRef.current.push(marker);
     });
   };
 
@@ -259,6 +274,7 @@ export function SimpleMap({
       // 清除之前的标记
       if (markerRef.current) {
         mapInstance.removeLayer(markerRef.current);
+        markerRef.current = null;
       }
 
       // 创建新标记
@@ -278,14 +294,28 @@ export function SimpleMap({
     }
   };
 
-  // 清理地图资源
+  // 清理地图资源 - 增强清理机制
   const cleanupMap = () => {
     if (mapInstanceRef.current) {
       try {
+        // 清除主标记
+        if (markerRef.current) {
+          mapInstanceRef.current.removeLayer(markerRef.current);
+          markerRef.current = null;
+        }
+
+        // 清除连线
+        if (polylineRef.current) {
+          mapInstanceRef.current.removeLayer(polylineRef.current);
+          polylineRef.current = null;
+        }
+
+        // 清除所有航点标记
+        clearWaypointMarkers();
+
+        // 移除地图实例
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
-        markerRef.current = null;
-        polylineRef.current = null;
       } catch (error) {
         console.error('清理地图资源失败:', error);
       }
@@ -298,9 +328,10 @@ export function SimpleMap({
     if (mapInstanceRef.current && waypoints && waypoints.length >= 2) {
       drawWaypointConnections(mapInstanceRef.current, waypoints);
       addWaypointMarkers(mapInstanceRef.current, waypoints);
-    } else if (mapInstanceRef.current && polylineRef.current) {
-      // 如果航点少于2个，清除连线
+    } else if (mapInstanceRef.current) {
+      // 如果航点少于2个，清除连线和标记
       clearConnections();
+      clearWaypointMarkers();
     }
   }, [waypoints]);
 

@@ -325,7 +325,7 @@ export function RouteEditor(props) {
     }));
   };
 
-  // 添加航点 - 确保8位小数精度
+  // 添加航点 - 确保8位小数精度（静默添加，不显示成功提示）
   const addWaypoint = validatedWaypoint => {
     if (!validatedWaypoint.name.trim()) {
       toast({
@@ -434,11 +434,6 @@ export function RouteEditor(props) {
         lat: validatedLat,
         lng: validatedLng
       }));
-      toast({
-        title: '坐标已更新',
-        description: `纬度: ${validatedLat.toFixed(8)}, 经度: ${validatedLng.toFixed(8)}`,
-        variant: 'default'
-      });
     } catch (error) {
       toast({
         title: '坐标验证失败',
