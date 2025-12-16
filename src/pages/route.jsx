@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 // @ts-ignore;
 import { Button, Card, CardContent, CardHeader, CardTitle, useToast, Badge, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui';
 // @ts-ignore;
-import { Plus, Edit, Trash2, Play, Music, Volume2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Play, Music, Volume2, AlertTriangle } from 'lucide-react';
 
 // @ts-ignore;
 import { RouteEditor } from '@/components/RouteEditor';
@@ -76,7 +76,7 @@ export default function RoutePage(props) {
     setDeleteConfirmOpen(true);
   };
 
-  // 确认删除航线
+  // 执行删除操作
   const confirmDeleteRoute = async () => {
     if (!routeToDelete) return;
     try {
@@ -96,7 +96,7 @@ export default function RoutePage(props) {
       if (result.count > 0) {
         toast({
           title: '删除成功',
-          description: `航线"${routeToDelete.name}"已删除`,
+          description: '航线已删除',
           variant: 'default'
         });
         loadRoutes();
@@ -115,7 +115,7 @@ export default function RoutePage(props) {
   };
 
   // 取消删除
-  const cancelDelete = () => {
+  const cancelDeleteRoute = () => {
     setDeleteConfirmOpen(false);
     setRouteToDelete(null);
   };
@@ -231,22 +231,45 @@ export default function RoutePage(props) {
 
         {/* 删除确认对话框 */}
         <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-          <DialogContent className="bg-gray-800 border border-gray-600">
+          <DialogContent className="bg-gray-800 border border-gray-600 shadow-2xl rounded-2xl max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-white">确认删除航线</DialogTitle>
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                </div>
+                <DialogTitle className="text-white text-lg font-semibold">确认删除航线</DialogTitle>
+              </div>
               <DialogDescription className="text-gray-400">
-                确定要删除航线 "{routeToDelete?.name}" 吗？此操作不可恢复。
-                {routeToDelete?.waypointCount && <span className="block mt-2 text-yellow-400 text-sm">
-                    该航线包含 {routeToDelete.waypointCount} 个航点，删除后将无法恢复。
-                  </span>}
+                您确定要删除这条航线吗？此操作不可恢复。
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="flex justify-end space-x-3">
-              <Button variant="outline" onClick={cancelDelete} className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
+            
+            {routeToDelete && <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 text-sm">航线编号:</span>
+                    <span className="text-white text-sm font-medium">{routeToDelete._id?.substring(0, 8)}...</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 text-sm">航线名称:</span>
+                    <span className="text-white text-sm font-medium">{routeToDelete.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 text-sm">航点数量:</span>
+                    <span className="text-white text-sm font-medium">{routeToDelete.waypointCount || 0} 个</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 text-sm">预计时长:</span>
+                    <span className="text-white text-sm font-medium">{routeToDelete.estimated_duration || 0} 分钟</span>
+                  </div>
+                </div>
+              </div>}
+            
+            <DialogFooter className="flex justify-end space-x-3 mt-4">
+              <Button variant="outline" onClick={cancelDeleteRoute} className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200">
                 取消
               </Button>
-              <Button onClick={confirmDeleteRoute} className="bg-red-500 hover:bg-red-600 text-white">
-                <Trash2 className="w-4 h-4 mr-2" />
+              <Button onClick={confirmDeleteRoute} className="bg-red-500 hover:bg-red-600 text-white font-medium transition-all duration-200">
                 确认删除
               </Button>
             </DialogFooter>
