@@ -318,22 +318,36 @@ function TipsForm({
     }
     return true;
   };
+
+  // 修复：统一表单提交处理
   const handleSubmit = async e => {
-    e.preventDefault();
-    if (!validateForm()) return;
+    // 防止默认表单提交行为
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+
+    // 先进行表单验证
+    if (!validateForm()) {
+      return;
+    }
     setLoading(true);
     try {
+      // 修复：确保数据类型正确，添加更严格的数据验证
+      const durationValue = Number(formData.duration);
       const tipData = {
         name: formData.name.trim(),
         type: formData.type,
         description: formData.description.trim(),
         imageFileId: formData.imageFileId || '',
-        duration: Number(formData.duration) || 0,
+        duration: isNaN(durationValue) ? 0 : Math.max(0, Math.min(86400, durationValue)),
+        // 确保在有效范围内
         status: 'active',
         updatedAt: new Date().getTime()
       };
       console.log('准备保存的数据:', tipData);
+      console.log('duration字段类型:', typeof tipData.duration, '值:', tipData.duration);
       if (tip?._id) {
+        // 更新Tips
         const result = await $w.cloud.callDataSource({
           dataSourceName: 'tips',
           methodName: 'wedaUpdateV2',
@@ -351,9 +365,10 @@ function TipsForm({
         console.log('更新结果:', result);
         toast({
           title: 'Tips更新成功',
-          description: `Tips "${formData.name}" 已更新`
+          description: `Tips "${formData.name}" 已更新，持续时长: ${tipData.duration}秒`
         });
       } else {
+        // 新增Tips
         tipData.createdAt = new Date().getTime();
         const result = await $w.cloud.callDataSource({
           dataSourceName: 'tips',
@@ -365,12 +380,17 @@ function TipsForm({
         console.log('创建结果:', result);
         toast({
           title: 'Tips创建成功',
-          description: `Tips "${formData.name}" 已创建`
+          description: `Tips "${formData.name}" 已创建，持续时长: ${tipData.duration}秒`
         });
       }
       onSave && onSave();
     } catch (error) {
       console.error('保存失败:', error);
+      console.error('错误详情:', {
+        message: error.message,
+        stack: error.stack,
+        code: error.code
+      });
       toast({
         title: '操作失败',
         description: error.message || '请检查网络连接',
@@ -451,6 +471,7 @@ function TipsForm({
           </DialogHeader>
 
           <div ref={contentRef} className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2 transition-all duration-300">
+            {/* 修复：将整个表单内容包含在form标签内 */}
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 py-4">
               {/* 基础信息 */}
               <div className="space-y-4">
@@ -497,19 +518,19 @@ function TipsForm({
 
               {/* 图片上传区域 */}
               <ImageUploadSection />
-            </form>
-          </div>
 
-          {/* 操作按钮 - 固定在底部 */}
-          <div className="sticky bottom-0 bg-gray-900 pt-4 border-t border-gray-700 mt-auto">
-            <div className="flex justify-end space-x-3">
-              <Button type="button" variant="outline" onClick={onCancel} className="border-gray-600 text-gray-300 hover:bg-gray-700/50 transition-colors">
-                取消
-              </Button>
-              <Button type="submit" disabled={loading} onClick={handleSubmit} className="bg-blue-500 hover:bg-blue-600 transition-colors">
-                {loading ? '保存中...' : tip ? '更新Tips' : '创建Tips'}
-              </Button>
-            </div>
+              {/* 修复：将操作按钮移到表单内部 */}
+              <div className="sticky bottom-0 bg-gray-900 pt-4 border-t border-gray-700 mt-auto">
+                <div className="flex justify-end space-x-3">
+                  <Button type="button" variant="outline" onClick={onCancel} className="border-gray-600 text-gray-300 hover:bg-gray-700/50 transition-colors">
+                    取消
+                  </Button>
+                  <Button type="submit" disabled={loading} className="bg-blue-500 hover:bg-blue-600 transition-colors">
+                    {loading ? '保存中...' : tip ? '更新Tips' : '创建Tips'}
+                  </Button>
+                </div>
+              </div>
+            </form>
           </div>
         </DialogContent>
       </Dialog>
@@ -659,6 +680,10 @@ export default function TipsPage(props) {
       }));
       setTipsList(tipsWithUrls);
       console.log('加载的Tips数据:', tipsWithUrls);
+      // 检查每个tip的duration字段
+      tipsWithUrls.forEach((tip, index) => {
+        console.log(`Tip ${index}: duration=${tip.duration}, 类型: ${typeof tip.duration}`);
+      });
     } catch (error) {
       toast({
         title: '加载失败',
