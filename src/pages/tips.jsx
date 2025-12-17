@@ -1,5 +1,5 @@
 // @ts-ignore;
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore;
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, useToast, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 // @ts-ignore;
@@ -9,6 +9,30 @@ import { Plus, Search, Edit, Trash2, Upload, Image, RefreshCw, X, CheckCircle, C
 import { AuthGuard } from '@/components/AuthGuard';
 // @ts-ignore;
 import { UserMenu } from '@/components/UserMenu';
+
+// 自定义滚动条样式组件
+function CustomScrollbarStyles() {
+  return <style jsx global>{`
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(75, 85, 99, 0.3);
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.6);
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(209, 213, 219, 0.8);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:active {
+      background: rgba(255, 255, 255, 0.9);
+    }
+  `}</style>;
+}
 
 // Tips表单组件
 function TipsForm({
@@ -33,7 +57,10 @@ function TipsForm({
   const [loading, setLoading] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [durationError, setDurationError] = useState(''); // 新增：持续时长错误状态
+  const [durationError, setDurationError] = useState('');
+  const [modalHeight, setModalHeight] = useState('auto');
+  const formRef = useRef(null);
+  const contentRef = useRef(null);
 
   // 页面类型选项
   const pageTypes = [{
@@ -56,10 +83,42 @@ function TipsForm({
     label: '限定体验视频页'
   }];
 
+  // 动态计算弹窗高度
+  const calculateModalHeight = () => {
+    if (!contentRef.current) return 'auto';
+    const windowHeight = window.innerHeight;
+    const headerHeight = 80; // 弹窗头部高度估算
+    const footerHeight = 80; // 底部按钮区域高度估算
+    const padding = 32; // 内外边距
+
+    // 计算可用高度
+    const availableHeight = windowHeight - headerHeight - footerHeight - padding;
+
+    // 限制最小和最大高度
+    const minHeight = 400;
+    const maxHeight = Math.min(availableHeight, 800);
+    return Math.max(minHeight, maxHeight) + 'px';
+  };
+
+  // 监听窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      if (open) {
+        setModalHeight(calculateModalHeight());
+      }
+    };
+    if (open) {
+      setModalHeight(calculateModalHeight());
+      window.addEventListener('resize', handleResize);
+    }
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [open]);
+
   // 获取已使用的页面类型
   const getUsedPageTypes = () => {
-    return existingTips.filter(t => t._id !== tip?._id) // 排除当前编辑的tip
-    .map(t => t.type).filter(Boolean);
+    return existingTips.filter(t => t._id !== tip?._id).map(t => t.type).filter(Boolean);
   };
 
   // 获取可用的页面类型选项
@@ -93,7 +152,6 @@ function TipsForm({
   useEffect(() => {
     const initializeFormData = async () => {
       if (tip) {
-        // 获取预览链接
         let imageUrl = '';
         if (tip.imageFileId) {
           imageUrl = await getFileUrl(tip.imageFileId);
@@ -107,7 +165,6 @@ function TipsForm({
         });
         setImagePreviewUrl(imageUrl);
       } else {
-        // 新增模式重置表单
         setFormData({
           name: '',
           type: '',
@@ -129,25 +186,18 @@ function TipsForm({
     }));
   };
 
-  // 修复：处理持续时长输入 - 简化验证逻辑
+  // 处理持续时长输入
   const handleDurationChange = value => {
-    // 清除之前的错误状态
     setDurationError('');
-
-    // 允许空值
     if (value === '') {
       handleInputChange('duration', 0);
       return;
     }
-
-    // 验证是否为有效数字
     const numValue = Number(value);
     if (isNaN(numValue)) {
       setDurationError('请输入有效的数字');
       return;
     }
-
-    // 验证范围
     if (numValue < 0) {
       setDurationError('持续时长不能小于0');
       return;
@@ -162,12 +212,10 @@ function TipsForm({
       handleInputChange('duration', 86400);
       return;
     }
-
-    // 保存有效值
-    handleInputChange('duration', Math.floor(numValue)); // 确保为整数
+    handleInputChange('duration', Math.floor(numValue));
   };
 
-  // 处理文件上传 - 使用腾讯云存储标准接口
+  // 处理文件上传
   const handleFileUpload = async file => {
     try {
       if (!file) return;
@@ -175,38 +223,24 @@ function TipsForm({
         title: '文件上传中',
         description: '图片文件正在上传...'
       });
-
-      // 设置上传状态
       setUploadingImage(true);
-
-      // 使用腾讯云存储上传文件
       const tcb = await $w.cloud.getCloudInstance();
-
-      // 生成唯一的文件名
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 8);
       const fileName = `tips/images/${timestamp}_${randomStr}_${file.name}`;
-
-      // 上传文件到云存储
       const uploadResult = await tcb.uploadFile({
         cloudPath: fileName,
         filePath: file
       });
       const fileID = uploadResult.fileID;
-
-      // 获取临时链接用于预览
       const tempFileURLResult = await tcb.getTempFileURL({
         fileList: [fileID]
       });
       const previewUrl = tempFileURLResult.fileList[0].tempFileURL;
-
-      // 更新表单数据，存储文件ID而不是URL
       setFormData(prev => ({
         ...prev,
         imageFileId: fileID
       }));
-
-      // 设置预览链接
       setImagePreviewUrl(previewUrl);
       toast({
         title: '上传成功',
@@ -236,12 +270,9 @@ function TipsForm({
     });
   };
 
-  // 修复：表单提交验证
+  // 表单提交验证
   const validateForm = () => {
-    // 清除所有错误状态
     setDurationError('');
-
-    // 验证必填字段
     if (!formData.name.trim()) {
       toast({
         title: '表单验证失败',
@@ -266,8 +297,6 @@ function TipsForm({
       });
       return false;
     }
-
-    // 验证持续时长
     const duration = Number(formData.duration);
     if (isNaN(duration) || duration < 0 || duration > 86400) {
       setDurationError('持续时长必须在0-86400秒之间');
@@ -278,8 +307,6 @@ function TipsForm({
       });
       return false;
     }
-
-    // 检查页面类型是否已被使用
     const usedTypes = getUsedPageTypes();
     if (usedTypes.includes(formData.type)) {
       toast({
@@ -293,28 +320,20 @@ function TipsForm({
   };
   const handleSubmit = async e => {
     e.preventDefault();
-
-    // 先进行表单验证
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     setLoading(true);
     try {
-      // 修复：确保数据类型正确
       const tipData = {
         name: formData.name.trim(),
         type: formData.type,
         description: formData.description.trim(),
         imageFileId: formData.imageFileId || '',
         duration: Number(formData.duration) || 0,
-        // 确保为数字类型
         status: 'active',
         updatedAt: new Date().getTime()
       };
-      console.log('准备保存的数据:', tipData); // 调试日志
-
+      console.log('准备保存的数据:', tipData);
       if (tip?._id) {
-        // 更新Tips
         const result = await $w.cloud.callDataSource({
           dataSourceName: 'tips',
           methodName: 'wedaUpdateV2',
@@ -329,13 +348,12 @@ function TipsForm({
             data: tipData
           }
         });
-        console.log('更新结果:', result); // 调试日志
+        console.log('更新结果:', result);
         toast({
           title: 'Tips更新成功',
           description: `Tips "${formData.name}" 已更新`
         });
       } else {
-        // 新增Tips
         tipData.createdAt = new Date().getTime();
         const result = await $w.cloud.callDataSource({
           dataSourceName: 'tips',
@@ -344,7 +362,7 @@ function TipsForm({
             data: tipData
           }
         });
-        console.log('创建结果:', result); // 调试日志
+        console.log('创建结果:', result);
         toast({
           title: 'Tips创建成功',
           description: `Tips "${formData.name}" 已创建`
@@ -352,7 +370,7 @@ function TipsForm({
       }
       onSave && onSave();
     } catch (error) {
-      console.error('保存失败:', error); // 调试日志
+      console.error('保存失败:', error);
       toast({
         title: '操作失败',
         description: error.message || '请检查网络连接',
@@ -367,11 +385,8 @@ function TipsForm({
   const ImageUploadSection = () => {
     return <div>
         <Label className="text-white mb-3 block">图片上传（可选）</Label>
-        
         <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-600">
-          {formData.imageFileId ?
-        // 已上传状态
-        <div className="space-y-4">
+          {formData.imageFileId ? <div className="space-y-4">
               <div className="flex flex-col space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -384,8 +399,6 @@ function TipsForm({
                     </div>
                   </div>
                 </div>
-                
-                {/* 按钮组 - 确保不超出边界 */}
                 <div className="flex space-x-2 justify-end">
                   <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('imageFile').click()} className="text-blue-400 border-blue-400 hover:bg-blue-400/10 px-3">
                     <Upload className="h-3 w-3 mr-1" />
@@ -397,32 +410,24 @@ function TipsForm({
                   </Button>
                 </div>
               </div>
-              
               {imagePreviewUrl && <div className="border border-gray-600 rounded-lg p-2 bg-gray-900/50">
                   <img src={imagePreviewUrl} alt="预览" className="w-full h-32 object-cover rounded" />
                   <p className="text-xs text-gray-400 mt-1 text-center">预览链接有效期1天</p>
                 </div>}
-            </div> :
-        // 未上传状态
-        <div className="text-center cursor-pointer group" onClick={() => document.getElementById('imageFile').click()}>
+            </div> : <div className="text-center cursor-pointer group" onClick={() => document.getElementById('imageFile').click()}>
               <input id="imageFile" type="file" accept="image/*" className="hidden" onChange={e => handleFileUpload(e.target.files[0])} />
-              
               <div className="space-y-3">
                 <div className="flex justify-center">
                   <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
                     <Image className="h-5 w-5 text-purple-400" />
                   </div>
                 </div>
-                
                 <div>
                   <p className="text-gray-300 font-medium text-sm">
                     {uploadingImage ? '上传中...' : '点击上传图片'}
                   </p>
-                  <p className="text-gray-500 text-xs mt-1">
-                    支持 JPG, PNG 格式（可选）
-                  </p>
+                  <p className="text-gray-500 text-xs mt-1">支持 JPG, PNG 格式（可选）</p>
                 </div>
-                
                 {uploadingImage && <div className="w-full bg-gray-700 rounded-full h-1.5">
                     <div className="bg-purple-500 h-1.5 rounded-full animate-pulse"></div>
                   </div>}
@@ -432,97 +437,100 @@ function TipsForm({
       </div>;
   };
   const availablePageTypes = getAvailablePageTypes();
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
-        <DialogHeader>
-          <DialogTitle className="text-white">
-            {tip ? '编辑Tips' : '新建Tips'}
-          </DialogTitle>
-        </DialogHeader>
+  return <>
+      <CustomScrollbarStyles />
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md bg-gray-900 border-gray-700 custom-scrollbar transition-all duration-300" style={{
+        maxHeight: modalHeight,
+        height: modalHeight === 'auto' ? 'auto' : modalHeight
+      }}>
+          <DialogHeader className="sticky top-0 bg-gray-900 z-10 pb-4 border-b border-gray-700">
+            <DialogTitle className="text-white text-xl font-bold">
+              {tip ? '编辑Tips' : '新建Tips'}
+            </DialogTitle>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 基础信息 */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name" className="text-white">Tips名称 *</Label>
-              <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入Tips名称" className="bg-gray-800 border-gray-700 text-white mt-1" required />
-            </div>
+          <div ref={contentRef} className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2 transition-all duration-300">
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 py-4">
+              {/* 基础信息 */}
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name" className="text-white">Tips名称 *</Label>
+                  <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入Tips名称" className="bg-gray-800 border-gray-700 text-white mt-1" required />
+                </div>
 
-            <div>
-              <Label htmlFor="type" className="text-white">页面类型 *</Label>
-              <Select value={formData.type} onValueChange={value => handleInputChange('type', value)}>
-                <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-1">
-                  <SelectValue placeholder="请选择页面类型" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-700">
-                  {availablePageTypes.map(pageType => <SelectItem key={pageType.value} value={pageType.value} disabled={pageType.disabled} className="text-white hover:bg-gray-700 data-[disabled]:text-gray-500 data-[disabled]:cursor-not-allowed">
-                      {pageType.label}
-                      {pageType.disabled && <span className="ml-2 text-gray-500 text-xs">(已使用)</span>}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+                <div>
+                  <Label htmlFor="type" className="text-white">页面类型 *</Label>
+                  <Select value={formData.type} onValueChange={value => handleInputChange('type', value)}>
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-1">
+                      <SelectValue placeholder="请选择页面类型" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-700">
+                      {availablePageTypes.map(pageType => <SelectItem key={pageType.value} value={pageType.value} disabled={pageType.disabled} className="text-white hover:bg-gray-700 data-[disabled]:text-gray-500 data-[disabled]:cursor-not-allowed">
+                          {pageType.label}
+                          {pageType.disabled && <span className="ml-2 text-gray-500 text-xs">(已使用)</span>}
+                        </SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div>
-              <Label htmlFor="description" className="text-white">描述 *</Label>
-              <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入Tips描述内容" className="bg-gray-800 border-gray-700 text-white mt-1 h-24" required />
-            </div>
+                <div>
+                  <Label htmlFor="description" className="text-white">描述 *</Label>
+                  <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入Tips描述内容" className="bg-gray-800 border-gray-700 text-white mt-1 h-24" required />
+                </div>
 
-            {/* 修复：持续时长输入字段 */}
-            <div>
-              <Label htmlFor="duration" className="text-white">持续时长</Label>
-              <div className="relative mt-1">
-                <Input id="duration" type="number" min="0" max="86400" value={formData.duration} onChange={e => handleDurationChange(e.target.value)} placeholder="0" className={`bg-gray-800 border-gray-700 text-white pr-12 ${durationError ? 'border-red-500' : ''}`} />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <span className="text-gray-400 text-sm">s</span>
+                <div>
+                  <Label htmlFor="duration" className="text-white">持续时长</Label>
+                  <div className="relative mt-1">
+                    <Input id="duration" type="number" min="0" max="86400" value={formData.duration} onChange={e => handleDurationChange(e.target.value)} placeholder="0" className={`bg-gray-800 border-gray-700 text-white pr-12 ${durationError ? 'border-red-500' : ''}`} />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <span className="text-gray-400 text-sm">s</span>
+                    </div>
+                  </div>
+                  {durationError && <p className="text-red-400 text-xs mt-1">{durationError}</p>}
+                  <div className="flex items-center mt-1 text-gray-400 text-xs">
+                    <Clock className="h-3 w-3 mr-1" />
+                    <span>范围: 0-86400秒 (0-24小时)</span>
+                  </div>
                 </div>
               </div>
-              {durationError && <p className="text-red-400 text-xs mt-1">{durationError}</p>}
-              <div className="flex items-center mt-1 text-gray-400 text-xs">
-                <Clock className="h-3 w-3 mr-1" />
-                <span>范围: 0-86400秒 (0-24小时)</span>
-              </div>
+
+              {/* 图片上传区域 */}
+              <ImageUploadSection />
+            </form>
+          </div>
+
+          {/* 操作按钮 - 固定在底部 */}
+          <div className="sticky bottom-0 bg-gray-900 pt-4 border-t border-gray-700 mt-auto">
+            <div className="flex justify-end space-x-3">
+              <Button type="button" variant="outline" onClick={onCancel} className="border-gray-600 text-gray-300 hover:bg-gray-700/50 transition-colors">
+                取消
+              </Button>
+              <Button type="submit" disabled={loading} onClick={handleSubmit} className="bg-blue-500 hover:bg-blue-600 transition-colors">
+                {loading ? '保存中...' : tip ? '更新Tips' : '创建Tips'}
+              </Button>
             </div>
           </div>
-
-          {/* 图片上传区域 - 简化版 */}
-          <ImageUploadSection />
-
-          {/* 操作按钮 */}
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel} className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
-              取消
-            </Button>
-            <Button type="submit" disabled={loading} className="bg-blue-500 hover:bg-blue-600">
-              {loading ? '保存中...' : tip ? '更新Tips' : '创建Tips'}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>;
+        </DialogContent>
+      </Dialog>
+    </>;
 }
 
-// 自定义Tag组件 - 优化可读性
+// 自定义Tag组件
 function CustomTag({
   type,
   label
 }) {
-  // 根据页面类型设置不同的背景色
   const getBackgroundColor = () => {
     const colors = {
       'homePage': 'rgba(59, 130, 246, 0.9)',
-      // 蓝色
       'realTimeWaitingPage': 'rgba(16, 185, 129, 0.9)',
-      // 绿色
       'realFlightExperience': 'rgba(139, 92, 246, 0.9)',
-      // 紫色
       'limitWaitingPage': 'rgba(245, 158, 11, 0.9)',
-      // 橙色
       'limitedExperience': 'rgba(236, 72, 153, 0.9)',
-      // 粉色
-      'videoRecordingExperience': 'rgba(239, 68, 68, 0.9)' // 红色
+      'videoRecordingExperience': 'rgba(239, 68, 68, 0.9)'
     };
-    return colors[type] || 'rgba(75, 85, 99, 0.9)'; // 默认灰色
+    return colors[type] || 'rgba(75, 85, 99, 0.9)';
   };
   return <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium text-white border border-white/20" style={{
     backgroundColor: getBackgroundColor(),
@@ -620,7 +628,7 @@ export default function TipsPage(props) {
     }
   };
 
-  // 加载Tips列表 - 使用真实数据模型
+  // 加载Tips列表
   const loadTipsList = async () => {
     setLoading(true);
     try {
@@ -639,8 +647,6 @@ export default function TipsPage(props) {
           getCount: true
         }
       });
-
-      // 为每个Tips获取预览链接
       const tipsWithUrls = await Promise.all((result.records || []).map(async tip => {
         let imageUrl = '';
         if (tip.imageFileId) {
@@ -652,7 +658,7 @@ export default function TipsPage(props) {
         };
       }));
       setTipsList(tipsWithUrls);
-      console.log('加载的Tips数据:', tipsWithUrls); // 调试日志
+      console.log('加载的Tips数据:', tipsWithUrls);
     } catch (error) {
       toast({
         title: '加载失败',
@@ -676,12 +682,12 @@ export default function TipsPage(props) {
     return pageType ? pageType.label : type;
   };
 
-  // 获取类型徽章 - 使用自定义Tag组件
+  // 获取类型徽章
   const getTypeBadge = type => {
     return <CustomTag type={type} label={getPageTypeLabel(type)} />;
   };
 
-  // 处理删除Tips - 使用真实数据模型
+  // 处理删除Tips
   const handleDelete = async tip => {
     try {
       await $w.cloud.callDataSource({
@@ -713,7 +719,7 @@ export default function TipsPage(props) {
 
   // 处理新建Tips按钮点击
   const handleNewTips = () => {
-    setEditingTip(null); // 确保清空编辑数据
+    setEditingTip(null);
     setShowForm(true);
   };
 
@@ -764,7 +770,7 @@ export default function TipsPage(props) {
             </div>
           </div>
 
-          {/* Tips列表 - 弱化图片作用，减小图片尺寸 */}
+          {/* Tips列表 */}
           {loading ? <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               <span className="ml-3 text-gray-300">加载中...</span>
@@ -793,14 +799,14 @@ export default function TipsPage(props) {
                   </CardHeader>
                   
                   <CardContent className="pt-0">
-                    {/* 图片预览 - 弱化图片作用，减小尺寸 */}
+                    {/* 图片预览 */}
                     {tip.imageUrl ? <div className="mb-3">
                         <img src={tip.imageUrl} alt={tip.name} className="w-20 h-20 object-cover rounded-lg float-right ml-3" />
                       </div> : <div className="mb-3 w-20 h-20 bg-gray-700 rounded-lg float-right ml-3 flex items-center justify-center">
                         <Image className="h-6 w-6 text-gray-500" />
                       </div>}
 
-                    {/* 描述信息 - 强化文字内容 */}
+                    {/* 描述信息 */}
                     <div className="mb-3">
                       <p className="text-gray-400 text-sm line-clamp-4">{tip.description}</p>
                     </div>
