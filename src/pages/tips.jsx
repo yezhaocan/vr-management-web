@@ -33,6 +33,7 @@ function TipsForm({
   const [loading, setLoading] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [durationError, setDurationError] = useState(''); // 新增：持续时长错误状态
 
   // 页面类型选项
   const pageTypes = [{
@@ -128,26 +129,42 @@ function TipsForm({
     }));
   };
 
-  // 处理持续时长输入 - 验证和过滤
+  // 修复：处理持续时长输入 - 简化验证逻辑
   const handleDurationChange = value => {
-    // 过滤非数字字符
-    const numericValue = value.replace(/[^0-9]/g, '');
+    // 清除之前的错误状态
+    setDurationError('');
 
-    // 转换为数字
-    let duration = parseInt(numericValue) || 0;
+    // 允许空值
+    if (value === '') {
+      handleInputChange('duration', 0);
+      return;
+    }
+
+    // 验证是否为有效数字
+    const numValue = Number(value);
+    if (isNaN(numValue)) {
+      setDurationError('请输入有效的数字');
+      return;
+    }
 
     // 验证范围
-    if (duration < 0) {
-      duration = 0;
-    } else if (duration > 86400) {
-      duration = 86400;
+    if (numValue < 0) {
+      setDurationError('持续时长不能小于0');
+      return;
+    }
+    if (numValue > 86400) {
+      setDurationError('持续时长不能超过86400秒（24小时）');
       toast({
         title: '输入限制',
         description: '持续时长不能超过86400秒（24小时）',
         variant: 'default'
       });
+      handleInputChange('duration', 86400);
+      return;
     }
-    handleInputChange('duration', duration);
+
+    // 保存有效值
+    handleInputChange('duration', Math.floor(numValue)); // 确保为整数
   };
 
   // 处理文件上传 - 使用腾讯云存储标准接口
@@ -218,15 +235,20 @@ function TipsForm({
       description: '图片文件已清除'
     });
   };
-  const handleSubmit = async e => {
-    e.preventDefault();
-    if (!formData.name) {
+
+  // 修复：表单提交验证
+  const validateForm = () => {
+    // 清除所有错误状态
+    setDurationError('');
+
+    // 验证必填字段
+    if (!formData.name.trim()) {
       toast({
         title: '表单验证失败',
         description: '请输入Tips名称',
         variant: 'destructive'
       });
-      return;
+      return false;
     }
     if (!formData.type) {
       toast({
@@ -234,7 +256,27 @@ function TipsForm({
         description: '请选择页面类型',
         variant: 'destructive'
       });
-      return;
+      return false;
+    }
+    if (!formData.description.trim()) {
+      toast({
+        title: '表单验证失败',
+        description: '请输入Tips描述',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    // 验证持续时长
+    const duration = Number(formData.duration);
+    if (isNaN(duration) || duration < 0 || duration > 86400) {
+      setDurationError('持续时长必须在0-86400秒之间');
+      toast({
+        title: '表单验证失败',
+        description: '持续时长格式不正确',
+        variant: 'destructive'
+      });
+      return false;
     }
 
     // 检查页面类型是否已被使用
@@ -245,23 +287,35 @@ function TipsForm({
         description: '该页面类型已被其他Tips使用，请选择其他类型',
         variant: 'destructive'
       });
+      return false;
+    }
+    return true;
+  };
+  const handleSubmit = async e => {
+    e.preventDefault();
+
+    // 先进行表单验证
+    if (!validateForm()) {
       return;
     }
     setLoading(true);
     try {
+      // 修复：确保数据类型正确
       const tipData = {
-        name: formData.name,
+        name: formData.name.trim(),
         type: formData.type,
-        description: formData.description,
-        imageFileId: formData.imageFileId,
-        duration: parseInt(formData.duration) || 0,
-        // 确保保存为整型
+        description: formData.description.trim(),
+        imageFileId: formData.imageFileId || '',
+        duration: Number(formData.duration) || 0,
+        // 确保为数字类型
         status: 'active',
         updatedAt: new Date().getTime()
       };
+      console.log('准备保存的数据:', tipData); // 调试日志
+
       if (tip?._id) {
         // 更新Tips
-        await $w.cloud.callDataSource({
+        const result = await $w.cloud.callDataSource({
           dataSourceName: 'tips',
           methodName: 'wedaUpdateV2',
           params: {
@@ -275,6 +329,7 @@ function TipsForm({
             data: tipData
           }
         });
+        console.log('更新结果:', result); // 调试日志
         toast({
           title: 'Tips更新成功',
           description: `Tips "${formData.name}" 已更新`
@@ -282,13 +337,14 @@ function TipsForm({
       } else {
         // 新增Tips
         tipData.createdAt = new Date().getTime();
-        await $w.cloud.callDataSource({
+        const result = await $w.cloud.callDataSource({
           dataSourceName: 'tips',
           methodName: 'wedaCreateV2',
           params: {
             data: tipData
           }
         });
+        console.log('创建结果:', result); // 调试日志
         toast({
           title: 'Tips创建成功',
           description: `Tips "${formData.name}" 已创建`
@@ -296,6 +352,7 @@ function TipsForm({
       }
       onSave && onSave();
     } catch (error) {
+      console.error('保存失败:', error); // 调试日志
       toast({
         title: '操作失败',
         description: error.message || '请检查网络连接',
@@ -411,15 +468,16 @@ function TipsForm({
               <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入Tips描述内容" className="bg-gray-800 border-gray-700 text-white mt-1 h-24" required />
             </div>
 
-            {/* 持续时长输入字段 */}
+            {/* 修复：持续时长输入字段 */}
             <div>
               <Label htmlFor="duration" className="text-white">持续时长</Label>
               <div className="relative mt-1">
-                <Input id="duration" type="number" min="0" max="86400" value={formData.duration} onChange={e => handleDurationChange(e.target.value)} placeholder="0" className="bg-gray-800 border-gray-700 text-white pr-12" />
+                <Input id="duration" type="number" min="0" max="86400" value={formData.duration} onChange={e => handleDurationChange(e.target.value)} placeholder="0" className={`bg-gray-800 border-gray-700 text-white pr-12 ${durationError ? 'border-red-500' : ''}`} />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                   <span className="text-gray-400 text-sm">s</span>
                 </div>
               </div>
+              {durationError && <p className="text-red-400 text-xs mt-1">{durationError}</p>}
               <div className="flex items-center mt-1 text-gray-400 text-xs">
                 <Clock className="h-3 w-3 mr-1" />
                 <span>范围: 0-86400秒 (0-24小时)</span>
@@ -594,6 +652,7 @@ export default function TipsPage(props) {
         };
       }));
       setTipsList(tipsWithUrls);
+      console.log('加载的Tips数据:', tipsWithUrls); // 调试日志
     } catch (error) {
       toast({
         title: '加载失败',
