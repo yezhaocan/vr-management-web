@@ -433,14 +433,34 @@ function TipsForm({
   };
   const availablePageTypes = getAvailablePageTypes();
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
+      <DialogContent className="max-w-md max-h-[90vh] bg-gray-900 border-gray-700 custom-scrollbar">
+        <style jsx>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(75, 85, 99, 0.3);
+            border-radius: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.6);
+            border-radius: 4px;
+            transition: background 0.2s ease;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(209, 213, 219, 0.8);
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:active {
+            background: rgba(255, 255, 255, 0.9);
+          }
+        `}</style>
         <DialogHeader>
           <DialogTitle className="text-white">
             {tip ? '编辑Tips' : '新建Tips'}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 overflow-y-auto custom-scrollbar pr-2 -mr-2">
           {/* 基础信息 */}
           <div className="space-y-4">
             <div>
@@ -489,7 +509,7 @@ function TipsForm({
           <ImageUploadSection />
 
           {/* 操作按钮 */}
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-3 pt-4 pb-2">
             <Button type="button" variant="outline" onClick={onCancel} className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
               取消
             </Button>
