@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 // @ts-ignore;
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, useToast, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 // @ts-ignore;
-import { Plus, Search, Edit, Trash2, Upload, Image, RefreshCw, X, CheckCircle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Upload, Image, RefreshCw, X, CheckCircle, Clock } from 'lucide-react';
 
 // @ts-ignore;
 import { AuthGuard } from '@/components/AuthGuard';
@@ -27,7 +27,8 @@ function TipsForm({
     name: '',
     type: '',
     description: '',
-    imageFileId: ''
+    imageFileId: '',
+    duration: 0
   });
   const [loading, setLoading] = useState(false);
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
@@ -100,7 +101,8 @@ function TipsForm({
           name: tip.name || '',
           type: tip.type || '',
           description: tip.description || '',
-          imageFileId: tip.imageFileId || ''
+          imageFileId: tip.imageFileId || '',
+          duration: tip.duration || 0
         });
         setImagePreviewUrl(imageUrl);
       } else {
@@ -109,7 +111,8 @@ function TipsForm({
           name: '',
           type: '',
           description: '',
-          imageFileId: ''
+          imageFileId: '',
+          duration: 0
         });
         setImagePreviewUrl('');
       }
@@ -123,6 +126,28 @@ function TipsForm({
       ...prev,
       [field]: value
     }));
+  };
+
+  // 处理持续时长输入 - 验证和过滤
+  const handleDurationChange = value => {
+    // 过滤非数字字符
+    const numericValue = value.replace(/[^0-9]/g, '');
+
+    // 转换为数字
+    let duration = parseInt(numericValue) || 0;
+
+    // 验证范围
+    if (duration < 0) {
+      duration = 0;
+    } else if (duration > 86400) {
+      duration = 86400;
+      toast({
+        title: '输入限制',
+        description: '持续时长不能超过86400秒（24小时）',
+        variant: 'default'
+      });
+    }
+    handleInputChange('duration', duration);
   };
 
   // 处理文件上传 - 使用腾讯云存储标准接口
@@ -229,6 +254,8 @@ function TipsForm({
         type: formData.type,
         description: formData.description,
         imageFileId: formData.imageFileId,
+        duration: parseInt(formData.duration) || 0,
+        // 确保保存为整型
         status: 'active',
         updatedAt: new Date().getTime()
       };
@@ -383,6 +410,21 @@ function TipsForm({
               <Label htmlFor="description" className="text-white">描述 *</Label>
               <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入Tips描述内容" className="bg-gray-800 border-gray-700 text-white mt-1 h-24" required />
             </div>
+
+            {/* 持续时长输入字段 */}
+            <div>
+              <Label htmlFor="duration" className="text-white">持续时长</Label>
+              <div className="relative mt-1">
+                <Input id="duration" type="number" min="0" max="86400" value={formData.duration} onChange={e => handleDurationChange(e.target.value)} placeholder="0" className="bg-gray-800 border-gray-700 text-white pr-12" />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <span className="text-gray-400 text-sm">s</span>
+                </div>
+              </div>
+              <div className="flex items-center mt-1 text-gray-400 text-xs">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>范围: 0-86400秒 (0-24小时)</span>
+              </div>
+            </div>
           </div>
 
           {/* 图片上传区域 - 简化版 */}
@@ -431,6 +473,39 @@ function CustomTag({
   }}>
       {label}
     </span>;
+}
+
+// 持续时长显示组件
+function DurationDisplay({
+  duration
+}) {
+  if (!duration || duration === 0) {
+    return <span className="text-gray-500 text-xs">未设置</span>;
+  }
+  const formatDuration = seconds => {
+    if (seconds < 60) {
+      return `${seconds}秒`;
+    } else if (seconds < 3600) {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return remainingSeconds > 0 ? `${minutes}分${remainingSeconds}秒` : `${minutes}分钟`;
+    } else {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor(seconds % 3600 / 60);
+      const remainingSeconds = seconds % 60;
+      if (minutes === 0 && remainingSeconds === 0) {
+        return `${hours}小时`;
+      } else if (remainingSeconds === 0) {
+        return `${hours}小时${minutes}分钟`;
+      } else {
+        return `${hours}小时${minutes}分${remainingSeconds}秒`;
+      }
+    }
+  };
+  return <div className="flex items-center text-gray-400 text-xs">
+      <Clock className="h-3 w-3 mr-1" />
+      <span>{formatDuration(duration)}</span>
+    </div>;
 }
 export default function TipsPage(props) {
   const {
@@ -669,6 +744,11 @@ export default function TipsPage(props) {
                     {/* 描述信息 - 强化文字内容 */}
                     <div className="mb-3">
                       <p className="text-gray-400 text-sm line-clamp-4">{tip.description}</p>
+                    </div>
+
+                    {/* 持续时长显示 */}
+                    <div className="mb-3">
+                      <DurationDisplay duration={tip.duration} />
                     </div>
 
                     {/* 操作按钮 */}

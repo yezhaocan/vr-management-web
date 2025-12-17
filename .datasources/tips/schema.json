@@ -27,6 +27,12 @@
       "name": "videoFileId",
       "title": "视频文件ID",
       "type": "String"
+    },
+    {
+      "name": "duration",
+      "title": "持续时长(秒)",
+      "type": "Number",
+      "defaultValue": 0
     }
   ]
 }
