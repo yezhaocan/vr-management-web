@@ -401,6 +401,37 @@ function TipsForm({
       </DialogContent>
     </Dialog>;
 }
+
+// 自定义Tag组件 - 优化可读性
+function CustomTag({
+  type,
+  label
+}) {
+  // 根据页面类型设置不同的背景色
+  const getBackgroundColor = () => {
+    const colors = {
+      'homePage': 'rgba(59, 130, 246, 0.9)',
+      // 蓝色
+      'realTimeWaitingPage': 'rgba(16, 185, 129, 0.9)',
+      // 绿色
+      'realFlightExperience': 'rgba(139, 92, 246, 0.9)',
+      // 紫色
+      'limitWaitingPage': 'rgba(245, 158, 11, 0.9)',
+      // 橙色
+      'limitedExperience': 'rgba(236, 72, 153, 0.9)',
+      // 粉色
+      'videoRecordingExperience': 'rgba(239, 68, 68, 0.9)' // 红色
+    };
+    return colors[type] || 'rgba(75, 85, 99, 0.9)'; // 默认灰色
+  };
+  return <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium text-white border border-white/20" style={{
+    backgroundColor: getBackgroundColor(),
+    backdropFilter: 'blur(4px)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+  }}>
+      {label}
+    </span>;
+}
 export default function TipsPage(props) {
   const {
     $w,
@@ -511,19 +542,9 @@ export default function TipsPage(props) {
     return pageType ? pageType.label : type;
   };
 
-  // 获取类型徽章 - 修改文字颜色为白色
+  // 获取类型徽章 - 使用自定义Tag组件
   const getTypeBadge = type => {
-    const variants = {
-      'homePage': 'default',
-      'realTimeWaitingPage': 'secondary',
-      'realFlightExperience': 'outline',
-      'limitWaitingPage': 'destructive',
-      'limitedExperience': 'default',
-      'videoRecordingExperience': 'secondary'
-    };
-    return <Badge variant={variants[type] || 'secondary'} className="text-white">
-        {getPageTypeLabel(type)}
-      </Badge>;
+    return <CustomTag type={type} label={getPageTypeLabel(type)} />;
   };
 
   // 处理删除Tips - 使用真实数据模型
