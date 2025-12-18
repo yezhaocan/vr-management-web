@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, useToast } from '@/components/ui';
 // @ts-ignore;
 import { MapPin, Navigation, Loader, Edit3 } from 'lucide-react';
-import PropTypes from 'prop-types';
 
 // Leaflet CSS 和 JS
 const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -345,16 +344,12 @@ export function ScenicMap({
   }, []);
   return <Card className="w-full p-0 border-gray-600 relative overflow-hidden">
       <CardContent className="w-full p-0 relative">
-        <div
-          ref={mapContainerRef}
-          className={`relative w-full h-full ${className} min-h-[20rem] rounded-lg overflow-hidden`}
-          style={{
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            width: '100%',
-            height: '100%',
-            position: 'relative'
-          }}
-        >
+        <div ref={mapContainerRef} className={`relative w-full h-full ${className} min-h-[20rem] rounded-lg overflow-hidden`} style={{
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        width: '100%',
+        height: '100%',
+        position: 'relative'
+      }}>
           {/* 地图加载状态 */}
           {!mapLoaded && !mapError && <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 z-[1000]">
               <div className="flex flex-col items中心 space-y-2">
@@ -420,13 +415,3 @@ export function ScenicMap({
       </CardContent>
     </Card>;
 }
-
-ScenicMap.propTypes = {
-  onPositionSelect: PropTypes.func,
-  initialPosition: PropTypes.shape({
-    lat: PropTypes.number,
-    lng: PropTypes.number
-  }),
-  disabled: PropTypes.bool,
-  className: PropTypes.string
-};
