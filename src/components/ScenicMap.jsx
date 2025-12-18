@@ -137,7 +137,7 @@ export function ScenicMap({
 
       // 添加天地图瓦片图层
       window.L.tileLayer('https://t0.tianditu.gov.cn/DataServer?T=img_w/&x={x}&y={y}&l={z}&style=dark&tk=eaa119242fd58a04007ad66abc2546f7', {
-        attribution: '&copy; 天地图',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18
       }).addTo(mapInstance);
 
