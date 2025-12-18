@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, useToast } from '@/components/ui';
 // @ts-ignore;
 import { MapPin, Navigation, Loader, Edit3 } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 // Leaflet CSS 和 JS
 const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -21,7 +22,9 @@ export function ScenicMap({
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
+  const initializingRef = useRef(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(null);
   const [userLocation, setUserLocation] = useState({
     latitude: 39.9042,
     longitude: 116.4074
@@ -112,7 +115,11 @@ export function ScenicMap({
 
   // 初始化地图
   const initializeMap = async () => {
-    if (!mapContainerRef.current || mapLoaded) return;
+    if (!mapContainerRef.current) return;
+    if (initializingRef.current) return;
+    if (mapInstanceRef.current) return;
+    if (mapContainerRef.current && mapContainerRef.current._leaflet_id) return;
+    initializingRef.current = true;
     try {
       // 加载 Leaflet 资源
       await Promise.all([loadLeafletCSS(), loadLeafletJS()]);
@@ -175,6 +182,7 @@ export function ScenicMap({
         addMarker(latLng, mapInstance);
       }
       setMapLoaded(true);
+      setMapError(null);
     } catch (error) {
       console.error('地图初始化失败:', error);
       toast({
@@ -182,6 +190,9 @@ export function ScenicMap({
         description: error.message,
         variant: 'destructive'
       });
+      setMapError(error);
+    } finally {
+      initializingRef.current = false;
     }
   };
 
@@ -305,7 +316,14 @@ export function ScenicMap({
         console.error('清理地图资源失败:', error);
       }
     }
+    if (mapContainerRef.current && mapContainerRef.current._leaflet_id) {
+      try {
+        delete mapContainerRef.current._leaflet_id;
+      } catch {}
+    }
+    initializingRef.current = false;
     setMapLoaded(false);
+    setMapError(null);
   };
 
   // 监听初始位置变化
@@ -322,24 +340,36 @@ export function ScenicMap({
 
   // 初始化地图
   useEffect(() => {
-    setTimeout(() => initializeMap(), 300);
+    setTimeout(() => initializeMap(), 0);
     return () => cleanupMap();
   }, []);
-  return <Card className="p-0 border-gray-600">
-      <CardContent className="p-0">
-        <div ref={mapContainerRef} className={`w-full ${className} rounded-lg overflow-hidden relative`} style={{
-        cursor: disabled ? 'not-allowed' : 'pointer'
-      }}>
+  return <Card className="w-full p-0 border-gray-600 relative overflow-hidden">
+      <CardContent className="w-full p-0 relative">
+        <div
+          ref={mapContainerRef}
+          className={`relative w-full h-full ${className} min-h-[20rem] rounded-lg overflow-hidden`}
+          style={{
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            width: '100%',
+            height: '100%',
+            position: 'relative'
+          }}
+        >
           {/* 地图加载状态 */}
-          {!mapLoaded && <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 z-10">
-              <div className="flex flex-col items-center space-y-2">
+          {!mapLoaded && !mapError && <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 z-[1000]">
+              <div className="flex flex-col items中心 space-y-2">
                 <Loader className="h-8 w-8 text-blue-400 animate-spin" />
                 <div className="text-white text-sm font-medium">地图加载中...</div>
               </div>
             </div>}
+          {mapError && <div className="absolute inset-0 flex items-center justify-center bg-red-900/40 z-[1100]">
+              <div className="text-white text-sm font-medium bg-red-700/60 px-4 py-2 rounded border border-white/20">
+                地图初始化失败
+              </div>
+            </div>}
           
           {/* 地图操作提示 */}
-          {!disabled && mapLoaded && <div className="absolute top-4 left-4 bg-black/80 text-white text-sm px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20 z-20">
+          {!disabled && mapLoaded && <div className="absolute top-4 left-4 bg-black/80 text-white text-sm px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20 z-[1000] pointer-events-none max-w-[90%]">
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-red-400" />
                 <span>左键点击地图或拖动标记设置坐标</span>
@@ -347,7 +377,7 @@ export function ScenicMap({
             </div>}
           
           {/* 禁用状态遮罩 */}
-          {disabled && mapLoaded && <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm z-30">
+          {disabled && mapLoaded && <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm z-[1100]">
               <div className="text-white text-lg font-medium bg-black/60 px-4 py-3 rounded-lg border border-white/20">
                 编辑模式下可设置坐标
               </div>
@@ -390,3 +420,13 @@ export function ScenicMap({
       </CardContent>
     </Card>;
 }
+
+ScenicMap.propTypes = {
+  onPositionSelect: PropTypes.func,
+  initialPosition: PropTypes.shape({
+    lat: PropTypes.number,
+    lng: PropTypes.number
+  }),
+  disabled: PropTypes.bool,
+  className: PropTypes.string
+};

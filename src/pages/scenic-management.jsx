@@ -435,8 +435,8 @@ export default function ScenicManagement(props) {
             </div>
 
             {/* 右侧：地图坐标选择 */}
-            <div className="space-y-6">
-              <Card className="bg-gray-800/50 border-gray-700">
+            <div className="w-full h-full space-y-6">
+              <Card className="bg-gray-800/50 border-gray-700 h-full">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center">
                     <MapPin className="h-5 w-5 mr-2 text-blue-400" />
