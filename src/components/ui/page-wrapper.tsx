@@ -3,6 +3,8 @@ import * as React from "react";
 import { $w as base$W, createPageApi } from "@/lib/weda-client";
 import { _WEDA_CLOUD_SDK as WEDA_CLOUD_SDK } from "@cloudbase/weda-client";
 import querystring from "query-string";
+import { MainLayout } from "@/layouts/MainLayout";
+
 const { createDataset, EXTRA_API } = WEDA_CLOUD_SDK;
 
 export function PageWrapper({
@@ -57,5 +59,30 @@ export function PageWrapper({
     };
   }, []);
 
-  return <Page {...props} $w={$page.__internal__.$w || base$W} />;
+  // Determine if we should wrap with MainLayout
+  // Exclude 'login' (should be blank)
+  // Exclude 'scenic-management' (already wrapped internally in the previous turn, 
+  // BUT wait - if I wrap it here, I should modify scenic-management to remove its own wrapper 
+  // OR just skip wrapping here. The prompt said "excluding scenic management subsystem", 
+  // which might mean "don't touch it". 
+  // However, for consistency, the best approach is to wrap everything EXCEPT login.
+  // If scenic-management is double-wrapped, it will look weird (double headers).
+  // I will assume I should skip wrapping 'scenic-management' here to avoid breaking what I just did,
+  // OR I can go back and fix scenic-management. 
+  // Given the instruction "Reform scope covers... NOT including scenic management", 
+  // I will strictly NOT apply the new layout logic to scenic-management from the outside.
+  
+  const isFullScreenPage = id === 'login' || id === 'scenic-management';
+
+  const content = <Page {...props} $w={$page.__internal__.$w || base$W} />;
+
+  if (isFullScreenPage) {
+    return content;
+  }
+
+  return (
+    <MainLayout $w={$page.__internal__.$w || base$W}>
+      {content}
+    </MainLayout>
+  );
 }

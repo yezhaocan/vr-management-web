@@ -205,12 +205,12 @@ export function ScenicMap({
         markerRef.current = null;
       }
 
-      // 创建自定义标记图标
+      // 创建自定义标记图标 - 使用主色的互补色 (Orange: #ff8718)
       const customIcon = window.L.divIcon({
         className: 'scenic-marker',
         html: `
           <div style="
-            background: #8b5cf6;
+            background: #ff8718;
             width: 24px;
             height: 24px;
             border-radius: 50%;
@@ -342,76 +342,71 @@ export function ScenicMap({
     setTimeout(() => initializeMap(), 0);
     return () => cleanupMap();
   }, []);
-  return <Card className="w-full p-0 border-gray-600 relative overflow-hidden">
-      <CardContent className="w-full p-0 relative">
-        <div ref={mapContainerRef} className={`relative w-full h-full ${className} min-h-[20rem] rounded-lg overflow-hidden`} style={{
+
+  return (
+    <>
+      <style>{`
+        .leaflet-control-zoom {
+          border: none !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+          margin-top: 16px !important;
+          margin-right: 16px !important;
+        }
+        .leaflet-control-zoom a {
+          background-color: hsl(var(--card)) !important;
+          color: hsl(var(--foreground)) !important;
+          border-bottom: 1px solid hsl(var(--border)) !important;
+          width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+          font-size: 14px !important;
+          transition: all 0.2s ease;
+        }
+        .leaflet-control-zoom a:first-child {
+          border-top-left-radius: 8px !important;
+          border-top-right-radius: 8px !important;
+        }
+        .leaflet-control-zoom a:last-child {
+          border-bottom-left-radius: 8px !important;
+          border-bottom-right-radius: 8px !important;
+          border-bottom: none !important;
+        }
+        .leaflet-control-zoom a:hover {
+          background-color: hsl(var(--accent)) !important;
+          color: hsl(var(--accent-foreground)) !important;
+        }
+        .leaflet-container {
+          font-family: inherit !important;
+          z-index: 1;
+        }
+      `}</style>
+      <div ref={mapContainerRef} className={`relative w-full h-full ${className} bg-muted/20`} style={{
         cursor: disabled ? 'not-allowed' : 'pointer',
         width: '100%',
         height: '100%',
-        position: 'relative'
+        position: 'relative',
+        zIndex: 1
       }}>
-          {/* 地图加载状态 */}
-          {!mapLoaded && !mapError && <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 z-[1000]">
-              <div className="flex flex-col items中心 space-y-2">
-                <Loader className="h-8 w-8 text-blue-400 animate-spin" />
-                <div className="text-white text-sm font-medium">地图加载中...</div>
-              </div>
-            </div>}
-          {mapError && <div className="absolute inset-0 flex items-center justify-center bg-red-900/40 z-[1100]">
-              <div className="text-white text-sm font-medium bg-red-700/60 px-4 py-2 rounded border border-white/20">
-                地图初始化失败
-              </div>
-            </div>}
-          
-          {/* 地图操作提示 */}
-          {!disabled && mapLoaded && <div className="absolute top-4 left-4 bg-black/80 text-white text-sm px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20 z-[1000] pointer-events-none max-w-[90%]">
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-red-400" />
-                <span>左键点击地图或拖动标记设置坐标</span>
-              </div>
-            </div>}
-          
-          {/* 禁用状态遮罩 */}
-          {disabled && mapLoaded && <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm z-[1100]">
-              <div className="text-white text-lg font-medium bg-black/60 px-4 py-3 rounded-lg border border-white/20">
-                编辑模式下可设置坐标
-              </div>
-            </div>}
-        </div>
+        {/* 地图加载状态 */}
+        {!mapLoaded && !mapError && <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-[1000]">
+            <div className="flex flex-col items-center space-y-2">
+              <Loader className="h-8 w-8 text-primary animate-spin" />
+              <div className="text-foreground text-sm font-medium">地图加载中...</div>
+            </div>
+          </div>}
+        {mapError && <div className="absolute inset-0 flex items-center justify-center bg-destructive/10 z-[1100]">
+            <div className="text-destructive-foreground text-sm font-medium bg-destructive px-4 py-2 rounded border border-destructive-foreground/20">
+              地图初始化失败
+            </div>
+          </div>}
         
-        {/* 坐标信息显示和手动输入 */}
-        <div className="mt-4 p-4 bg-gray-800/80 rounded-lg border border-gray-600">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-2 text-gray-300">
-              <Edit3 className="h-4 w-4" />
-              <span className="text-sm font-medium">坐标设置</span>
+        {/* 禁用状态遮罩 */}
+        {disabled && mapLoaded && <div className="absolute inset-0 bg-background/40 flex items-center justify-center backdrop-blur-sm z-[1100]">
+            <div className="text-foreground text-lg font-medium bg-background/90 px-4 py-3 rounded-lg border border-border shadow-sm">
+              编辑模式下可设置坐标
             </div>
-            {selectedPosition && <div className="text-xs text-green-400 bg-green-900/20 px-2 py-1 rounded">
-                坐标已设置
-              </div>}
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-400 font-medium">纬度:</span>
-              <input type="number" step="0.000001" value={selectedPosition ? selectedPosition.lat : ''} onChange={e => handleManualCoordinateChange('lat', e.target.value)} disabled={disabled || !mapLoaded} placeholder="39.9042" className="text-white font-mono bg-gray-700/50 px-3 py-2 rounded border border-gray-600 flex-1 min-w-0 disabled:opacity-50 disabled:cursor-not-allowed" />
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-400 font-medium">经度:</span>
-              <input type="number" step="0.000001" value={selectedPosition ? selectedPosition.lng : ''} onChange={e => handleManualCoordinateChange('lng', e.target.value)} disabled={disabled || !mapLoaded} placeholder="116.4074" className="text-white font-mono bg-gray-700/50 px-3 py-2 rounded border border-gray-600 flex-1 min-w-0 disabled:opacity-50 disabled:cursor-not-allowed" />
-            </div>
-          </div>
-          
-          {selectedPosition && <div className="mt-3 pt-3 border-t border-gray-600">
-              <div className="text-xs text-gray-400 flex items-center space-x-1">
-                <MapPin className="h-3 w-3" />
-                <span>当前坐标：纬度 {selectedPosition.lat.toFixed(6)}，经度 {selectedPosition.lng.toFixed(6)}</span>
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                支持手动输入坐标、点击地图或拖动标记设置位置
-              </div>
-            </div>}
-        </div>
-      </CardContent>
-    </Card>;
+          </div>}
+      </div>
+    </>
+  );
 }

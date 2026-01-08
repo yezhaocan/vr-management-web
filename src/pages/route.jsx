@@ -1,30 +1,27 @@
 // @ts-ignore;
 import React, { useState, useEffect } from 'react';
 // @ts-ignore;
-import { Button, Card, CardContent, CardHeader, CardTitle, useToast, Badge, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, useToast, Badge, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Input } from '@/components/ui';
 // @ts-ignore;
-import { Plus, Edit, Trash2, Play, Music, Volume2, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Play, Music, Volume2, AlertTriangle, Map, Clock, Search } from 'lucide-react';
 
 // @ts-ignore;
 import { RouteEditor } from '@/components/RouteEditor';
 // @ts-ignore;
 import { AirlineList } from '@/components/AirlineList';
+import { AuthGuard } from '@/components/AuthGuard';
+
 export default function RoutePage(props) {
-  const {
-    $w,
-    style
-  } = props;
+  const { $w, style } = props;
   const [routes, setRoutes] = useState([]);
   const [showEditor, setShowEditor] = useState(false);
   const [editingRoute, setEditingRoute] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [routeToDelete, setRouteToDelete] = useState(null);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const [searchKeyword, setSearchKeyword] = useState(''); // 新增：搜索关键词状态
 
-  // 加载航线数据
   const loadRoutes = async () => {
     try {
       setLoading(true);
@@ -34,12 +31,8 @@ export default function RoutePage(props) {
         params: {
           pageSize: 100,
           pageNumber: 1,
-          orderBy: [{
-            createdAt: 'desc'
-          }],
-          select: {
-            $master: true
-          }
+          orderBy: [{ createdAt: 'desc' }],
+          select: { $master: true }
         }
       });
       setRoutes(result.records || []);
@@ -54,29 +47,26 @@ export default function RoutePage(props) {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     loadRoutes();
   }, []);
 
-  // 创建新航线
   const handleCreateRoute = () => {
     setEditingRoute(null);
     setShowEditor(true);
   };
 
-  // 编辑航线
   const handleEditRoute = route => {
     setEditingRoute(route);
     setShowEditor(true);
   };
 
-  // 打开删除确认对话框
   const handleDeleteRoute = route => {
     setRouteToDelete(route);
     setDeleteConfirmOpen(true);
   };
 
-  // 执行删除操作
   const confirmDeleteRoute = async () => {
     if (!routeToDelete) return;
     try {
@@ -84,21 +74,11 @@ export default function RoutePage(props) {
         dataSourceName: 'airline',
         methodName: 'wedaDeleteV2',
         params: {
-          filter: {
-            where: {
-              _id: {
-                $eq: routeToDelete._id
-              }
-            }
-          }
+          filter: { where: { _id: { $eq: routeToDelete._id } } }
         }
       });
       if (result.count > 0) {
-        toast({
-          title: '删除成功',
-          description: '航线已删除',
-          variant: 'default'
-        });
+        toast({ title: '删除成功', description: '航线已删除', variant: 'default' });
         loadRoutes();
       }
     } catch (error) {
@@ -114,32 +94,27 @@ export default function RoutePage(props) {
     }
   };
 
-  // 取消删除
   const cancelDeleteRoute = () => {
     setDeleteConfirmOpen(false);
     setRouteToDelete(null);
   };
 
-  // 处理编辑器关闭
   const handleEditorClose = () => {
     setShowEditor(false);
     setEditingRoute(null);
   };
 
-  // 处理编辑器保存成功
   const handleEditorSuccess = () => {
     setShowEditor(false);
     setEditingRoute(null);
     loadRoutes();
   };
 
-  // 检查航线是否有语音讲解（只要有一个航点开启了语音讲解就认为有）
   const hasVoiceGuide = route => {
     if (!route.waypoints || !Array.isArray(route.waypoints)) return false;
     return route.waypoints.some(waypoint => waypoint.voiceGuide && waypoint.voiceGuide.enabled === true);
   };
 
-  // 统计信息
   const getStats = () => {
     const totalRoutes = routes.length;
     const routesWithBackgroundMusic = routes.filter(route => route.cloudStorageId && route.cloudStorageId.trim() !== '').length;
@@ -153,128 +128,126 @@ export default function RoutePage(props) {
     };
   };
   const stats = getStats();
-  return <div style={style} className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* 头部标题和操作按钮 */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">航线管理</h1>
-            <p className="text-gray-400">创建和管理无人机飞行航线</p>
+
+  // 过滤航线列表
+  const filteredRoutes = routes.filter(route => 
+    route.name?.toLowerCase().includes(searchKeyword.toLowerCase()) || 
+    route.description?.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
+
+  return (
+    <AuthGuard $w={$w}>
+      <div style={style} className="space-y-6 animate-in fade-in duration-500">
+        
+        {/* 统计信息卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="flex flex-row items-center p-6 border border-border bg-card shadow-sm gap-4">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+              <Map className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex flex-col items-start space-y-1">
+              <h3 className="text-sm font-medium text-muted-foreground">总航线数</h3>
+              <div className="text-3xl font-bold text-primary">{stats.totalRoutes}</div>
+              <p className="text-xs text-muted-foreground">已规划航线</p>
+            </div>
+          </Card>
+
+          <Card className="flex flex-row items-center p-6 border border-border bg-card shadow-sm gap-4">
+            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+              <Music className="w-6 h-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="flex flex-col items-start space-y-1 flex-1">
+              <h3 className="text-sm font-medium text-muted-foreground">带背景音乐</h3>
+              <div className="text-3xl font-bold text-primary">{stats.routesWithBackgroundMusic}</div>
+            </div>
+            <div className="flex flex-col items-end">
+               <span className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.backgroundMusicPercentage}%</span>
+               <span className="text-xs text-muted-foreground">占比</span>
+            </div>
+          </Card>
+
+          <Card className="flex flex-row items-center p-6 border border-border bg-card shadow-sm gap-4">
+            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+              <Volume2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="flex flex-col items-start space-y-1 flex-1">
+              <h3 className="text-sm font-medium text-muted-foreground">带语音讲解</h3>
+              <div className="text-3xl font-bold text-primary">{stats.routesWithVoiceGuide}</div>
+            </div>
+            <div className="flex flex-col items-end">
+               <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.voiceGuidePercentage}%</span>
+               <span className="text-xs text-muted-foreground">占比</span>
+            </div>
+          </Card>
+        </div>
+
+        {/* 顶部工具栏 */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1 w-full sm:w-auto flex items-center gap-4">
+             <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input 
+                  placeholder="搜索航线名称或描述..." 
+                  value={searchKeyword} 
+                  onChange={e => setSearchKeyword(e.target.value)} 
+                  className="pl-10 bg-background border-input w-full hover:border-primary transition-colors duration-200" 
+                />
+             </div>
           </div>
-          <Button onClick={handleCreateRoute} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold">
+          <Button onClick={handleCreateRoute} className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Plus className="w-4 h-4 mr-2" /> 创建航线
           </Button>
         </div>
 
-        {/* 统计信息卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">总航线数</p>
-                  <p className="text-3xl font-bold text-white">{stats.totalRoutes}</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
-                  <Play className="w-6 h-6 text-blue-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">带背景音乐</p>
-                  <p className="text-3xl font-bold text-white">{stats.routesWithBackgroundMusic}</p>
-                  <p className="text-green-400 text-sm">{stats.backgroundMusicPercentage}%</p>
-                </div>
-                <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
-                  <Music className="w-6 h-6 text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">带语音讲解</p>
-                  <p className="text-3xl font-bold text-white">{stats.routesWithVoiceGuide}</p>
-                  <p className="text-purple-400 text-sm">{stats.voiceGuidePercentage}%</p>
-                </div>
-                <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
-                  <Volume2 className="w-6 h-6 text-purple-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* 航线列表 */}
-        <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold text-white">航线列表</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {loading ? <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-                <span className="ml-3 text-gray-400">加载中...</span>
-              </div> : <AirlineList routes={routes} onEdit={handleEditRoute} onDelete={handleDeleteRoute} hasVoiceGuide={hasVoiceGuide} />}
-          </CardContent>
-        </Card>
+        <div className="bg-background">
+          <AirlineList routes={filteredRoutes} onEdit={handleEditRoute} onDelete={handleDeleteRoute} hasVoiceGuide={hasVoiceGuide} />
+        </div>
 
         {/* 航线编辑器弹窗 */}
         {showEditor && <RouteEditor route={editingRoute} onClose={handleEditorClose} onSuccess={handleEditorSuccess} $w={$w} />}
 
         {/* 删除确认对话框 */}
         <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-          <DialogContent className="bg-gray-800 border border-gray-600 shadow-2xl rounded-2xl max-w-md">
+          <DialogContent className="bg-background border-border text-foreground sm:max-w-md">
             <DialogHeader>
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-red-400" />
-                </div>
-                <DialogTitle className="text-white text-lg font-semibold">确认删除航线</DialogTitle>
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <DialogTitle>确认删除航线</DialogTitle>
               </div>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription>
                 您确定要删除这条航线吗？此操作不可恢复。
               </DialogDescription>
             </DialogHeader>
             
-            {routeToDelete && <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">航线编号:</span>
-                    <span className="text-white text-sm font-medium">{routeToDelete._id?.substring(0, 8)}...</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">航线名称:</span>
-                    <span className="text-white text-sm font-medium">{routeToDelete.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">航点数量:</span>
-                    <span className="text-white text-sm font-medium">{routeToDelete.waypointCount || 0} 个</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">预计时长:</span>
-                    <span className="text-white text-sm font-medium">{routeToDelete.estimated_duration || 0} 分钟</span>
-                  </div>
+            {routeToDelete && (
+              <div className="bg-muted/50 rounded-md p-4 space-y-2 text-sm border border-border">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">航线名称</span>
+                  <span className="font-medium text-foreground">{routeToDelete.name}</span>
                 </div>
-              </div>}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">航点数量</span>
+                  <span className="font-medium text-foreground">{routeToDelete.waypointCount || 0} 个</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">预计时长</span>
+                  <span className="font-medium text-foreground">{routeToDelete.estimated_duration || 0} 分钟</span>
+                </div>
+              </div>
+            )}
             
-            <DialogFooter className="flex justify-end space-x-3 mt-4">
-              <Button variant="outline" onClick={cancelDeleteRoute} className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200">
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={cancelDeleteRoute}>
                 取消
               </Button>
-              <Button onClick={confirmDeleteRoute} className="bg-red-500 hover:bg-red-600 text-white font-medium transition-all duration-200">
+              <Button variant="destructive" onClick={confirmDeleteRoute}>
                 确认删除
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
-    </div>;
+    </AuthGuard>
+  );
 }

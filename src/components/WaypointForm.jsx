@@ -3,13 +3,15 @@ import React from 'react';
 // @ts-ignore;
 import { Card, CardContent, CardHeader, CardTitle, Input, Label, Button, useToast } from '@/components/ui';
 // @ts-ignore;
-import { Plus } from 'lucide-react';
+import { Plus, Save } from 'lucide-react';
 
 export function WaypointForm({
   newWaypoint,
   onWaypointChange,
   onAddWaypoint,
-  scenicCenter
+  onDeleteWaypoint,
+  scenicCenter,
+  isEditing = false
 }) {
   const {
     toast
@@ -104,48 +106,56 @@ export function WaypointForm({
       });
     }
   };
-  return <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-blue-400 text-sm font-semibold">添加新航点</CardTitle>
-        <p className="text-gray-400 text-xs">坐标精度: 8位小数</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* 第一行：航点名称 */}
-        <div>
-          <Label className="text-gray-300 text-xs font-medium">航点名称</Label>
-          <Input placeholder="航点名称" value={newWaypoint.name} onChange={e => onWaypointChange('name', e.target.value)} className="bg-gray-700 border-gray-600 text-white text-sm" />
+  return <Card className="bg-card border-border shadow-sm rounded-lg h-full overflow-y-auto custom-scrollbar">
+      <CardContent className="space-y-4 pt-4">
+        {/* 航点名称 */}
+        <div className="space-y-2">
+          <Label className="text-foreground text-sm font-medium">航点名称</Label>
+          <Input placeholder="请输入航点名称" value={newWaypoint.name} onChange={e => onWaypointChange('name', e.target.value)} className="common-input" />
         </div>
         
-        {/* 第二行：飞行速度（单位m/s）默认5，悬停时长（秒）默认0 */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <Label className="text-gray-300 text-xs font-medium">飞行速度(m/s)</Label>
-            <Input type="number" min="0.1" step="0.1" value={newWaypoint.flightSpeed} onChange={e => onWaypointChange('flightSpeed', e.target.value)} className="bg-gray-700 border-gray-600 text-white text-sm" />
+        {/* 飞行速度与悬停时长 - 合并为一列 */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-foreground text-sm font-medium">飞行速度(m/s)</Label>
+            <Input type="number" min="0.1" step="0.1" value={newWaypoint.flightSpeed} onChange={e => onWaypointChange('flightSpeed', e.target.value)} className="common-input" />
           </div>
-          <div>
-            <Label className="text-gray-300 text-xs font-medium">悬停时长(秒)</Label>
-            <Input type="number" min="0" step="0.1" value={newWaypoint.hoverDuration} onChange={e => onWaypointChange('hoverDuration', e.target.value)} className="bg-gray-700 border-gray-600 text-white text-sm" />
+          <div className="space-y-2">
+            <Label className="text-foreground text-sm font-medium">悬停时长(秒)</Label>
+            <Input type="number" min="0" step="0.1" value={newWaypoint.hoverDuration} onChange={e => onWaypointChange('hoverDuration', e.target.value)} className="common-input" />
           </div>
         </div>
         
-        {/* 第三行：纬度，经度，高度 */}
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <Label className="text-gray-300 text-xs font-medium">纬度</Label>
-            <Input type="number" step="0.00000001" value={newWaypoint.lat} onChange={e => handleCoordinateChange('lat', e.target.value)} className="bg-gray-700 border-gray-600 text-white text-sm" title="支持8位小数精度" />
-          </div>
-          <div>
-            <Label className="text-gray-300 text-xs font-medium">经度</Label>
-            <Input type="number" step="0.00000001" value={newWaypoint.lng} onChange={e => handleCoordinateChange('lng', e.target.value)} className="bg-gray-700 border-gray-600 text-white text-sm" title="支持8位小数精度" />
-          </div>
-          <div>
-            <Label className="text-gray-300 text-xs font-medium">高度(米)</Label>
-            <Input type="number" min="1" step="1" value={newWaypoint.altitude} onChange={e => onWaypointChange('altitude', e.target.value)} className="bg-gray-700 border-gray-600 text-white text-sm" />
-          </div>
+        {/* 经度 */}
+        <div className="space-y-2">
+          <Label className="text-foreground text-sm font-medium">经度</Label>
+          <Input type="number" step="0.00000001" value={newWaypoint.lng} onChange={e => handleCoordinateChange('lng', e.target.value)} className="common-input" title="支持8位小数精度" />
         </div>
-        <Button onClick={handleAddWaypoint} className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white">
-          <Plus className="w-4 h-4 mr-1" /> 添加航点
-        </Button>
+        
+        {/* 纬度 */}
+        <div className="space-y-2">
+          <Label className="text-foreground text-sm font-medium">纬度</Label>
+          <Input type="number" step="0.00000001" value={newWaypoint.lat} onChange={e => handleCoordinateChange('lat', e.target.value)} className="common-input" title="支持8位小数精度" />
+        </div>
+        
+        {/* 高度 */}
+        <div className="space-y-2">
+          <Label className="text-foreground text-sm font-medium">高度(米)</Label>
+          <Input type="number" min="1" step="1" value={newWaypoint.altitude} onChange={e => onWaypointChange('altitude', e.target.value)} className="common-input" />
+        </div>
+        
+        <div className="flex gap-2 mt-4 pt-2 border-t border-border">
+          <Button onClick={handleAddWaypoint} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+            {isEditing ? <><Save className="w-4 h-4 mr-1" /> 保存航点</> : <><Plus className="w-4 h-4 mr-1" /> 添加航点</>}
+          </Button>
+          {isEditing && <Button variant="outline" onClick={() => {
+            if (window.confirm('确定要删除当前编辑的航点吗？')) {
+              onDeleteWaypoint();
+            }
+          }} className="flex-1 border-destructive text-destructive hover:bg-destructive/10">
+            删除航点
+          </Button>}
+        </div>
       </CardContent>
     </Card>;
 }
