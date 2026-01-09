@@ -10,8 +10,6 @@ import VIDEO_RECORD from '../pages/video-record.jsx';
 import TIPS from '../pages/tips.jsx';
 import SCENIC_MANAGEMENT from '../pages/scenic-management.jsx';
 import LOGIN from '../pages/login.jsx';
-import ROUTER_TEST from '../pages/router-test.jsx';
-import NOT_FOUND from '../pages/not-found.jsx';
 export const routers = [{
   id: "dashboard",
   component: DASHBOARD,
@@ -49,7 +47,4 @@ export const routers = [{
 }, {
   id: "login",
   component: LOGIN
-}, {
-  id: "404",
-  component: NOT_FOUND
 }]
