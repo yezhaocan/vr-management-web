@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useToast, Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from '@/components/ui';
 // @ts-ignore;
 import { Drone, Navigation, MapPin, PlayCircle, Lightbulb, Settings, Users, DollarSign, RefreshCw, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard(props) {
   const {
@@ -13,7 +12,6 @@ export default function Dashboard(props) {
   const {
     toast
   } = useToast();
-  const navigate = useNavigate();
 
   const [currentUser, setCurrentUser] = useState(null);
   const [systemStats, setSystemStats] = useState({
@@ -25,6 +23,30 @@ export default function Dashboard(props) {
     totalTips: 0
   });
   const [loading, setLoading] = useState(false);
+
+  const navigateTo = (path, options = {}) => {
+    const { state = {}, params = {}, replace = false, requireAuth = false } = options;
+    if (requireAuth && !currentUser) {
+      toast({
+        title: '未登录',
+        description: '请先登录后再进行操作',
+        variant: 'destructive'
+      });
+      return;
+    }
+    const url = new URL(path, window.location.origin);
+    Object.entries(params || {}).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+    });
+    const method = replace ? 'replaceState' : 'pushState';
+    try {
+      window.history[method](state, '', url.toString());
+      window.dispatchEvent(new PopStateEvent('popstate', { state }));
+      window.dispatchEvent(new CustomEvent('app:navigate', { detail: { path: url.pathname, params: url.searchParams, state } }));
+    } catch {
+      window.location.assign(url.toString());
+    }
+  };
 
   const getCurrentUser = async () => {
     try {
@@ -185,25 +207,25 @@ export default function Dashboard(props) {
           title="景区管理" 
           description="管理景区信息和坐标位置" 
           icon={<MapPin className="w-5 h-5 mr-2" />} 
-          onClick={() => navigate('/scenic-management')} 
+          onClick={() => navigateTo('/scenic-management', { requireAuth: true })} 
         />
         <QuickActionCard 
           title="航线管理" 
           description="规划和管理飞行航线" 
           icon={<Navigation className="w-5 h-5 mr-2" />} 
-          onClick={() => navigate('/route')} 
+          onClick={() => navigateTo('/route', { requireAuth: true })} 
         />
         <QuickActionCard 
           title="飞行任务" 
           description="创建和执行飞行任务" 
           icon={<PlayCircle className="w-5 h-5 mr-2" />} 
-          onClick={() => navigate('/flight-task')} 
+          onClick={() => navigateTo('/flight-task', { requireAuth: true, params: { tab: 'pending' } })} 
         />
         <QuickActionCard 
           title="系统配置" 
           description="系统参数和设置管理" 
           icon={<Settings className="w-5 h-5 mr-2" />} 
-          onClick={() => navigate('/config')} 
+          onClick={() => navigateTo('/config', { requireAuth: true })} 
         />
       </div>
     </div>

@@ -1,16 +1,10 @@
 // @ts-nocheck
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  unstable_HistoryRouter as BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
 import { PageWrapper } from "./components/ui/page-wrapper";
 import { routers } from "./configs/routers";
 import { createBrowserHistory } from "history";
@@ -21,6 +15,33 @@ window._WEAPPS_HISTORY = history;
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {
+  const homeId = useMemo(
+    () => routers.find((item) => item.isHome)?.id || routers[0].id,
+    []
+  );
+  const [path, setPath] = useState<string>(window.location.pathname);
+
+  useEffect(() => {
+    const handlePop = () => setPath(window.location.pathname);
+    window.addEventListener("popstate", handlePop);
+    window.addEventListener("app:navigate", handlePop as any);
+
+    if (window.location.pathname === "/") {
+      const url = `/${homeId}`;
+      history.replace(url);
+      setPath(url);
+    }
+    return () => {
+      window.removeEventListener("popstate", handlePop);
+      window.removeEventListener("app:navigate", handlePop as any);
+    };
+  }, [homeId]);
+
+  const activeRoute = useMemo(() => {
+    const id = path.replace(/^\/+/, "");
+    return routers.find((r) => r.id === id) || routers.find((r) => r.id === homeId)!;
+  }, [path, homeId]);
+
   return (
     <React.StrictMode>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -28,30 +49,7 @@ const App: React.FC = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner position="top-center" />
-            <BrowserRouter history={history}>
-              <Routes>
-                <Route
-                  path="/"
-                  element={
-                    <Navigate
-                      to={`/${
-                        routers.find((item) => item.isHome)?.id || routers[0].id
-                      }`}
-                      replace
-                    />
-                  }
-                />
-                {routers.map((item) => {
-                  return (
-                    <Route
-                      key={item.id}
-                      path={`/${item.id}`}
-                      element={<PageWrapper id={item.id} Page={item.component} />}
-                    />
-                  );
-                })}
-              </Routes>
-            </BrowserRouter>
+            <PageWrapper id={activeRoute.id} Page={activeRoute.component} />
           </TooltipProvider>
         </QueryClientProvider>
       </ThemeProvider>
