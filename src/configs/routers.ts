@@ -10,7 +10,6 @@ import SCENIC_MANAGEMENT from '../pages/scenic-management.jsx';
 import SUPERADMIN from '../pages/superadmin.jsx';
 import TIPS from '../pages/tips.jsx';
 import VIDEO_RECORD from '../pages/video-record.jsx';
-import NOT_FOUND from '../pages/not-found.jsx';
 export const routers = [{
   id: "_app",
   component: _APP
@@ -47,7 +46,4 @@ export const routers = [{
 }, {
   id: "video-record",
   component: VIDEO_RECORD
-}, {
-  id: "not-found",
-  component: NOT_FOUND
 }]
