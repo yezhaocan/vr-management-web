@@ -7,7 +7,7 @@ import { MapPin, Edit, Save, Map, Upload, Image, X } from 'lucide-react';
 
 import { ScenicMap } from '@/components/ScenicMap';
 import { AuthGuard } from '@/components/AuthGuard';
-import { MainLayout } from '@/layouts/MainLayout';
+import { MainLayout } from '@/pages/MainLayout';
 
 export default function ScenicManagement(props) {
   const {

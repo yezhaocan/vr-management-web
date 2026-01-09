@@ -4,43 +4,19 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { menuItems } from '@/configs/menus';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-interface MainLayoutProps {
-  children: React.ReactNode;
-  $w?: any;
-}
-
-export const MainLayout: React.FC<MainLayoutProps> = ({ children, $w }) => {
+export const MainLayout = ({ children, $w }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
-
-  const navigateTo = (path: string, options: { replace?: boolean; state?: any } = {}) => {
-    const { replace = false, state = {} } = options;
-    try {
-      const method = replace ? 'replaceState' : 'pushState';
-      window.history[method](state, '', path);
-      window.dispatchEvent(new PopStateEvent('popstate', { state }));
-      window.dispatchEvent(new CustomEvent('app:navigate', { detail: { path, state } }));
-    } catch {
-      window.location.assign(path);
-    }
-  };
-
-  useEffect(() => {
-    const handlePop = () => setCurrentPath(window.location.pathname);
-    window.addEventListener('popstate', handlePop);
-    window.addEventListener('app:navigate', handlePop as any);
-    return () => {
-      window.removeEventListener('popstate', handlePop);
-      window.removeEventListener('app:navigate', handlePop as any);
-    };
-  }, []);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // 获取当前激活的菜单 ID
   const activeMenuId = React.useMemo(() => {
+    const currentPath = location.pathname;
     const item = menuItems.find(item => item.path === currentPath);
     return item?.id || '';
-  }, [currentPath]);
+  }, [location.pathname]);
 
   // 获取当前页面标题
   const currentTitle = React.useMemo(() => {
@@ -80,7 +56,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children, $w }) => {
                   label={item.label} 
                   isOpen={sidebarOpen} 
                   active={activeMenuId === item.id}
-                  onClick={() => navigateTo(item.path)}
+                  onClick={() => navigate(item.path)}
                 />
               ))}
             </nav>
@@ -122,12 +98,6 @@ function NavItem({
   isOpen, 
   active = false,
   onClick 
-}: { 
-  icon: React.ReactNode, 
-  label: string, 
-  isOpen: boolean, 
-  active?: boolean,
-  onClick?: () => void
 }) {
   return (
     <Button

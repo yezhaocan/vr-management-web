@@ -3,7 +3,7 @@ import * as React from "react";
 import { $w as base$W, createPageApi } from "@/lib/weda-client";
 import { _WEDA_CLOUD_SDK as WEDA_CLOUD_SDK } from "@cloudbase/weda-client";
 import querystring from "query-string";
-import { MainLayout } from "@/layouts/MainLayout";
+import { MainLayout } from '@/pages/MainLayout';
 
 const { createDataset, EXTRA_API } = WEDA_CLOUD_SDK;
 

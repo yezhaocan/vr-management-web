@@ -10,8 +10,6 @@ import { VideoUploadForm } from '@/components/VideoUploadForm';
 // @ts-ignore;
 import { VideoCard } from '@/components/VideoCard';
 import { AuthGuard } from '@/components/AuthGuard';
-import { UserMenu } from '@/components/UserMenu';
-import { MainLayout } from '@/layouts/MainLayout';
 
 export default function VideoRecord(props) {
   const {
