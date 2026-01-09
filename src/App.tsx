@@ -6,17 +6,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  unstable_HistoryRouter as BrowserRouter,
+  BrowserRouter,
   Routes,
   Route,
   Navigate,
-} from "react-router-dom";
+} from "@/components/router";
 import { PageWrapper } from "./components/ui/page-wrapper";
 import { routers } from "./configs/routers";
 import { createBrowserHistory } from "history";
+import NotFoundPage from "./pages/not-found";
 
+// 保持与原有代码的兼容性
 const history = createBrowserHistory();
-window._WEAPPS_HISTORY = history;
+(window as any)._WEAPPS_HISTORY = history;
 // Create a client
 const queryClient = new QueryClient();
 
@@ -28,15 +30,14 @@ const App: React.FC = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner position="top-center" />
-            <BrowserRouter history={history}>
-              <Routes>
+            <BrowserRouter>
+              <Routes fallback={<NotFoundPage />}>
                 <Route
                   path="/"
                   element={
                     <Navigate
-                      to={`/${
-                        routers.find((item) => item.isHome)?.id || routers[0].id
-                      }`}
+                      to={`/${routers.find((item) => item.isHome)?.id || routers[0].id
+                        }`}
                       replace
                     />
                   }

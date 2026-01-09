@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useToast, Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from '@/components/ui';
 // @ts-ignore;
 import { Drone, Navigation, MapPin, PlayCircle, Lightbulb, Settings, Users, DollarSign, RefreshCw, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@/components/router';
 
 export default function Dashboard(props) {
   const {
