@@ -27,34 +27,38 @@ export default function LoginPage(props) {
   useEffect(() => {
     checkLoginStatus();
   }, []);
+
   const checkLoginStatus = async () => {
     try {
       const tcb = await $w.cloud.getCloudInstance();
       console.log(`🚀 ~ checkLoginStatus ~ tcb-> `, tcb)
       const auth = tcb.auth();
-      await auth.signIn({
-        username: 'administrator',
-        password: 'Nucleus!123'
-      });
+      
+      // 开发环境：自动登录
+      if (import.meta.env.DEV) {
+        console.log('🔧 开发环境：使用自动登录');
+        await auth.signIn({
+          username: 'administrator',
+          password: 'Nucleus!123'
+        });
+      }
+      
       if (!auth.currentUser) return;
       console.log(`🚀 检查 ~ checkLoginStatus ~ auth-> `, auth)
       const loginState = auth.hasLoginState();
       console.log(`🚀 检查 ~ checkLoginStatus ~ loginState-> `, loginState)
+      
       if (loginState && loginState.user?.name !== 'anonymous') {
         // 已登录，跳转到dashboard
         $w.utils.redirectTo({
           pageId: 'dashboard',
           params: {}
         });
-      } else {
-
-        // $w.utils.redirectTo({
-        //   pageId: 'login',
-        //   params: {}
-        // });
+      } else if (import.meta.env.PROD) {
+        // 生产环境：跳转到默认登录页
+        console.log('🚀 生产环境：跳转到默认登录页');
         auth.toDefaultLoginPage({
-            // redirect_uri: 'https://vr.genew.com',
-            redirect_uri: 'https://vr-manage.genew.com/',
+          redirect_uri: 'https://vr-manage.genew.com/',
         });
       }
     } catch (error) {
@@ -97,11 +101,25 @@ export default function LoginPage(props) {
       const tcb = await $w.cloud.getCloudInstance();
       const auth = tcb.auth();
 
-      // 使用 signIn 方法登录
-      const loginResult = await auth.signIn({
-        username: formData.username.trim(),
-        password: formData.password
-      });
+      let loginResult;
+      
+      // 根据环境选择登录方式
+      if (import.meta.env.DEV) {
+        // 开发环境：使用 signIn 方法登录
+        console.log('🔧 开发环境：使用 signIn 登录');
+        loginResult = await auth.signIn({
+          username: formData.username.trim(),
+          password: formData.password
+        });
+      } else {
+        // 生产环境：跳转到默认登录页
+        console.log('🚀 生产环境：跳转到默认登录页');
+        auth.toDefaultLoginPage({
+          redirect_uri: 'https://vr-manage.genew.com/',
+        });
+        return; // 跳转后不继续执行
+      }
+
       console.log(`🚀 ~ handleLogin ~ loginResult-> `, loginResult)
       if (loginResult) {
         toast({
