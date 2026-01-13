@@ -86,52 +86,7 @@
   body {
     @apply bg-background text-foreground;
   }
-
-  /* 
-   * 统一输入框公共样式
-   * 
-   * 包含状态：
-   * - 默认状态 (Default)
-   * - 悬停状态 (Hover)
-   * - 聚焦状态 (Focus)
-   * - 禁用状态 (Disabled)
-   * 
-   * 主题适配：
-   * - 自动适配白天 (Light) 和黑夜 (Dark) 模式
-   * - 样式变量来源于 :root 和 .dark 定义的 CSS 变量
-   * 
-   * 使用示例：
-   * <input class="common-input" placeholder="请输入..." />
-   */
-  .common-input {
-    @apply flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground transition-all duration-200 ease-in-out disabled:cursor-not-allowed disabled:opacity-50;
-    
-    /* 基础样式覆盖与增强 */
-    border-radius: 4px; /* 边框圆角 4px */
-    border-width: 1px;  /* 边框宽度 1px */
-    padding: 8px 12px;  /* 内边距 8px 12px */
-    font-size: 14px;    /* 字体大小 14px */
-  }
-
-  /* 悬停状态 (Hover) */
-  /* 显示1px边框，颜色使用主题色 */
-  .common-input:hover:not(:disabled):not(:focus-visible) {
-    @apply border-primary;
-  }
-
-  /* 聚焦状态 (Focus) */
-  /* 添加4px阴影效果，阴影色与主题协调 */
-  .common-input:focus-visible {
-    @apply outline-none border-primary ring-offset-0;
-    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
-  }
-
-  /* 禁用状态 (Disabled) */
-  /* 样式已在 @apply disabled:... 中定义，此处增强背景色 */
-  .common-input:disabled {
-    @apply bg-muted text-muted-foreground opacity-50 cursor-not-allowed;
-  }
-
+  
   /* 
    * 统一内容区域样式
    * 
