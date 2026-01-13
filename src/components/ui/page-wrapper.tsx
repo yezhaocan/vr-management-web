@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { menuItems } from '@/configs/menus';
-import { useNavigate, useLocation } from '@/components/router';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const { createDataset, EXTRA_API } = WEDA_CLOUD_SDK;
 

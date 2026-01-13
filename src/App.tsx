@@ -10,15 +10,10 @@ import {
   Routes,
   Route,
   Navigate,
-} from "@/components/router";
+} from "react-router-dom";
 import { PageWrapper } from "./components/ui/page-wrapper";
 import { routers } from "./configs/routers";
-import { createBrowserHistory } from "history";
-import NotFoundPage from "./pages/not-found";
 
-// 保持与原有代码的兼容性
-const history = createBrowserHistory();
-(window as any)._WEAPPS_HISTORY = history;
 // Create a client
 const queryClient = new QueryClient();
 
@@ -31,7 +26,7 @@ const App: React.FC = () => {
             <Toaster />
             <Sonner position="top-center" />
             <BrowserRouter>
-              <Routes fallback={<NotFoundPage />}>
+              <Routes>
                 <Route
                   path="/"
                   element={
