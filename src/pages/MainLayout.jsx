@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState, useMemo } from "react";
 import { Header } from '@/components/Header';
 import { ThemeProvider } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
@@ -15,12 +15,6 @@ function NavItem({
     isOpen,
     active = false,
     onClick
-}: {
-    icon: React.ReactNode;
-    label: string;
-    isOpen: boolean;
-    active?: boolean;
-    onClick: () => void;
 }) {
     return (
         <Button
@@ -48,23 +42,20 @@ function NavItem({
 export function MainLayout({
     children,
     $w = base$W
-}: {
-    children: React.ReactNode;
-    $w?: typeof base$W;
 }) {
-    const [sidebarOpen, setSidebarOpen] = React.useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
     const navigate = useNavigate();
     const location = useLocation();
 
     // 获取当前激活的菜单 ID
-    const activeMenuId = React.useMemo(() => {
+    const activeMenuId = useMemo(() => {
         const currentPath = location.pathname;
         const item = menuItems.find(item => item.path === currentPath);
         return item?.id || '';
     }, [location.pathname]);
 
     // 获取当前页面标题
-    const currentTitle = React.useMemo(() => {
+    const currentTitle = useMemo(() => {
         const item = menuItems.find(item => item.id === activeMenuId);
         return item?.label || '管理控制台';
     }, [activeMenuId]);
