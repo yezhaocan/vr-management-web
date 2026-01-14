@@ -7,7 +7,6 @@ import { MapPin, Edit, Save, Map, Upload, Image, X } from 'lucide-react';
 
 import { ScenicMap } from '@/components/ScenicMap';
 import { AuthGuard } from '@/components/AuthGuard';
-import { MainLayout } from './MainLayout';
 
 export default function ScenicManagement(props) {
   const {
@@ -317,9 +316,8 @@ export default function ScenicManagement(props) {
   };
 
   return (
-    <MainLayout $w={$w}>
-      <AuthGuard $w={$w}>
-          <style>{`
+    <AuthGuard $w={$w}>
+      <style>{`
         .leaflet-control-zoom {
           border: none !important;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
@@ -508,8 +506,7 @@ export default function ScenicManagement(props) {
             </div>
 
           </div>
-          </div>
-        </AuthGuard>
-      </MainLayout>
+        </div>
+    </AuthGuard>
   );
 }

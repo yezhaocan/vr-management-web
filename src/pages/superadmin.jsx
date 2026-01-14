@@ -14,8 +14,6 @@ import VideoRecordManagement from './video-record';
 import FlightTaskManagement from './flight-task';
 import ConfigManagement from './config';
 import { AuthGuard } from '@/components/AuthGuard';
-import { MainLayout } from './MainLayout';
-
 export default function SuperAdminPage(props) {
   const {
     $w,
@@ -243,17 +241,15 @@ export default function SuperAdminPage(props) {
         </Card>
       </div>
     </div>;
-  return <MainLayout $w={$w}>
-    <AuthGuard $w={$w}>
-        <div style={style} className="min-h-screen bg-background text-foreground">
-          <div className="flex h-screen bg-background">
-            <SuperAdminSidebar activeMenu={activeMenu} onMenuChange={handleMenuChange} onLogout={handleLogout} $w={$w} />
-            
-            <div className="flex-1 overflow-auto bg-background/50">
-              {renderContent()}
-            </div>
+  return <AuthGuard $w={$w}>
+      <div style={style} className="min-h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-background">
+          <SuperAdminSidebar activeMenu={activeMenu} onMenuChange={handleMenuChange} onLogout={handleLogout} $w={$w} />
+          
+          <div className="flex-1 overflow-auto bg-background/50">
+            {renderContent()}
           </div>
         </div>
-      </AuthGuard>
-    </MainLayout>;
+      </div>
+    </AuthGuard>;
 }

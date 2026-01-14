@@ -6,8 +6,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle, useToast, Textarea, L
 import { Save, CheckCircle, XCircle, Settings, FileJson, AlertCircle, Info } from 'lucide-react';
 
 import { AuthGuard } from '@/components/AuthGuard';
-import { MainLayout } from './MainLayout';
-
+import { UserMenu } from '@/components/UserMenu';
 export default function ConfigPage(props) {
   const {
     $w,
@@ -151,10 +150,9 @@ export default function ConfigPage(props) {
       setSaving(false);
     }
   };
-  return <MainLayout $w={$w}>
-    <AuthGuard $w={$w}>
-        <div style={style} className="w-full h-full space-y-6 p-6">
-          <div className="w-full mx-auto space-y-6">
+  return <AuthGuard $w={$w}>
+    <div style={style} className="w-full h-full space-y-6">
+      <div className="w-full mx-auto space-y-6">
         
         {/* 使用说明 - 移动到顶部 */}
         <Card className="bg-card text-card-foreground border-border shadow-sm w-full">
@@ -227,6 +225,5 @@ export default function ConfigPage(props) {
         </Card>
       </div>
     </div>
-      </AuthGuard>
-    </MainLayout>;
+  </AuthGuard>;
 }

@@ -8,8 +8,7 @@ import { Plus, MapPin, Edit, Trash2, Search, Navigation, Clock, ArrowUp, Target,
 // @ts-ignore;
 import { POIForm } from '@/components/POIForm';
 import { AuthGuard } from '@/components/AuthGuard';
-import { MainLayout } from './MainLayout';
-
+import { UserMenu } from '@/components/UserMenu';
 export default function POIManagement(props) {
   const {
     $w,
@@ -126,9 +125,8 @@ export default function POIManagement(props) {
     const date = new Date(timestamp);
     return date.toLocaleString('zh-CN');
   };
-  return <MainLayout $w={$w}>
-    <AuthGuard $w={$w}>
-        <div style={style} className="w-full h-full space-y-6 p-6">
+  return <AuthGuard $w={$w}>
+      <div style={style} className="w-full h-full space-y-6">
         {/* 页面标题和操作栏 */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1 w-full sm:w-auto flex items-center gap-4">
@@ -258,7 +256,6 @@ export default function POIManagement(props) {
             </div>
           </DialogContent>
         </Dialog>
-        </div>
-      </AuthGuard>
-    </MainLayout>;
+      </div>
+    </AuthGuard>;
 }
