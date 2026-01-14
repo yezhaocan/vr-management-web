@@ -5,6 +5,8 @@ import { useToast, Card, CardContent, CardDescription, CardHeader, CardTitle, Bu
 // @ts-ignore;
 import { Drone, Navigation, MapPin, PlayCircle, Lightbulb, Settings, Users, DollarSign, RefreshCw, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MainLayout } from './MainLayout';
+import { AuthGuard } from '@/components/AuthGuard';
 
 export default function Dashboard(props) {
   const {
@@ -130,7 +132,9 @@ export default function Dashboard(props) {
   };
 
   return (
-    <div className="space-y-6">
+    <MainLayout $w={$w}>
+      <AuthGuard $w={$w}>
+        <div className="space-y-6">
       {/* 欢迎区域 */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-lg border border-border shadow-sm">
         <div>
@@ -206,7 +210,9 @@ export default function Dashboard(props) {
           onClick={() => navigate('/config')} 
         />
       </div>
-    </div>
+      </div>
+      </AuthGuard>
+    </MainLayout>
   );
 }
 

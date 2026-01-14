@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, useT
 import { Plus, Wifi, Battery, MapPin, Edit, Trash2, Drone, Calendar, RefreshCw, Factory, Home, Signal, Search } from 'lucide-react';
 // @ts-ignore;
 import { AuthGuard } from '@/components/AuthGuard';
+import { MainLayout } from './MainLayout';
 
 export default function DroneManagement(props) {
   const { $w, style } = props;
@@ -270,8 +271,9 @@ export default function DroneManagement(props) {
   };
 
   return (
-    <AuthGuard $w={$w}>
-      <div style={style} className="space-y-6 animate-in fade-in duration-500">
+    <MainLayout $w={$w}>
+      <AuthGuard $w={$w}>
+          <div style={style} className="space-y-6 animate-in fade-in duration-500">
         
         {/* 顶部工具栏 */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -523,8 +525,9 @@ export default function DroneManagement(props) {
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
-      </div>
-    </AuthGuard>
+          </Dialog>
+        </div>
+        </AuthGuard>
+      </MainLayout>
   );
 }

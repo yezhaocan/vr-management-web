@@ -7,8 +7,7 @@ import { Plus, Search, Edit, Trash2, Upload, Image, RefreshCw, X, CheckCircle, C
 
 // @ts-ignore;
 import { AuthGuard } from '@/components/AuthGuard';
-// @ts-ignore;
-import { UserMenu } from '@/components/UserMenu';
+import { MainLayout } from './MainLayout';
 
 // 自定义滚动条样式组件
 function CustomScrollbarStyles() {
@@ -721,8 +720,9 @@ export default function TipsPage(props) {
     setShowForm(false);
     setEditingTip(null);
   };
-  return <AuthGuard $w={$w}>
-      <div style={style} className="w-full h-full space-y-6">
+  return <MainLayout $w={$w}>
+    <AuthGuard $w={$w}>
+        <div style={style} className="w-full h-full space-y-6 p-6">
         {/* 头部操作区 */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1 w-full sm:w-auto flex items-center gap-4">
@@ -851,5 +851,6 @@ export default function TipsPage(props) {
           </DialogContent>
         </Dialog>
       </div>
-    </AuthGuard>;
+      </AuthGuard>
+    </MainLayout>;
 }

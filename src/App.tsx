@@ -10,7 +10,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { PageWrapper } from "./pages/page-wrapper";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { routers } from "./configs/routers";
 import { createBrowserHistory } from "history";
 

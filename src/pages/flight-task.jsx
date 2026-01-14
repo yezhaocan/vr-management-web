@@ -8,6 +8,7 @@ import { Plus, Search, Filter, Edit, Trash2, Play, RefreshCw, Gauge, Repeat, Loa
 // @ts-ignore;
 import { MissionForm } from '@/components/MissionForm';
 import { AuthGuard } from '@/components/AuthGuard';
+import { MainLayout } from './MainLayout';
 
 export default function FlightTaskPage(props) {
   const { $w, style } = props;
@@ -238,8 +239,9 @@ export default function FlightTaskPage(props) {
   const statusCounts = getStatusCounts();
 
   return (
-    <AuthGuard $w={$w}>
-      <div style={style} className="space-y-6 animate-in fade-in duration-500">
+    <MainLayout $w={$w}>
+      <AuthGuard $w={$w}>
+          <div style={style} className="space-y-6 animate-in fade-in duration-500">
         {/* 头部操作区 */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1 w-full sm:w-auto flex items-center gap-4">
@@ -431,8 +433,9 @@ export default function FlightTaskPage(props) {
               />
             </div>
           </DialogContent>
-        </Dialog>
-      </div>
-    </AuthGuard>
+          </Dialog>
+        </div>
+        </AuthGuard>
+      </MainLayout>
   );
 }

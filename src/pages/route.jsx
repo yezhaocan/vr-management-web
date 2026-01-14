@@ -10,6 +10,7 @@ import { RouteEditor } from '@/components/RouteEditor';
 // @ts-ignore;
 import { AirlineList } from '@/components/AirlineList';
 import { AuthGuard } from '@/components/AuthGuard';
+import { MainLayout } from './MainLayout';
 
 export default function RoutePage(props) {
   const { $w, style } = props;
@@ -136,8 +137,9 @@ export default function RoutePage(props) {
   );
 
   return (
-    <AuthGuard $w={$w}>
-      <div style={style} className="space-y-6 animate-in fade-in duration-500">
+    <MainLayout $w={$w}>
+      <AuthGuard $w={$w}>
+          <div style={style} className="space-y-6 animate-in fade-in duration-500">
         
         {/* 统计信息卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -246,8 +248,9 @@ export default function RoutePage(props) {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
-      </div>
-    </AuthGuard>
+          </Dialog>
+        </div>
+        </AuthGuard>
+      </MainLayout>
   );
 }
