@@ -4,7 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { menuItems } from '@/configs/menus';
+import { menuItems } from '../configs/menus';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { $w as base$W } from "@/lib/weda-client";
 
