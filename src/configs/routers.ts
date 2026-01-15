@@ -11,39 +11,39 @@ import TIPS from '../pages/tips.jsx';
 import SCENIC_MANAGEMENT from '../pages/scenic-management.jsx';
 import LOGIN from '../pages/login.jsx';
 export const routers = [{
-                id: "dashboard",
-                component: DASHBOARD
-              }, {
-                id: "drone",
-                component: DRONE
-              }, {
-                id: "route",
-                component: ROUTE
-              }, {
-                id: "poi",
-                component: POI
-              }, {
-                id: "config",
-                component: CONFIG
-              }, {
-                id: "superadmin",
-                component: SUPERADMIN
-              }, {
-                id: "flight-task",
-                component: FLIGHT_TASK
-              }, {
-                id: "_app",
-                component: _APP
-              }, {
-                id: "video-record",
-                component: VIDEO_RECORD
-              }, {
-                id: "tips",
-                component: TIPS
-              }, {
-                id: "scenic-management",
-                component: SCENIC_MANAGEMENT
-              }, {
-                id: "login",
-                component: LOGIN
-              }]
+  id: "dashboard",
+  component: DASHBOARD
+}, {
+  id: "drone",
+  component: DRONE
+}, {
+  id: "route",
+  component: ROUTE
+}, {
+  id: "poi",
+  component: POI
+}, {
+  id: "config",
+  component: CONFIG
+}, {
+  id: "superadmin",
+  component: SUPERADMIN
+}, {
+  id: "flight-task",
+  component: FLIGHT_TASK
+}, {
+  id: "_app",
+  component: _APP
+}, {
+  id: "video-record",
+  component: VIDEO_RECORD
+}, {
+  id: "tips",
+  component: TIPS
+}, {
+  id: "scenic-management",
+  component: SCENIC_MANAGEMENT
+}, {
+  id: "login",
+  component: LOGIN
+}]

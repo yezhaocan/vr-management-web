@@ -1,7 +1,7 @@
 // @ts-ignore;
 import React, { useState, useEffect } from 'react';
 // @ts-ignore;
-import { Button, useToast, Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui';
+import { Button, useToast, Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@/components/ui';
 // @ts-ignore;
 import { Plus, Search, RefreshCw, Video, Megaphone, Music } from 'lucide-react';
 
@@ -10,7 +10,8 @@ import { VideoUploadForm } from '@/components/VideoUploadForm';
 // @ts-ignore;
 import { VideoCard } from '@/components/VideoCard';
 import { AuthGuard } from '@/components/AuthGuard';
-import { UserMenu } from '@/components/UserMenu';
+import { MainLayout } from './MainLayout';
+
 export default function VideoRecord(props) {
   const {
     $w,
@@ -161,91 +162,51 @@ export default function VideoRecord(props) {
     setShowForm(false);
     setEditingVideo(null);
   };
-  return <AuthGuard $w={$w}>
-      <div style={style} className="min-h-screen bg-gray-900">        
-        <div className="p-6 space-y-6">
-          {/* 头部操作区 */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-            <div>
-              <h1 className="text-2xl font-bold text-white">录像管理</h1>
-              <p className="text-gray-400">管理无人机录像记录</p>
-            </div>
-            <div className="flex space-x-3">
-              <Button onClick={loadVideoList} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                刷新
-              </Button>
-              <Button onClick={handleNewVideo} className="bg-blue-500 hover:bg-blue-600">
-                <Plus className="h-4 w-4 mr-2" />
-                新建录像
-              </Button>
-            </div>
+  return <MainLayout $w={$w}>
+    <AuthGuard $w={$w}>
+        <div style={style} className="space-y-6 animate-in fade-in duration-500 p-6">
+        {/* 头部操作区 */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1 w-full sm:w-auto flex items-center gap-4">
+             <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input 
+                  placeholder="搜索录像名称或描述..." 
+                  value={searchTerm} 
+                  onChange={e => setSearchTerm(e.target.value)} 
+                  className="pl-10 bg-background border-input w-full hover:border-primary transition-colors duration-200" 
+                />
+             </div>
           </div>
-
-          {/* 统计信息 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-white">{stats.total}</div>
-                  <div className="text-gray-400 text-sm">总录像数</div>
-                </div>
-                <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
-                  <Video className="h-5 w-5 text-blue-400" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-green-400">{stats.broadcastVideos}</div>
-                  <div className="text-gray-400 text-sm">播报录像数</div>
-                </div>
-                <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                  <Megaphone className="h-5 w-5 text-green-400" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold text-purple-400">{stats.backgroundMusicVideos}</div>
-                  <div className="text-gray-400 text-sm">背景音乐数</div>
-                </div>
-                <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
-                  <Music className="h-5 w-5 text-purple-400" />
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Button onClick={loadVideoList} variant="outline" className="shadow-sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              刷新
+            </Button>
+            <Button onClick={handleNewVideo} className="shadow-sm">
+              <Plus className="h-4 w-4 mr-2" />
+              新建录像
+            </Button>
           </div>
+        </div>
 
-          {/* 搜索栏 */}
-          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input type="text" placeholder="搜索录像名称或描述..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-            </div>
-          </div>
-
-          {/* 录像列表容器 - 添加固定高度和滚动支持 */}
-          <div className="bg-gray-800/30 rounded-lg border border-gray-700 overflow-hidden">
+        {/* 录像列表容器 */}
+          <div className="bg-transparent">
             {loading ? <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <span className="ml-3 text-gray-300">加载中...</span>
-              </div> : filteredVideoList.length === 0 ? <div className="text-center py-12">
-                <div className="text-gray-500 mb-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <span className="ml-3 text-muted-foreground">加载中...</span>
+              </div> : filteredVideoList.length === 0 ? <div className="flex flex-col justify-center items-center py-12">
+                <div className="text-muted-foreground mb-4">
                   <Video className="h-16 w-16 mx-auto opacity-30" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-300 mb-2">暂无录像记录</h3>
-                <p className="text-gray-500 mb-4">创建第一个录像记录开始管理</p>
-                <Button onClick={handleNewVideo} className="bg-blue-500 hover:bg-blue-600">
+                <h3 className="text-lg font-medium mb-2">暂无录像记录</h3>
+                <p className="text-muted-foreground mb-4">创建第一个录像记录开始管理</p>
+                <Button onClick={handleNewVideo}>
                   <Plus className="h-4 w-4 mr-2" />
                   新建录像
                 </Button>
-              </div> : <div className="max-h-[calc(100vh-300px)] overflow-y-auto p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              </div> : <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {filteredVideoList.map(video => <VideoCard key={video._id} video={video} onEdit={handleEditVideo} onDelete={handleDeleteVideo} />)}
-                </div>
               </div>}
           </div>
 
@@ -254,27 +215,27 @@ export default function VideoRecord(props) {
 
           {/* 删除确认弹窗 */}
           <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700">
+            <DialogContent className="sm:max-w-[425px] bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden">
               <DialogHeader>
-                <DialogTitle className="text-white">确认删除</DialogTitle>
+                <DialogTitle className="text-lg font-semibold text-slate-900 dark:text-slate-50">确认删除</DialogTitle>
               </DialogHeader>
-              <div className="text-gray-400 mb-4">
+              <div className="text-slate-600 dark:text-slate-400 mb-4 text-sm leading-relaxed">
                 确定要删除录像 "{videoToDelete?.name}" 吗？此操作不可恢复。
               </div>
-              <div className="flex justify-end space-x-3">
-                <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
+              <div className="flex justify-end space-x-3 bg-slate-50 dark:bg-slate-900/50 -mx-6 -mb-6 px-6 py-4 border-t border-slate-100 dark:border-slate-800/50 mt-4">
+                <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">
                   取消
                 </Button>
                 <Button onClick={() => {
                 handleDelete(videoToDelete);
                 setDeleteConfirmOpen(false);
-              }} className="bg-red-500 hover:bg-red-600">
+              }} variant="destructive" className="bg-red-600 hover:bg-red-700 text-white border-none shadow-sm">
                   确认删除
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
-      </div>
-    </AuthGuard>;
+      </AuthGuard>
+    </MainLayout>;
 }

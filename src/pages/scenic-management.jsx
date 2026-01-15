@@ -1,16 +1,14 @@
 // @ts-ignore;
 import React, { useState, useEffect } from 'react';
 // @ts-ignore;
-import { useToast, Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Input, Label, Textarea } from '@/components/ui';
+import { useToast, Button, Input, Label, Textarea } from '@/components/ui';
 // @ts-ignore;
-import { MapPin, Edit, Save, Map, Navigation, Upload, Image, X } from 'lucide-react';
+import { MapPin, Edit, Save, Map, Upload, Image, X } from 'lucide-react';
 
 import { ScenicMap } from '@/components/ScenicMap';
 import { AuthGuard } from '@/components/AuthGuard';
-import { UserMenu } from '@/components/UserMenu';
+import { MainLayout } from './MainLayout';
 
-// 本地存储键名
-const SCENIC_SPOT_STORAGE_KEY = 'scenic_spot_data';
 export default function ScenicManagement(props) {
   const {
     $w,
@@ -34,25 +32,7 @@ export default function ScenicManagement(props) {
   const [backgroundImage, setBackgroundImage] = useState(null);
   const [backgroundPreview, setBackgroundPreview] = useState('');
 
-  // 保存景区数据到本地存储
-  const saveScenicDataToLocal = data => {
-    try {
-      localStorage.setItem(SCENIC_SPOT_STORAGE_KEY, JSON.stringify(data));
-    } catch (error) {
-      console.error('保存到本地存储失败:', error);
-    }
-  };
-
-  // 从本地存储获取景区数据
-  const getScenicDataFromLocal = () => {
-    try {
-      const storedData = localStorage.getItem(SCENIC_SPOT_STORAGE_KEY);
-      return storedData ? JSON.parse(storedData) : null;
-    } catch (error) {
-      console.error('从本地存储获取数据失败:', error);
-      return null;
-    }
-  };
+  // 页面初始化加载数据
   useEffect(() => {
     loadScenicData();
   }, []);
@@ -62,29 +42,7 @@ export default function ScenicManagement(props) {
     try {
       setLoading(true);
 
-      // 先尝试从本地存储获取数据
-      const localData = getScenicDataFromLocal();
-      if (localData) {
-        setScenicData(localData);
-        setFormData({
-          name: localData.name || '',
-          latitude: localData.latitude || 0,
-          longitude: localData.longitude || 0,
-          address: localData.address || '',
-          description: localData.description || ''
-        });
-        setSelectedPosition({
-          lat: localData.latitude || 39.9042,
-          lng: localData.longitude || 116.4074
-        });
-
-        // 加载背景图预览
-        if (localData.backgroundImageId) {
-          loadBackgroundImagePreview(localData.backgroundImageId);
-        }
-      }
-
-      // 同时查询最新的景区数据
+      // 从云端 API 获取最新的景区数据
       const result = await $w.cloud.callDataSource({
         dataSourceName: 'scenic_spot',
         methodName: 'wedaGetRecordsV2',
@@ -103,9 +61,13 @@ export default function ScenicManagement(props) {
           getCount: true
         }
       });
+      console.log(`🚀 ~ loadScenicData ~ result-> `, result)
+      
       if (result.records && result.records.length > 0) {
         const latestScenic = result.records[0];
         setScenicData(latestScenic);
+        
+        // 使用 API 数据更新表单
         setFormData({
           name: latestScenic.name || '',
           latitude: latestScenic.latitude || 0,
@@ -113,8 +75,9 @@ export default function ScenicManagement(props) {
           address: latestScenic.address || '',
           description: latestScenic.description || ''
         });
+        
         setSelectedPosition({
-          lat: latestScenic.latitude || 39.9042,
+          lat: latestScenic.latitude || 40.9042,
           lng: latestScenic.longitude || 116.4074
         });
 
@@ -122,9 +85,6 @@ export default function ScenicManagement(props) {
         if (latestScenic.backgroundImageId) {
           loadBackgroundImagePreview(latestScenic.backgroundImageId);
         }
-
-        // 保存到本地存储
-        saveScenicDataToLocal(latestScenic);
       } else {
         // 没有数据时设置默认值
         setSelectedPosition({
@@ -305,7 +265,7 @@ export default function ScenicManagement(props) {
         });
       }
 
-      // 重新加载数据并更新本地存储
+      // 重新加载数据
       loadScenicData();
     } catch (error) {
       console.error('保存景区数据失败:', error);
@@ -326,132 +286,230 @@ export default function ScenicManagement(props) {
       [field]: value
     }));
   };
-  return <AuthGuard $w={$w}>
-      <div style={style} className="min-h-screen bg-gray-900">        
-        <div className="p-6 space-y-6">
-          {/* 页面标题和操作按钮 */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <MapPin className="h-8 w-8 text-blue-400" />
-              <div>
-                <h1 className="text-2xl font-bold text-white">景区管理</h1>
-                <p className="text-gray-400">管理景区基本信息和坐标位置</p>
+
+  // 处理坐标输入变化
+  const handleCoordinateChange = (field, value) => {
+    // 允许空值以便输入
+    if (value === '') {
+      setSelectedPosition(prev => ({ ...prev, [field]: '' }));
+      setFormData(prev => ({ ...prev, [field === 'lat' ? 'latitude' : 'longitude']: '' }));
+      return;
+    }
+
+    const numValue = parseFloat(value);
+    // 验证是否为有效数字
+    if (isNaN(numValue)) return;
+
+    // 验证范围
+    if (field === 'lat' && (numValue < -90 || numValue > 90)) return;
+    if (field === 'lng' && (numValue < -180 || numValue > 180)) return;
+
+    const newPosition = {
+      ...selectedPosition,
+      [field]: numValue
+    };
+    
+    setSelectedPosition(newPosition);
+    setFormData(prev => ({
+      ...prev,
+      [field === 'lat' ? 'latitude' : 'longitude']: numValue
+    }));
+  };
+
+  return (
+    <MainLayout $w={$w}>
+      <AuthGuard $w={$w}>
+          <style>{`
+        .leaflet-control-zoom {
+          border: none !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+          margin-top: 16px !important;
+          margin-right: 16px !important;
+        }
+      `}</style>
+      <div className="h-[calc(100vh-120px)] flex flex-col">
+          
+          {/* 平铺式布局网格 - 调整为全高 */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+            
+            {/* 左侧主要信息区 (占据 4/12) - 添加滚动 */}
+            <div className="lg:col-span-4 h-full overflow-y-auto pr-2 space-y-6 custom-scrollbar">
+              
+              {/* 基本信息模块 */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 pb-2 border-b border-border">
+                  <Edit className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">基本信息</h3>
+                </div>
+                
+                <div className="grid gap-5 p-1">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm font-medium">景区名称</Label>
+                    <Input 
+                      id="name" 
+                      value={formData.name} 
+                      onChange={e => handleInputChange('name', e.target.value)} 
+                      placeholder="输入景区名称" 
+                      className="bg-card/50 focus:bg-card transition-colors" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-sm font-medium">详细地址</Label>
+                    <Input 
+                      id="address" 
+                      value={formData.address} 
+                      onChange={e => handleInputChange('address', e.target.value)} 
+                      placeholder="输入详细地址" 
+                      className="bg-card/50 focus:bg-card transition-colors" 
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description" className="text-sm font-medium">景区描述</Label>
+                    <Textarea 
+                      id="description" 
+                      value={formData.description} 
+                      onChange={e => handleInputChange('description', e.target.value)} 
+                      placeholder="输入景区简要描述..." 
+                      className="min-h-[140px] resize-y bg-card/50 focus:bg-card transition-colors" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 背景图片模块 */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 pb-2 border-b border-border">
+                  <Image className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">背景图片</h3>
+                </div>
+
+                <div className="bg-card/30 rounded-xl border-2 border-dashed border-border p-6 transition-all hover:border-primary/50 hover:bg-card/50">
+                  {backgroundPreview ? (
+                    <div className="relative group rounded-lg overflow-hidden shadow-sm">
+                      <img src={backgroundPreview} alt="Preview" className="w-full h-48 object-cover transition-transform group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={handleRemoveBackgroundImage}
+                          className="shadow-lg"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          移除图片
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => document.getElementById('background-upload').click()}
+                      className="flex flex-col items-center justify-center py-8 cursor-pointer text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <div className="p-4 bg-background rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                        <Upload className="h-8 w-8" />
+                      </div>
+                      <span className="font-medium">点击上传图片</span>
+                      <span className="text-xs mt-1 opacity-70">支持 JPG, PNG (最大 5MB)</span>
+                    </div>
+                  )}
+                  <input 
+                    type="file" 
+                    id="background-upload" 
+                    accept="image/*" 
+                    onChange={handleBackgroundImageUpload} 
+                    className="hidden" 
+                  />
+                </div>
               </div>
             </div>
-            <div className="flex space-x-3">
-              <Button onClick={handleSaveScenicData} disabled={saving || uploading} className="bg-blue-500 hover:bg-blue-600">
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? '保存中...' : '保存信息'}
-              </Button>
-            </div>
-          </div>
 
-          {/* 主要内容区域 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 左侧：基本信息卡片 */}
-            <div className="space-y-6">
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <MapPin className="h-5 w-5 mr-2 text-blue-400" />
-                    基本信息
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
-                  {/* 1. 景区名称 */}
-                  <div>
-                    <Label htmlFor="name" className="text-white">景区名称 *</Label>
-                    <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入景区名称" className="bg-gray-800 border-gray-600 text-white mt-2" />
+            {/* 右侧地图区域 (占据 8/12) - 撑满高度 */}
+            <div className="lg:col-span-8 h-full flex flex-col pb-6">
+              <div className="flex items-center justify-between pb-2 mb-2">
+                <div className="flex items-center space-x-2">
+                  <Map className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold">地理位置</h3>
+                </div>
+                {selectedPosition && (
+                  <div className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
+                    {selectedPosition.lat && typeof selectedPosition.lat === 'number' ? selectedPosition.lat.toFixed(6) : '0.000000'}, {selectedPosition.lng && typeof selectedPosition.lng === 'number' ? selectedPosition.lng.toFixed(6) : '0.000000'}
                   </div>
-
-                  {/* 2. 经纬度坐标 */}
-                  <div>
-                    <Label className="text-white">坐标位置</Label>
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div className="flex items-center space-x-2 p-3 bg-gray-800 rounded-lg border border-gray-600">
-                        <Navigation className="h-4 w-4 text-blue-400" />
-                        <div>
-                          <div className="text-gray-400 text-xs">纬度</div>
-                          <div className="text-white text-sm font-medium">{selectedPosition?.lat.toFixed(6) || '未选择'}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2 p-3 bg-gray-800 rounded-lg border border-gray-600">
-                        <Navigation className="h-4 w-4 text-blue-400" />
-                        <div>
-                          <div className="text-gray-400 text-xs">经度</div>
-                          <div className="text-white text-sm font-medium">{selectedPosition?.lng.toFixed(6) || '未选择'}</div>
-                        </div>
-                      </div>
+                )}
+              </div>
+              
+              {/* 地图容器 - 自动撑满剩余空间，无边框，添加相对定位以容纳浮动提示 */}
+              <div className="flex-1 rounded-xl overflow-hidden bg-card relative group min-h-0">
+                <ScenicMap 
+                  onPositionSelect={handleMapPositionSelect} 
+                  initialPosition={selectedPosition} 
+                  disabled={false} 
+                  className="h-full w-full absolute inset-0"
+                />
+                
+                {/* 悬浮提示信息 - 左上角，半透明背景，主题适配 */}
+                <div className="absolute top-4 left-4 z-[400] max-w-[90%] sm:max-w-md animate-in fade-in slide-in-from-top-2 duration-300 pointer-events-none">
+                  <div className="bg-background/80 backdrop-blur-md border border-border/50 rounded-lg p-3 shadow-sm flex items-center gap-3">
+                    <div className="p-1.5 bg-primary/10 rounded-full">
+                       <MapPin className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">
+                        点击地图任意位置或拖动标记点来精确设置坐标
+                      </p>
                     </div>
                   </div>
+                </div>
 
-                  {/* 3. 背景图片 */}
-                  <div>
-                    <Label className="text-white">背景图片</Label>
-                    <div className="mt-2 space-y-3">
-                      {/* 背景图预览 */}
-                      {backgroundPreview && <div className="relative">
-                          <div className="relative bg-gray-700 rounded-lg overflow-hidden border border-gray-600">
-                            <img src={backgroundPreview} alt="背景图预览" className="w-full h-32 object-cover" />
-                            <Button variant="destructive" size="sm" className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-700/80" onClick={handleRemoveBackgroundImage}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>}
-
-                      {/* 上传控件 */}
-                      <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
-                        <input type="file" id="background-upload" accept="image/*" onChange={handleBackgroundImageUpload} className="hidden" />
-                        <label htmlFor="background-upload" className="cursor-pointer">
-                          <div className="flex flex-col items-center justify-center space-y-2">
-                            <Upload className="h-6 w-6 text-gray-400" />
-                            <div>
-                              <div className="text-white font-medium text-sm">点击上传背景图</div>
-                              <div className="text-gray-400 text-xs">支持 JPG、PNG、GIF 等格式</div>
-                            </div>
-                            {uploading && <div className="text-blue-400 text-sm flex items-center">
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-400 mr-1"></div>
-                                上传中...
-                              </div>}
-                          </div>
-                        </label>
-                      </div>
-                    </div>
+                {/* 悬浮坐标输入面板 - 底部左侧，半透明背景 */}
+                <div className="absolute bottom-4 left-4 z-[400] bg-background/90 backdrop-blur-md border border-border rounded-lg p-3 shadow-lg flex flex-col sm:flex-row gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="lat-input" className="text-xs font-medium whitespace-nowrap">纬度</Label>
+                    <Input 
+                      id="lat-input"
+                      type="number"
+                      step="0.000001"
+                      min="-90"
+                      max="90"
+                      value={selectedPosition?.lat || ''}
+                      onChange={e => handleCoordinateChange('lat', e.target.value)}
+                      className="h-8 w-32 bg-background/50 text-xs font-mono"
+                      placeholder="0.000000"
+                    />
                   </div>
-
-                  {/* 4. 详细地址 */}
-                  <div>
-                    <Label htmlFor="address" className="text-white">详细地址</Label>
-                    <Input id="address" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} placeholder="请输入详细地址" className="bg-gray-800 border-gray-600 text-white mt-2" />
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="lng-input" className="text-xs font-medium whitespace-nowrap">经度</Label>
+                    <Input 
+                      id="lng-input"
+                      type="number"
+                      step="0.000001"
+                      min="-180"
+                      max="180"
+                      value={selectedPosition?.lng || ''}
+                      onChange={e => handleCoordinateChange('lng', e.target.value)}
+                      className="h-8 w-32 bg-background/50 text-xs font-mono"
+                      placeholder="0.000000"
+                    />
                   </div>
+                </div>
+              </div>
 
-                  {/* 5. 景区描述 */}
-                  <div>
-                    <Label htmlFor="description" className="text-white">景区描述</Label>
-                    <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入景区描述" className="bg-gray-800 border-gray-600 text-white mt-2 h-24" />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* 底部功能按钮区域 - 独占一行，居中，宽度100% */}
+              <div className="mt-auto pt-4 w-full flex flex-col sm:flex-row justify-center items-center gap-2">
+                <Button 
+                  onClick={handleSaveScenicData} 
+                  disabled={saving || uploading} 
+                  className="w-full sm:w-auto min-w-[200px] bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm h-10 px-8"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? '保存中...' : '保存更改'}
+                </Button>
+              </div>
             </div>
 
-            {/* 右侧：地图坐标选择 */}
-            <div className="space-y-6">
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <MapPin className="h-5 w-5 mr-2 text-blue-400" />
-                    地图坐标选择
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64">
-                    <ScenicMap onPositionSelect={handleMapPositionSelect} initialPosition={selectedPosition} disabled={false} />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
-        </div>
-      </div>
-    </AuthGuard>;
+          </div>
+        </AuthGuard>
+      </MainLayout>
+  );
 }

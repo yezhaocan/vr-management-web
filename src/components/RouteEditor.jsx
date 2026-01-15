@@ -229,6 +229,7 @@ export function RouteEditor(props) {
     lat: 39.9042,
     lng: 116.4074
   });
+  const [editingIndex, setEditingIndex] = useState(null); // 新增：当前编辑的航点索引
   const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(null);
   const [scenicCenter, setScenicCenter] = useState([39.9042, 116.4074]);
   const [clearConnectionsTrigger, setClearConnectionsTrigger] = useState(false);
@@ -319,56 +320,118 @@ export function RouteEditor(props) {
 
   // 处理航点字段变化
   const handleWaypointChange = (field, value) => {
-    setNewWaypoint(prev => ({
-      ...prev,
+    const updatedNewWaypoint = {
+      ...newWaypoint,
       [field]: value
-    }));
+    };
+    setNewWaypoint(updatedNewWaypoint);
+
+    // 如果正在编辑，实时同步到列表（仅前端内存）
+    if (editingIndex !== null) {
+      const updatedWaypoints = [...formData.waypoints];
+      updatedWaypoints[editingIndex] = {
+        ...updatedWaypoints[editingIndex],
+        [field]: value,
+        _unsaved: true // 标记为未保存
+      };
+      setFormData(prev => ({
+        ...prev,
+        waypoints: updatedWaypoints
+      }));
+    }
   };
 
-  // 添加航点 - 确保8位小数精度（静默添加，不显示成功提示）
-  const addWaypoint = validatedWaypoint => {
-    if (!validatedWaypoint.name.trim()) {
+  // 保存航点（确认编辑或添加新航点）
+  const handleSaveWaypoint = () => {
+    try {
+      if (!newWaypoint.name.trim()) {
+        toast({
+          title: '提示',
+          description: '请输入航点名称',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      // 验证坐标精度
+      const validatedLat = validateCoordinate(newWaypoint.lat, '纬度');
+      const validatedLng = validateCoordinate(newWaypoint.lng, '经度');
+
+      // 构造标准航点对象
+      const waypointData = {
+        name: newWaypoint.name,
+        flightSpeed: Number(newWaypoint.flightSpeed),
+        hoverDuration: Number(newWaypoint.hoverDuration),
+        altitude: Number(newWaypoint.altitude),
+        lat: validatedLat,
+        lng: validatedLng,
+        voiceGuide: newWaypoint.voiceGuide || {
+          enabled: false,
+          text: '',
+          character: '导游',
+          voice: '女声',
+          triggerType: 'time',
+          audioFileId: '',
+          audioUrl: '',
+          subtitleFileId: ''
+        },
+        _unsaved: false // 保存后移除未保存标记
+      };
+
+      if (editingIndex !== null) {
+        // 更新现有航点
+        const updatedWaypoints = [...formData.waypoints];
+        updatedWaypoints[editingIndex] = {
+          ...updatedWaypoints[editingIndex],
+          ...waypointData
+        };
+        setFormData(prev => ({
+          ...prev,
+          waypoints: updatedWaypoints
+        }));
+        
+        // 保持在编辑模式，并更新状态
+        checkAndSwitchMode(validatedLat, validatedLng, updatedWaypoints);
+        
+        toast({ title: '已保存', description: '航点修改已保存到列表', variant: 'default' });
+      } else {
+        // 添加新航点
+        const newPoint = {
+          ...waypointData,
+          id: Date.now()
+        };
+        const updatedWaypoints = [...formData.waypoints, newPoint];
+        setFormData(prev => ({
+          ...prev,
+          waypoints: updatedWaypoints
+        }));
+        
+        // 立即进入新航点的编辑模式
+        const newIndex = updatedWaypoints.length - 1;
+        setEditingIndex(newIndex);
+        
+        // 更新表单状态为刚添加的航点（保持当前数据，状态改为已保存）
+        setNewWaypoint({
+          ...waypointData, // 使用刚才保存的数据
+          voiceGuide: newPoint.voiceGuide // 确保包含完整的语音配置
+        });
+        
+        toast({ title: '已添加', description: '新航点已添加并进入编辑模式', variant: 'default' });
+        
+        // 再次检查确认模式（双重保障）
+        checkAndSwitchMode(validatedLat, validatedLng, updatedWaypoints);
+      }
+    } catch (error) {
       toast({
-        title: '提示',
-        description: '请输入航点名称',
+        title: '验证失败',
+        description: error.message,
         variant: 'destructive'
       });
-      return;
     }
-    const waypoint = {
-      id: Date.now(),
-      name: validatedWaypoint.name,
-      flightSpeed: Number(validatedWaypoint.flightSpeed),
-      hoverDuration: Number(validatedWaypoint.hoverDuration),
-      altitude: Number(validatedWaypoint.altitude),
-      lat: validatedWaypoint.lat,
-      // 已经验证过的8位小数精度
-      lng: validatedWaypoint.lng,
-      // 已经验证过的8位小数精度
-      voiceGuide: {
-        enabled: false,
-        text: '',
-        character: '导游',
-        voice: '女声',
-        triggerType: 'time',
-        audioFileId: '',
-        audioUrl: '',
-        subtitleFileId: '' // 新增：初始化字幕文件ID
-      }
-    };
-    setFormData(prev => ({
-      ...prev,
-      waypoints: [...prev.waypoints, waypoint]
-    }));
-    setNewWaypoint({
-      name: `航点${formData.waypoints.length + 2}`,
-      flightSpeed: 5,
-      hoverDuration: 0,
-      altitude: 100,
-      lat: scenicCenter[0],
-      lng: scenicCenter[1]
-    });
   };
+
+  // 添加航点 - 已废弃，由 handleSaveWaypoint 替代，保留作为别名以兼容 WaypointForm props
+  const addWaypoint = () => handleSaveWaypoint();
 
   // 删除航点
   const deleteWaypoint = index => {
@@ -424,21 +487,206 @@ export function RouteEditor(props) {
     }
   };
 
+  // 检查点位是否已存在并处理状态切换
+  const checkAndSwitchMode = (lat, lng, waypoints = formData.waypoints) => {
+    // 验证坐标精度
+    const validatedLat = validateCoordinate(lat, '纬度');
+    const validatedLng = validateCoordinate(lng, '经度');
+
+    // 尝试通过坐标匹配已存在的航点
+    const existingIndex = waypoints.findIndex(wp => 
+      Math.abs(wp.lat - validatedLat) < 0.00000001 && 
+      Math.abs(wp.lng - validatedLng) < 0.00000001
+    );
+
+    if (existingIndex !== -1) {
+      // [场景A] 坐标匹配到已有航点 -> 进入/保持编辑模式
+      console.log('[RouteEditor] 坐标匹配成功，切换至编辑模式:', existingIndex);
+      setEditingIndex(existingIndex);
+      
+      // 同步航点信息到表单
+      setNewWaypoint({
+        name: waypoints[existingIndex].name,
+        flightSpeed: waypoints[existingIndex].flightSpeed || 5,
+        hoverDuration: waypoints[existingIndex].hoverDuration || 0,
+        altitude: waypoints[existingIndex].altitude || 100,
+        lat: validatedLat,
+        lng: validatedLng,
+        // 保留语音配置
+        voiceGuide: waypoints[existingIndex].voiceGuide
+      });
+      
+      return true; // 返回true表示是已有航点
+    } else {
+      // [场景B] 坐标未匹配 -> 保持/切换至新增模式
+      // 注意：此函数不负责重置为新航点默认值（除非显式调用），主要用于状态判断
+      console.log('[RouteEditor] 坐标未匹配，保持新增模式');
+      // 如果需要重置编辑状态
+      // setEditingIndex(null); 
+      return false; // 返回false表示是新坐标
+    }
+  };
+
   // 处理地图选择 - 确保8位小数精度
   const handleMapLocationSelect = location => {
     try {
+      // 1. 验证坐标精度
       const validatedLat = validateCoordinate(location.lat, '纬度');
       const validatedLng = validateCoordinate(location.lng, '经度');
-      setNewWaypoint(prev => ({
-        ...prev,
-        lat: validatedLat,
-        lng: validatedLng
-      }));
+      
+      // 2. 优先使用 checkAndSwitchMode 进行逻辑判断
+      // 如果直接传递了index，则直接使用index（优化性能）
+      if (typeof location.index !== 'undefined') {
+        const index = location.index;
+        console.log('[RouteEditor] 通过索引选中航点:', index);
+        setEditingIndex(index);
+        setNewWaypoint({
+          name: formData.waypoints[index].name,
+          flightSpeed: formData.waypoints[index].flightSpeed || 5,
+          hoverDuration: formData.waypoints[index].hoverDuration || 0,
+          altitude: formData.waypoints[index].altitude || 100,
+          lat: validatedLat,
+          lng: validatedLng,
+          voiceGuide: formData.waypoints[index].voiceGuide
+        });
+        toast({ title: '编辑模式', description: `正在编辑: ${formData.waypoints[index].name}`, duration: 2000 });
+        return;
+      }
+
+      // 如果没有索引，尝试坐标匹配
+      const isExisting = checkAndSwitchMode(validatedLat, validatedLng);
+
+      if (isExisting) {
+         toast({ title: '编辑模式', description: `正在编辑: ${newWaypoint.name}`, duration: 2000 });
+      } else {
+        // [场景B] 点击了地图空白区域（非现有航点位置）
+        if (editingIndex !== null) {
+          // [需求实现] 当前处于编辑模式 -> 自动退出编辑模式 (切换至新增模式)
+          console.log('[RouteEditor] 编辑模式下点击空白处 -> 退出编辑，切换至新增模式');
+          
+          // 1. 清除当前选中的编辑对象
+          setEditingIndex(null);
+          
+          // 2. 重置表单内容 (清空输入、恢复默认值、清除验证状态)
+          setNewWaypoint({
+            name: `航点${formData.waypoints.length + 1}`, // 自动生成默认名称
+            flightSpeed: 5,
+            hoverDuration: 0,
+            altitude: 100,
+            lat: validatedLat, // 使用点击位置作为新航点坐标
+            lng: validatedLng,
+            voiceGuide: {
+              enabled: false,
+              text: '',
+              character: '导游',
+              voice: '女声',
+              triggerType: 'time',
+              audioFileId: '',
+              audioUrl: '',
+              subtitleFileId: ''
+            }
+          });
+          
+          // 3. 状态变更事件通知
+          toast({ title: '新增模式', description: '已退出编辑，切换至新增航点模式', duration: 2000 });
+        } else {
+          // [场景C] 当前处于新增模式 -> 仅更新新航点坐标
+          console.log('[RouteEditor] 新增模式下更新坐标');
+          
+          // 确保处于新增模式（重置底部按钮状态）
+          setEditingIndex(null);
+          
+          setNewWaypoint(prev => ({
+            ...prev,
+            lat: validatedLat,
+            lng: validatedLng
+          }));
+        }
+      }
     } catch (error) {
+      console.error('[RouteEditor] 坐标处理异常:', error);
       toast({
-        title: '坐标验证失败',
+        title: '操作失败',
         description: error.message,
         variant: 'destructive'
+      });
+    }
+  };
+
+  // 处理删除当前编辑的航点（从表单操作）
+  const handleDeleteCurrentWaypoint = () => {
+    if (editingIndex !== null) {
+      try {
+        // 1. 执行删除操作
+        const updatedWaypoints = formData.waypoints.filter((_, i) => i !== editingIndex);
+        
+        // 2. 更新数据状态
+        setFormData(prev => ({
+          ...prev,
+          waypoints: updatedWaypoints
+        }));
+
+        // 3. 退出编辑模式
+        setEditingIndex(null);
+
+        // 4. 重置表单为新航点默认值
+        setNewWaypoint({
+          name: `航点${updatedWaypoints.length + 1}`,
+          flightSpeed: 5,
+          hoverDuration: 0,
+          altitude: 100,
+          lat: scenicCenter[0],
+          lng: scenicCenter[1],
+          voiceGuide: {
+            enabled: false,
+            text: '',
+            character: '导游',
+            voice: '女声',
+            triggerType: 'time',
+            audioFileId: '',
+            audioUrl: '',
+            subtitleFileId: ''
+          }
+        });
+
+        // 5. 用户反馈
+        toast({
+          title: '已删除',
+          description: '航点已从列表中移除',
+          variant: 'default'
+        });
+      } catch (error) {
+        console.error('删除航点失败:', error);
+        toast({
+          title: '删除失败',
+          description: '操作出现异常，请重试',
+          variant: 'destructive'
+        });
+      }
+    } else {
+      // 新增模式下的重置逻辑
+      setNewWaypoint({
+        name: `航点${formData.waypoints.length + 1}`,
+        flightSpeed: 5,
+        hoverDuration: 0,
+        altitude: 100,
+        lat: scenicCenter[0],
+        lng: scenicCenter[1],
+        voiceGuide: {
+          enabled: false,
+          text: '',
+          character: '导游',
+          voice: '女声',
+          triggerType: 'time',
+          audioFileId: '',
+          audioUrl: '',
+          subtitleFileId: ''
+        }
+      });
+      toast({
+        title: '已重置',
+        description: '航点表单已重置',
+        variant: 'default'
       });
     }
   };
@@ -558,105 +806,111 @@ export function RouteEditor(props) {
   };
 
   // 渲染航点列表标签页
-  const renderWaypointListTab = () => <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="space-y-4">
-        <WaypointForm newWaypoint={newWaypoint} onWaypointChange={handleWaypointChange} onAddWaypoint={addWaypoint} scenicCenter={scenicCenter} />
-        <div className="h-64 overflow-y-auto border border-gray-600 rounded-lg">
-          <WaypointList waypoints={formData.waypoints} onDeleteWaypoint={deleteWaypoint} onSelectWaypoint={setSelectedVoiceIndex} selectedVoiceIndex={selectedVoiceIndex} locked={true} // 启用列表锁定功能
-        />
+  const renderWaypointListTab = () => <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+      <div className="lg:col-span-1 space-y-4 flex flex-col h-full">
+        {/* 移除左侧表单顶部的title标题区域 */}
+        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar h-full">
+          <WaypointForm newWaypoint={newWaypoint} onWaypointChange={handleWaypointChange} onAddWaypoint={addWaypoint} onDeleteWaypoint={handleDeleteCurrentWaypoint} scenicCenter={scenicCenter} isEditing={editingIndex !== null} />
         </div>
       </div>
-      <div>
-        <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-blue-400 text-sm font-semibold">地图拾取坐标</CardTitle>
-            <p className="text-gray-400 text-xs">地图中心点已设置为景区坐标，坐标精度: 8位小数</p>
-          </CardHeader>
-          <CardContent className="p-0">
+      <div className="lg:col-span-2 flex flex-col h-full">
+        {/* 将坐标精度提示信息从表单中移出，改为在右侧地图区域以info提示框形式展示 */}
+        <div className="flex justify-between items-center mb-3 flex-shrink-0">
+          <h4 className="text-foreground text-sm font-semibold">地图选点</h4>
+          <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded border border-border">
+            提示：点击地图可自动填充坐标，支持8位小数精度
+          </div>
+        </div>
+        <Card className="bg-card border-border shadow-sm flex-1 flex flex-col min-h-0">
+          {/* 移除地图标题栏 */}
+          <CardContent className="p-0 relative flex-1">
             <SimpleMap center={scenicCenter} onLocationSelect={handleMapLocationSelect} currentLocation={{
             lat: newWaypoint.lat,
             lng: newWaypoint.lng
-          }} waypoints={formData.waypoints} onClearConnections={clearConnectionsTrigger} className="h-80" />
+          }} waypoints={formData.waypoints} onClearConnections={clearConnectionsTrigger} className="h-full w-full absolute inset-0" />
+            
           </CardContent>
         </Card>
       </div>
     </div>;
 
   // 渲染语音讲解标签页
-  const renderVoiceConfigTab = () => <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div>
-        <h4 className="text-blue-400 text-sm font-semibold mb-3">选择航点配置语音</h4>
-        <div className="h-96 overflow-y-auto border border-gray-600 rounded-lg">
+  const renderVoiceConfigTab = () => <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+      <div className="flex flex-col h-full min-h-0">
+        <h4 className="text-foreground text-sm font-semibold mb-3">选择航点配置语音</h4>
+        <div className="flex-1 min-h-0 overflow-y-auto border border-border rounded-lg bg-background/50 p-2 custom-scrollbar">
           <WaypointList waypoints={formData.waypoints} onDeleteWaypoint={deleteWaypoint} onSelectWaypoint={setSelectedVoiceIndex} selectedVoiceIndex={selectedVoiceIndex} locked={true} // 启用列表锁定功能
         />
         </div>
       </div>
-      <div className="h-96 overflow-y-auto">
-        <VoiceConfigPanel waypoint={selectedVoiceIndex !== null ? formData.waypoints[selectedVoiceIndex] : null} onVoiceConfigChange={(field, value) => updateWaypointVoiceConfig(selectedVoiceIndex, field, value)} onSynthesisComplete={handleSpeechSynthesisComplete} $w={$w} />
+      <div className="flex flex-col h-full min-h-0">
+        <h4 className="text-foreground text-sm font-semibold mb-3">语音配置详情</h4>
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+          <VoiceConfigPanel waypoint={selectedVoiceIndex !== null ? formData.waypoints[selectedVoiceIndex] : null} onVoiceConfigChange={(field, value) => updateWaypointVoiceConfig(selectedVoiceIndex, field, value)} onSynthesisComplete={handleSpeechSynthesisComplete} $w={$w} />
+        </div>
       </div>
     </div>;
 
   // 渲染背景音乐标签页
   const renderMusicConfigTab = () => <div className="space-y-6">
       <div className="flex items-center space-x-2 cursor-pointer" onClick={() => handleInputChange('hasBackgroundMusic', !formData.hasBackgroundMusic)}>
-        <input type="checkbox" checked={formData.hasBackgroundMusic} onChange={e => handleInputChange('hasBackgroundMusic', e.target.checked)} className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2" />
-        <label className="text-white text-sm font-medium cursor-pointer">启用背景音乐</label>
+        <input type="checkbox" checked={formData.hasBackgroundMusic} onChange={e => handleInputChange('hasBackgroundMusic', e.target.checked)} className="w-4 h-4 text-primary bg-background border-input rounded focus:ring-primary focus:ring-2" />
+        <label className="text-foreground text-sm font-medium cursor-pointer">启用背景音乐</label>
       </div>
       
       {formData.hasBackgroundMusic && <BackgroundMusicUploader cloudStorageId={formData.cloudStorageId} onCloudStorageIdChange={handleCloudStorageIdChange} $w={$w} />}
     </div>;
-  return <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl min-h-[600px] max-h-[90vh] bg-gray-900 border border-gray-700 shadow-2xl rounded-3xl flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
+  return <Dialog open={true} onOpenChange={open => !open && onClose()}>
+      <DialogContent className="max-w-7xl min-h-[600px] max-h-[90vh] bg-background border border-border shadow-xl rounded-lg flex flex-col p-0 overflow-hidden" onPointerDownOutside={e => e.preventDefault()}>
+        <DialogHeader className="flex-shrink-0 p-6 border-b border-border bg-card">
+          <DialogTitle className="text-xl font-bold text-foreground">
             {route ? '编辑航线' : '创建航线'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 bg-background/50">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-600 rounded-t-xl flex-shrink-0">
-              <TabsTrigger value="basic" className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-blue-400 data-[state=active]:border-b-2 data-[state=active]:border-blue-400 data-[state=active]:shadow-sm">
+            <TabsList className="flex w-full bg-background border-b border-border rounded-none p-0 h-12 justify-start px-6 gap-6">
+              <TabsTrigger value="basic" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
                 基本信息
               </TabsTrigger>
-              <TabsTrigger value="waypoints" className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-blue-400 data-[state=active]:border-b-2 data-[state=active]:border-blue-400 data-[state=active]:shadow-sm">
+              <TabsTrigger value="waypoints" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
                 航点列表
               </TabsTrigger>
-              <TabsTrigger value="voice" className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-blue-400 data-[state=active]:border-b-2 data-[state=active]:border-blue-400 data-[state=active]:shadow-sm">
+              <TabsTrigger value="voice" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
                 语音讲解
               </TabsTrigger>
-              <TabsTrigger value="music" className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-blue-400 data-[state=active]:border-b-2 data-[state=active]:border-blue-400 data-[state=active]:shadow-sm">
+              <TabsTrigger value="music" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
                 背景音乐
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-800/30 backdrop-blur-sm min-h-[400px]">
-              <TabsContent value="basic" className="space-y-6 h-full">
+            <div className="flex-1 overflow-y-auto p-6 min-h-[400px]">
+              <TabsContent value="basic" className="space-y-6 h-full mt-0">
                 <BasicInfoPanel formData={formData} onInputChange={handleInputChange} />
               </TabsContent>
 
-              <TabsContent value="waypoints" className="space-y-6 h-full">
+              <TabsContent value="waypoints" className="space-y-6 h-full mt-0">
                 {renderWaypointListTab()}
               </TabsContent>
 
-              <TabsContent value="voice" className="space-y-6 h-full">
+              <TabsContent value="voice" className="space-y-6 h-full mt-0">
                 {renderVoiceConfigTab()}
               </TabsContent>
 
-              <TabsContent value="music" className="space-y-6 h-full">
+              <TabsContent value="music" className="space-y-6 h-full mt-0">
                 {renderMusicConfigTab()}
               </TabsContent>
             </div>
           </Tabs>
 
           {/* 保存按钮区域 - 固定在底部 */}
-          <div className="flex-shrink-0 border-t border-gray-600 bg-gray-800/50 backdrop-blur-sm rounded-b-xl p-6">
+          <div className="flex-shrink-0 border-t border-border bg-card p-4">
             <div className="flex justify-end space-x-3">
-              <Button variant="outline" onClick={onClose} className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
+              <Button variant="outline" onClick={onClose} className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground">
                 <X className="w-4 h-4 mr-2" /> 取消
               </Button>
-              <Button onClick={handleSave} className="group relative bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 text-white font-semibold shadow-lg">
-                <span className="absolute inset-0 w-full h-full transition duration-300 ease-out transform bg-white opacity-0 group-hover:opacity-10 rounded-lg"></span>
+              <Button onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
                 <Save className="w-4 h-4 mr-2" /> 保存航线
               </Button>
             </div>
