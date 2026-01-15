@@ -4,9 +4,76 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { menuItems } from './menus';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { $w as base$W } from "@/lib/weda-client";
+import { 
+  LayoutDashboard, 
+  Plane, 
+  Map as MapIcon, 
+  ClipboardList, 
+  MapPin, 
+  Video, 
+  Settings, 
+  Lightbulb, 
+  Image 
+} from 'lucide-react';
+
+const menuItems = [
+  {
+    id: 'dashboard',
+    label: '系统概览',
+    icon: <LayoutDashboard size={20} />,
+    path: '/dashboard'
+  },
+  {
+    id: 'scenic-management',
+    label: '景区管理',
+    icon: <Image size={20} />,
+    path: '/scenic-management'
+  },
+  {
+    id: 'drone',
+    label: '无人机管理',
+    icon: <Plane size={20} />,
+    path: '/drone'
+  },
+  {
+    id: 'route',
+    label: '航线规划',
+    icon: <MapIcon size={20} />,
+    path: '/route'
+  },
+  {
+    id: 'flight-task',
+    label: '飞行任务',
+    icon: <ClipboardList size={20} />,
+    path: '/flight-task'
+  },
+  {
+    id: 'poi',
+    label: 'POI管理',
+    icon: <MapPin size={20} />,
+    path: '/poi'
+  },
+  {
+    id: 'video-record',
+    label: '录像管理',
+    icon: <Video size={20} />,
+    path: '/video-record'
+  },
+  {
+    id: 'config',
+    label: '系统配置',
+    icon: <Settings size={20} />,
+    path: '/config'
+  },
+  {
+    id: 'tips',
+    label: 'Tips管理',
+    icon: <Lightbulb size={20} />,
+    path: '/tips'
+  }
+]
 
 // 辅助组件：菜单项
 function NavItem({
