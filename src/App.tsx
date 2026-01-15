@@ -10,7 +10,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageWrapper } from "./components/ui/page-wrapper";
 import { routers } from "./configs/routers";
 import { createBrowserHistory } from "history";
 
@@ -32,8 +32,9 @@ const App: React.FC = () => {
                 path="/"
                 element={
                   <Navigate
-                    to={`/${routers.find((item) => item.isHome)?.id || routers[0].id
-                      }`}
+                    to={`/${
+                      routers.find((item) => item.isHome)?.id || routers[0].id
+                    }`}
                     replace
                   />
                 }

@@ -168,54 +168,36 @@ export function SimpleMap({
 
     // 为每个航点添加标记
     waypoints.forEach((waypoint, index) => {
-      // 检查是否为选中的航点（通过currentLocation坐标匹配）
-      const isSelected = currentLocation && 
-        Math.abs(currentLocation.lat - waypoint.lat) < 0.00000001 && 
-        Math.abs(currentLocation.lng - waypoint.lng) < 0.00000001;
-
       const marker = window.L.marker([waypoint.lat, waypoint.lng], {
         icon: window.L.divIcon({
           className: 'waypoint-marker',
           html: `
             <div style="
-              background: ${isSelected ? '#f59e0b' : (index === 0 ? '#10b981' : index === waypoints.length - 1 ? '#ef4444' : '#3b82f6')};
-              width: ${isSelected ? '28px' : '24px'};
-              height: ${isSelected ? '28px' : '24px'};
+              background: ${index === 0 ? '#10b981' : index === waypoints.length - 1 ? '#ef4444' : '#3b82f6'};
+              width: 24px;
+              height: 24px;
               border-radius: 50%;
-              border: ${isSelected ? '3px solid #fcd34d' : '3px solid white'};
+              border: 3px solid white;
               box-shadow: 0 2px 8px rgba(0,0,0,0.3);
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-weight: bold;
-              font-size: ${isSelected ? '12px' : '10px'};
-              transition: all 0.2s ease;
-              z-index: ${isSelected ? 1000 : 100};
+              font-size: 10px;
             ">
               ${index + 1}
             </div>
           `,
-          iconSize: isSelected ? [28, 28] : [24, 24],
-          iconAnchor: isSelected ? [14, 14] : [12, 12]
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
         })
       }).addTo(mapInstance);
 
       // 添加点击事件
-      marker.on('click', (e) => {
-        // 阻止事件冒泡，防止触发地图背景点击
-        window.L.DomEvent.stopPropagation(e);
-        
-        // 触发位置选择事件，将点击的航点信息回传给父组件
-        onLocationSelect && onLocationSelect({
-          lat: waypoint.lat,
-          lng: waypoint.lng,
-          name: waypoint.name,
-          flightSpeed: waypoint.flightSpeed,
-          hoverDuration: waypoint.hoverDuration,
-          altitude: waypoint.altitude,
-          index: index // 传递索引，方便父组件识别
-        });
+      marker.on('click', () => {
+        // 可以在这里添加航点点击事件处理
+        console.log(`点击航点 ${index + 1}:`, waypoint);
       });
 
       // 存储标记引用
@@ -258,11 +240,9 @@ export function SimpleMap({
             lat: validateCoordinate(e.latlng.lat.toFixed(8), '纬度'),
             lng: validateCoordinate(e.latlng.lng.toFixed(8), '经度')
           };
-          // 仅触发选择事件，不自动设置 selectedLocation，由父组件控制
+          setSelectedLocation(location);
           onLocationSelect && onLocationSelect(location);
-          
-          // 不再自动添加标记，依赖父组件传入的 currentLocation 更新标记
-          // addMarker(e.latlng, mapInstance);
+          addMarker(e.latlng, mapInstance);
         } catch (error) {
           console.error('坐标拾取错误:', error);
         }
@@ -272,7 +252,7 @@ export function SimpleMap({
       setMapLoaded(true);
 
       // 如果已有坐标，添加标记
-      if (currentLocation && currentLocation.lat != null && currentLocation.lng != null) {
+      if (currentLocation && currentLocation.lat && currentLocation.lng) {
         const latLng = window.L.latLng(currentLocation.lat, currentLocation.lng);
         addMarker(latLng, mapInstance);
       }
@@ -343,16 +323,6 @@ export function SimpleMap({
     setMapLoaded(false);
   };
 
-  // 监听 currentLocation 变化，更新地图标记
-  useEffect(() => {
-    if (mapInstanceRef.current && currentLocation && currentLocation.lat && currentLocation.lng) {
-      const latLng = window.L.latLng(currentLocation.lat, currentLocation.lng);
-      addMarker(latLng, mapInstanceRef.current);
-      // 可选：平滑移动到新位置
-      // mapInstanceRef.current.panTo(latLng);
-    }
-  }, [currentLocation]);
-
   // 监听航点变化，实时更新连线
   useEffect(() => {
     if (mapInstanceRef.current && waypoints && waypoints.length >= 2) {
@@ -375,13 +345,32 @@ export function SimpleMap({
     setTimeout(() => initializeMap(), 300);
     return () => cleanupMap();
   }, []);
-  return <div className={`w-full ${className} bg-card rounded-lg border border-border overflow-hidden`}>
-      <div ref={mapContainerRef} className="w-full h-full bg-card" style={{
+  return <div className={`w-full ${className} bg-gray-800 rounded-lg border border-gray-600 overflow-hidden`}>
+      <div className="bg-blue-900/20 border-b border-blue-500/30 p-3">
+        <div className="flex justify-between items-center">
+          <p className="text-blue-300 text-sm">
+            <strong>操作说明：</strong>左键点击地图拾取坐标（精度：8位小数）
+          </p>
+          {waypoints && waypoints.length >= 2 && <button onClick={clearConnections} className="flex items-center space-x-1 text-red-400 hover:text-red-300 text-sm bg-red-900/20 px-2 py-1 rounded">
+              <Trash2 className="h-3 w-3" />
+              <span>清除连线</span>
+            </button>}
+        </div>
+      </div>
+      
+      <div ref={mapContainerRef} className="w-full h-full bg-gray-800" style={{
       minHeight: '256px'
     }}>
-        {!mapLoaded && <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+        {!mapLoaded && <div className="w-full h-full flex items-center justify-center text-gray-500">
             地图加载中...
           </div>}
       </div>
+
+      {selectedLocation && <div className="bg-blue-900/20 border-t border-blue-500/30 p-3">
+          <div className="flex items-center space-x-2 text-blue-400 text-sm">
+            <MapPin className="h-4 w-4" />
+            <span>当前坐标：纬度 {selectedLocation.lat.toFixed(8)}，经度 {selectedLocation.lng.toFixed(8)}</span>
+          </div>
+        </div>}
     </div>;
 }

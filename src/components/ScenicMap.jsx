@@ -3,100 +3,45 @@ import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore;
 import { Card, CardContent, useToast } from '@/components/ui';
 // @ts-ignore;
-import { MapPin, Navigation, Loader, Edit3 } from 'lucide-react';
+import { MapPin, Navigation, Loader } from 'lucide-react';
 
-// Leaflet CSS 和 JS
-const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+// 本地存储键名
+const SCENIC_SPOT_STORAGE_KEY = 'scenic_spot_data';
 export function ScenicMap({
   onPositionSelect,
   initialPosition,
-  disabled = false,
-  className = "h-80"
+  disabled = false
 }) {
   const {
     toast
   } = useToast();
-  const [selectedPosition, setSelectedPosition] = useState(initialPosition || null);
+  const [selectedPosition, setSelectedPosition] = useState(initialPosition);
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const markerRef = useRef(null);
-  const initializingRef = useRef(false);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [mapError, setMapError] = useState(null);
   const [userLocation, setUserLocation] = useState({
     latitude: 39.9042,
     longitude: 116.4074
   });
+  const [marker, setMarker] = useState(null);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  // 检查 Leaflet 是否已加载
-  const isLeafletLoaded = () => typeof window !== 'undefined' && window.L;
+  // 天地图API密钥
+  const TIAN_DI_TU_KEY = 'eaa119242fd58a04007ad66abc2546f7';
 
-  // 加载 Leaflet CSS
-  const loadLeafletCSS = () => {
-    return new Promise((resolve, reject) => {
-      if (document.querySelector(`link[href="${LEAFLET_CSS}"]`)) {
-        resolve();
-        return;
-      }
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = LEAFLET_CSS;
-      link.onload = () => resolve();
-      link.onerror = () => reject(new Error('Leaflet CSS 加载失败'));
-      document.head.appendChild(link);
-    });
-  };
-
-  // 加载 Leaflet JS
-  const loadLeafletJS = () => {
-    return new Promise((resolve, reject) => {
-      if (isLeafletLoaded()) {
-        resolve();
-        return;
-      }
-      if (window._leafletLoading) {
-        const checkInterval = setInterval(() => {
-          if (isLeafletLoaded()) {
-            clearInterval(checkInterval);
-            resolve();
-          }
-        }, 100);
-        return;
-      }
-      window._leafletLoading = true;
-      const script = document.createElement('script');
-      script.src = LEAFLET_JS;
-      script.onload = () => {
-        window._leafletLoading = false;
-        resolve();
-      };
-      script.onerror = () => {
-        window._leafletLoading = false;
-        reject(new Error('Leaflet JS 加载失败'));
-      };
-      document.head.appendChild(script);
-    });
-  };
-
-  // 坐标精度验证函数 - 确保6位小数精度
-  const validateCoordinate = (value, type) => {
-    const num = parseFloat(value);
-    if (isNaN(num)) {
-      throw new Error(`无效的${type}坐标值`);
+  // 从本地存储获取景区数据
+  const getScenicDataFromLocal = () => {
+    try {
+      const storedData = localStorage.getItem(SCENIC_SPOT_STORAGE_KEY);
+      return storedData ? JSON.parse(storedData) : null;
+    } catch (error) {
+      console.error('从本地存储获取数据失败:', error);
+      return null;
     }
-
-    // 验证坐标范围
-    if (type === '纬度' && (num < -90 || num > 90)) {
-      throw new Error('纬度范围应在-90到90之间');
-    }
-    if (type === '经度' && (num < -180 || num > 180)) {
-      throw new Error('经度范围应在-180到180之间');
-    }
-
-    // 返回6位小数精度
-    return parseFloat(num.toFixed(6));
   };
+  useEffect(() => {
+    setSelectedPosition(initialPosition);
+  }, [initialPosition]);
 
   // 获取用户地理位置
   useEffect(() => {
@@ -112,301 +57,208 @@ export function ScenicMap({
     }
   }, []);
 
-  // 初始化地图
-  const initializeMap = async () => {
-    if (!mapContainerRef.current) return;
-    if (initializingRef.current) return;
-    if (mapInstanceRef.current) return;
-    if (mapContainerRef.current && mapContainerRef.current._leaflet_id) return;
-    initializingRef.current = true;
-    try {
-      // 加载 Leaflet 资源
-      await Promise.all([loadLeafletCSS(), loadLeafletJS()]);
-      if (!mapContainerRef.current) {
-        throw new Error('地图容器不存在');
-      }
-
-      // 确定地图中心点
-      let mapCenter;
-      if (selectedPosition && selectedPosition.lat && selectedPosition.lng) {
-        mapCenter = [selectedPosition.lat, selectedPosition.lng];
-      } else {
-        mapCenter = [userLocation.latitude, userLocation.longitude];
-      }
-
-      // 创建地图实例
-      const mapInstance = window.L.map(mapContainerRef.current, {
-        center: mapCenter,
-        zoom: 12,
-        zoomControl: false
+  // 加载天地图API脚本
+  useEffect(() => {
+    if (scriptLoaded) return;
+    const loadScript = () => {
+      return new Promise((resolve, reject) => {
+        if (window.T) {
+          setScriptLoaded(true);
+          resolve();
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = `https://api.tianditu.gov.cn/api?v=4.0&tk=${TIAN_DI_TU_KEY}`;
+        script.onload = () => {
+          setScriptLoaded(true);
+          resolve();
+        };
+        script.onerror = () => reject(new Error('天地图加载失败'));
+        document.head.appendChild(script);
       });
+    };
+    loadScript().catch(error => {
+      toast({
+        title: '地图加载失败',
+        description: error.message,
+        variant: 'destructive'
+      });
+    });
+  }, [scriptLoaded]);
 
-      // 添加天地图瓦片图层
-      window.L.tileLayer('https://t0.tianditu.gov.cn/DataServer?T=img_w/&x={x}&y={y}&l={z}&style=dark&tk=eaa119242fd58a04007ad66abc2546f7', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18
-      }).addTo(mapInstance);
+  // 初始化地图
+  useEffect(() => {
+    if (!mapContainerRef.current || !scriptLoaded || mapLoaded) return;
+    try {
+      // 获取景区数据作为地图中心点
+      const scenicData = getScenicDataFromLocal();
+      let mapCenter;
+      if (scenicData && scenicData.latitude && scenicData.longitude) {
+        mapCenter = new T.LngLat(scenicData.longitude, scenicData.latitude);
+      } else if (selectedPosition && selectedPosition.lat && selectedPosition.lng) {
+        mapCenter = new T.LngLat(selectedPosition.lng, selectedPosition.lat);
+      } else {
+        mapCenter = new T.LngLat(userLocation.longitude, userLocation.latitude);
+      }
+      const mapInstance = new T.Map(mapContainerRef.current);
+      mapInstance.centerAndZoom(mapCenter, 12);
 
-      // 添加缩放控件
-      window.L.control.zoom({
-        position: 'topright'
-      }).addTo(mapInstance);
+      // 添加地图控件
+      mapInstance.addControl(new T.Control.Zoom());
+      mapInstance.addControl(new T.Control.Scale());
+      mapInstance.setMapType(TMAP_NORMAL_MAP);
 
-      // 地图点击事件 - 更新唯一标记位置
+      // 添加左键点击事件 - 移除坐标拾取成功提示
       const handleMapClick = e => {
         if (disabled) return;
         try {
-          const location = {
-            lat: validateCoordinate(e.latlng.lat.toFixed(6), '纬度'),
-            lng: validateCoordinate(e.latlng.lng.toFixed(6), '经度')
+          const lnglat = e.lnglat;
+          const newPosition = {
+            lat: parseFloat(lnglat.lat.toFixed(6)),
+            lng: parseFloat(lnglat.lng.toFixed(6))
           };
-          setSelectedPosition(location);
-          onPositionSelect && onPositionSelect(location);
-          updateMarker(e.latlng, mapInstance);
+          setSelectedPosition(newPosition);
+          onPositionSelect && onPositionSelect(newPosition);
+
+          // 在地图上添加标记
+          addMarker(newPosition, mapInstance);
+          // 移除坐标拾取成功提示
         } catch (error) {
           console.error('坐标拾取错误:', error);
-          toast({
-            title: '坐标拾取失败',
-            description: error.message,
-            variant: 'destructive'
-          });
         }
       };
-      mapInstance.on('click', handleMapClick);
-      mapInstanceRef.current = mapInstance;
 
-      // 如果已有初始位置，添加标记
-      if (selectedPosition && selectedPosition.lat && selectedPosition.lng) {
-        const latLng = window.L.latLng(selectedPosition.lat, selectedPosition.lng);
-        addMarker(latLng, mapInstance);
+      // 绑定事件监听器
+      mapInstance.addEventListener('click', handleMapClick);
+
+      // 如果已有初始位置，在地图上标记
+      if (selectedPosition) {
+        addMarker(selectedPosition, mapInstance);
       }
+      mapInstanceRef.current = mapInstance;
       setMapLoaded(true);
-      setMapError(null);
+      // 移除地图加载成功的toast提示
     } catch (error) {
-      console.error('地图初始化失败:', error);
+      console.error('地图初始化错误:', error);
       toast({
         title: '地图初始化失败',
         description: error.message,
         variant: 'destructive'
       });
-      setMapError(error);
-    } finally {
-      initializingRef.current = false;
     }
-  };
 
-  // 添加/更新地图标记
-  const addMarker = (latLng, mapInstance = mapInstanceRef.current) => {
+    // 清理函数
+    return () => {
+      if (mapInstanceRef.current) {
+        try {
+          // 移除事件监听器
+          mapInstanceRef.current.removeEventListener('click', () => {});
+
+          // 清除标记
+          if (marker) {
+            mapInstanceRef.current.removeOverLay(marker);
+          }
+
+          // 销毁地图实例
+          mapInstanceRef.current.destroy();
+          mapInstanceRef.current = null;
+        } catch (error) {
+          console.error('清理地图资源失败:', error);
+        }
+      }
+    };
+  }, [scriptLoaded, mapLoaded, disabled]);
+
+  // 添加地图标记 - 使用React状态管理
+  const addMarker = (position, mapInstance = mapInstanceRef.current) => {
     if (!mapInstance) return;
     try {
       // 清除之前的标记
-      if (markerRef.current) {
-        mapInstance.removeLayer(markerRef.current);
-        markerRef.current = null;
+      if (marker) {
+        mapInstance.removeOverLay(marker);
+        setMarker(null);
       }
 
-      // 创建自定义标记图标 - 使用主色的互补色 (Orange: #ff8718)
-      const customIcon = window.L.divIcon({
-        className: 'scenic-marker',
-        html: `
-          <div style="
-            background: #ff8718;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-          ">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
-          </div>
-        `,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
-
       // 创建新标记
-      markerRef.current = window.L.marker(latLng, {
-        icon: customIcon,
-        draggable: !disabled
-      }).addTo(mapInstance);
-
-      // 标记拖动事件
-      markerRef.current.on('dragend', e => {
-        if (disabled) return;
-        const marker = e.target;
-        const position = marker.getLatLng();
-        const location = {
-          lat: validateCoordinate(position.lat.toFixed(6), '纬度'),
-          lng: validateCoordinate(position.lng.toFixed(6), '经度')
-        };
-        setSelectedPosition(location);
-        onPositionSelect && onPositionSelect(location);
-      });
-
-      // 将地图中心移动到标记位置
-      mapInstance.setView(latLng, mapInstance.getZoom());
+      const newMarker = new T.Marker(new T.LngLat(position.lng, position.lat));
+      mapInstance.addOverLay(newMarker);
+      setMarker(newMarker);
     } catch (error) {
       console.error('添加标记失败:', error);
     }
   };
 
-  // 更新标记位置
-  const updateMarker = (latLng, mapInstance = mapInstanceRef.current) => {
-    if (!mapInstance) return;
-    addMarker(latLng, mapInstance);
-  };
-
   // 处理手动坐标输入
   const handleManualCoordinateChange = (field, value) => {
-    if (!mapLoaded || disabled) return;
-    try {
-      const newValue = validateCoordinate(value, field === 'lat' ? '纬度' : '经度');
-      const newPosition = {
-        ...selectedPosition,
-        [field]: newValue
-      };
+    if (!mapLoaded) return;
+    const newPosition = {
+      ...selectedPosition,
+      [field]: parseFloat(value) || 0
+    };
+    setSelectedPosition(newPosition);
+    onPositionSelect && onPositionSelect(newPosition);
 
-      // 确保两个坐标都存在
-      if (!newPosition.lat || !newPosition.lng) {
-        return;
-      }
-      setSelectedPosition(newPosition);
-      onPositionSelect && onPositionSelect(newPosition);
+    // 更新地图标记
+    addMarker(newPosition);
 
-      // 更新地图标记
-      const latLng = window.L.latLng(newPosition.lat, newPosition.lng);
-      updateMarker(latLng);
-
-      // 移动地图中心到新位置
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.setView(latLng, 15);
-      }
-    } catch (error) {
-      toast({
-        title: '坐标输入错误',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
-  };
-
-  // 清理地图资源
-  const cleanupMap = () => {
+    // 移动地图中心到新位置
     if (mapInstanceRef.current) {
-      try {
-        // 清除标记
-        if (markerRef.current) {
-          mapInstanceRef.current.removeLayer(markerRef.current);
-          markerRef.current = null;
-        }
-
-        // 移除地图实例
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      } catch (error) {
-        console.error('清理地图资源失败:', error);
-      }
+      const center = new T.LngLat(newPosition.lng, newPosition.lat);
+      mapInstanceRef.current.centerAndZoom(center, 15);
     }
-    if (mapContainerRef.current && mapContainerRef.current._leaflet_id) {
-      try {
-        delete mapContainerRef.current._leaflet_id;
-      } catch {}
-    }
-    initializingRef.current = false;
-    setMapLoaded(false);
-    setMapError(null);
   };
-
-  // 监听初始位置变化
-  useEffect(() => {
-    if (initialPosition && (!selectedPosition || initialPosition.lat !== selectedPosition.lat || initialPosition.lng !== selectedPosition.lng)) {
-      setSelectedPosition(initialPosition);
-      if (mapInstanceRef.current && initialPosition.lat && initialPosition.lng) {
-        const latLng = window.L.latLng(initialPosition.lat, initialPosition.lng);
-        updateMarker(latLng);
-        mapInstanceRef.current.setView(latLng, 15);
-      }
-    }
-  }, [initialPosition]);
-
-  // 初始化地图
-  useEffect(() => {
-    setTimeout(() => initializeMap(), 0);
-    return () => cleanupMap();
-  }, []);
-
-  return (
-    <>
-      <style>{`
-        .leaflet-control-zoom {
-          border: none !important;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-          margin-top: 16px !important;
-          margin-right: 16px !important;
-        }
-        .leaflet-control-zoom a {
-          background-color: hsl(var(--card)) !important;
-          color: hsl(var(--foreground)) !important;
-          border-bottom: 1px solid hsl(var(--border)) !important;
-          width: 32px !important;
-          height: 32px !important;
-          line-height: 32px !important;
-          font-size: 14px !important;
-          transition: all 0.2s ease;
-        }
-        .leaflet-control-zoom a:first-child {
-          border-top-left-radius: 8px !important;
-          border-top-right-radius: 8px !important;
-        }
-        .leaflet-control-zoom a:last-child {
-          border-bottom-left-radius: 8px !important;
-          border-bottom-right-radius: 8px !important;
-          border-bottom: none !important;
-        }
-        .leaflet-control-zoom a:hover {
-          background-color: hsl(var(--accent)) !important;
-          color: hsl(var(--accent-foreground)) !important;
-        }
-        .leaflet-container {
-          font-family: inherit !important;
-          z-index: 1;
-        }
-      `}</style>
-      <div ref={mapContainerRef} className={`relative w-full h-full ${className} bg-muted/20`} style={{
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        width: '100%',
-        height: '100%',
-        position: 'relative',
-        zIndex: 1
+  return <Card className="p-0 border-gray-600">
+      <CardContent className="p-0">
+        <div ref={mapContainerRef} className="relative w-full h-80 rounded-lg overflow-hidden" style={{
+        cursor: disabled ? 'not-allowed' : 'pointer'
       }}>
-        {/* 地图加载状态 */}
-        {!mapLoaded && !mapError && <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-[1000]">
-            <div className="flex flex-col items-center space-y-2">
-              <Loader className="h-8 w-8 text-primary animate-spin" />
-              <div className="text-foreground text-sm font-medium">地图加载中...</div>
-            </div>
-          </div>}
-        {mapError && <div className="absolute inset-0 flex items-center justify-center bg-destructive/10 z-[1100]">
-            <div className="text-destructive-foreground text-sm font-medium bg-destructive px-4 py-2 rounded border border-destructive-foreground/20">
-              地图初始化失败
-            </div>
-          </div>}
+          {/* 地图加载状态 */}
+          {!mapLoaded && <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 z-10">
+              <div className="flex flex-col items-center space-y-2">
+                <Loader className="h-8 w-8 text-blue-400 animate-spin" />
+                <div className="text-white text-sm font-medium">地图加载中...</div>
+              </div>
+            </div>}
+          
+          {/* 地图操作提示 */}
+          {!disabled && mapLoaded && <div className="absolute top-4 left-4 bg-black/80 text-white text-sm px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20 z-20">
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4 text-red-400" />
+                <span>左键点击地图拾取坐标</span>
+              </div>
+            </div>}
+          
+          {/* 禁用状态遮罩 */}
+          {disabled && mapLoaded && <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm z-30">
+              <div className="text-white text-lg font-medium bg-black/60 px-4 py-3 rounded-lg border border-white/20">
+                编辑模式下可设置坐标
+              </div>
+            </div>}
+        </div>
         
-        {/* 禁用状态遮罩 */}
-        {disabled && mapLoaded && <div className="absolute inset-0 bg-background/40 flex items-center justify-center backdrop-blur-sm z-[1100]">
-            <div className="text-foreground text-lg font-medium bg-background/90 px-4 py-3 rounded-lg border border-border shadow-sm">
-              编辑模式下可设置坐标
+        {/* 坐标信息显示和手动输入 */}
+        <div className="mt-4 p-4 bg-gray-800/80 rounded-lg border border-gray-600">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-400 font-medium">纬度:</span>
+              <input type="number" step="0.000001" value={selectedPosition ? selectedPosition.lat : ''} onChange={e => handleManualCoordinateChange('lat', e.target.value)} disabled={disabled || !mapLoaded} placeholder="39.9042" className="text-white font-mono bg-gray-700/50 px-3 py-2 rounded border border-gray-600 flex-1 min-w-0 disabled:opacity-50 disabled:cursor-not-allowed" />
             </div>
-          </div>}
-      </div>
-    </>
-  );
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-400 font-medium">经度:</span>
+              <input type="number" step="0.000001" value={selectedPosition ? selectedPosition.lng : ''} onChange={e => handleManualCoordinateChange('lng', e.target.value)} disabled={disabled || !mapLoaded} placeholder="116.4074" className="text-white font-mono bg-gray-700/50 px-3 py-2 rounded border border-gray-600 flex-1 min-w-0 disabled:opacity-50 disabled:cursor-not-allowed" />
+            </div>
+          </div>
+          
+          {selectedPosition && <div className="mt-3 pt-3 border-t border-gray-600">
+              <div className="text-xs text-gray-400 flex items-center space-x-1">
+                <MapPin className="h-3 w-3" />
+                <span>坐标已选择：纬度 {selectedPosition.lat.toFixed(6)}，经度 {selectedPosition.lng.toFixed(6)}</span>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                支持手动输入坐标或点击地图拾取
+              </div>
+            </div>}
+        </div>
+      </CardContent>
+    </Card>;
 }

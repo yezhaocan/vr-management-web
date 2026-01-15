@@ -1,7 +1,7 @@
 // @ts-ignore;
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore;
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useToast, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useToast } from '@/components/ui';
 // @ts-ignore;
 import { MapPin, Navigation, Upload, X, Image, Video, Palette, Type, Code, Eye, CheckCircle, AlertCircle, Copy, RotateCcw } from 'lucide-react';
 
@@ -497,7 +497,8 @@ export function POIForm({
   };
 
   // 处理表单提交
-  const handleSaveClick = async () => {
+  const handleSubmit = async e => {
+    e.preventDefault();
     if (!formData.name) {
       toast({
         title: '表单验证失败',
@@ -586,20 +587,20 @@ export function POIForm({
   // 渲染基础信息标签页
   const renderBasicTab = () => <div className="space-y-4">
       <div>
-        <Label htmlFor="name" className="font-medium">POI名称 *</Label>
-        <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入POI名称" className="mt-1" required />
+        <Label htmlFor="name" className="text-white">POI名称 *</Label>
+        <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入POI名称" className="bg-gray-800 border-gray-700 text-white mt-1" required />
       </div>
 
       <div>
-        <Label htmlFor="description" className="font-medium">描述</Label>
-        <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入POI描述" className="mt-1 h-20" />
+        <Label htmlFor="description" className="text-white">描述</Label>
+        <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入POI描述" className="bg-gray-800 border-gray-700 text-white mt-1 h-20" />
       </div>
 
       {/* 坐标信息 - 直接显示地图 */}
-      <div className="bg-muted/30 rounded-lg p-4 border border-border">
+      <div className="bg-gray-800/50 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <Label className="font-medium">地理坐标</Label>
-          <div className="flex items-center space-x-2 text-primary text-sm">
+          <Label className="text-white">地理坐标</Label>
+          <div className="flex items-center space-x-2 text-blue-400 text-sm">
             <Navigation className="h-4 w-4" />
             <span>左键点击地图拾取坐标</span>
           </div>
@@ -607,31 +608,31 @@ export function POIForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <Label htmlFor="latitude" className="text-muted-foreground">纬度</Label>
-            <Input id="latitude" value={formData.latitude} onChange={e => handleInputChange('latitude', e.target.value)} placeholder="例如：39.90923" className="mt-1" />
+            <Label htmlFor="latitude" className="text-gray-300">纬度</Label>
+            <Input id="latitude" value={formData.latitude} onChange={e => handleInputChange('latitude', e.target.value)} placeholder="例如：39.90923" className="bg-gray-700 border-gray-600 text-white mt-1" />
           </div>
           <div>
-            <Label htmlFor="longitude" className="text-muted-foreground">经度</Label>
-            <Input id="longitude" value={formData.longitude} onChange={e => handleInputChange('longitude', e.target.value)} placeholder="例如：116.397428" className="mt-1" />
+            <Label htmlFor="longitude" className="text-gray-300">经度</Label>
+            <Input id="longitude" value={formData.longitude} onChange={e => handleInputChange('longitude', e.target.value)} placeholder="例如：116.397428" className="bg-gray-700 border-gray-600 text-white mt-1" />
           </div>
         </div>
 
         {/* 地图拾取区域 */}
-        <div className="border border-border rounded-lg overflow-hidden">
-          <div className="bg-muted/50 border-b border-border p-3">
-            <p className="text-muted-foreground text-sm">
+        <div className="border border-gray-600 rounded-lg overflow-hidden">
+          <div className="bg-blue-900/20 border-b border-blue-500/30 p-3">
+            <p className="text-blue-300 text-sm">
               <strong>操作说明：</strong>左键点击地图拾取坐标
             </p>
           </div>
-          <div ref={mapContainerRef} className="w-full h-64 bg-muted">
-            {!mapLoaded && <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+          <div ref={mapContainerRef} className="w-full h-64 bg-gray-800">
+            {!mapLoaded && <div className="w-full h-full flex items-center justify-center text-gray-500">
                 地图加载中...
               </div>}
           </div>
         </div>
 
-        {formData.latitude && formData.longitude && <div className="mt-3 p-3 bg-primary/10 border border-primary/20 rounded">
-            <div className="flex items-center space-x-2 text-primary text-sm">
+        {formData.latitude && formData.longitude && <div className="mt-3 p-3 bg-green-900/20 border border-green-500/30 rounded">
+            <div className="flex items-center space-x-2 text-green-400 text-sm">
               <MapPin className="h-4 w-4" />
               <span>当前坐标：纬度 {formData.latitude}，经度 {formData.longitude}</span>
             </div>
@@ -639,55 +640,55 @@ export function POIForm({
       </div>
 
       <div>
-        <Label htmlFor="height" className="font-medium">高度 (米)</Label>
-        <Input id="height" type="number" value={formData.height} onChange={e => handleInputChange('height', e.target.value)} placeholder="请输入高度" className="mt-1" />
+        <Label htmlFor="height" className="text-white">高度 (米)</Label>
+        <Input id="height" type="number" value={formData.height} onChange={e => handleInputChange('height', e.target.value)} placeholder="请输入高度" className="bg-gray-800 border-gray-700 text-white mt-1" />
       </div>
     </div>;
 
   // 渲染媒体上传标签页
   const renderMediaTab = () => <div className="space-y-6">
       {/* 图片上传 */}
-      <div className="bg-muted/30 rounded-lg p-4 border border-border">
-        <Label className="mb-4 block font-medium">图片上传</Label>
+      <div className="bg-gray-800/50 rounded-lg p-4">
+        <Label className="text-white mb-4 block">图片上传</Label>
         <div className="space-y-3">
           <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleFileUpload(e, 'image')} />
           
           {formData.imageFileId ? <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Image className="h-6 w-6 text-green-500" />
+                  <Image className="h-6 w-6 text-green-400" />
                   <div>
-                    <p className="text-sm font-medium">图片已上传</p>
-                    <p className="text-xs text-muted-foreground">文件ID: {formData.imageFileId.substring(0, 20)}...</p>
+                    <p className="text-sm text-white">图片已上传</p>
+                    <p className="text-xs text-gray-400">文件ID: {formData.imageFileId.substring(0, 20)}...</p>
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => imageInputRef.current?.click()} className="px-3">
+                  <Button type="button" variant="outline" size="sm" onClick={() => imageInputRef.current?.click()} className="text-blue-400 border-blue-400 hover:bg-blue-400/10">
                     <Upload className="h-3 w-3 mr-1" />
                     更换
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => clearFile('image')} className="px-3 hover:text-destructive">
+                  <Button type="button" variant="outline" size="sm" onClick={() => clearFile('image')} className="text-red-400 border-red-400 hover:bg-red-400/10">
                     <X className="h-3 w-3 mr-1" />
                     清除
                   </Button>
                 </div>
               </div>
-              {imagePreviewUrl && <div className="border border-border rounded-lg p-2 bg-muted/50">
+              {imagePreviewUrl && <div className="border border-gray-600 rounded-lg p-2 bg-gray-900/30">
                   <img src={imagePreviewUrl} alt="预览" className="w-full h-32 object-cover rounded" />
                 </div>}
-            </div> : <div className="text-center border-2 border-dashed border-border rounded-lg p-6 hover:border-primary transition-colors cursor-pointer bg-muted/20" onClick={() => imageInputRef.current?.click()}>
+            </div> : <div className="text-center border-2 border-dashed border-gray-600 rounded-lg p-6 hover:border-gray-500 transition-colors cursor-pointer" onClick={() => imageInputRef.current?.click()}>
               <div className="space-y-3">
                 <div className="flex justify-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Image className="h-8 w-8 text-primary" />
+                  <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center">
+                    <Image className="h-8 w-8 text-blue-400" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-foreground font-medium">{uploadingImage ? '上传中...' : '点击上传图片'}</p>
-                  <p className="text-muted-foreground text-sm mt-1">支持 JPG, PNG, GIF 格式</p>
+                  <p className="text-gray-300 font-medium">{uploadingImage ? '上传中...' : '点击上传图片'}</p>
+                  <p className="text-gray-500 text-sm mt-1">支持 JPG, PNG, GIF 格式</p>
                 </div>
-                {uploadingImage && <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full animate-pulse"></div>
+                {uploadingImage && <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-blue-500 h-2 rounded-full animate-pulse"></div>
                   </div>}
               </div>
             </div>}
@@ -695,46 +696,46 @@ export function POIForm({
       </div>
 
       {/* 视频上传 */}
-      <div className="bg-muted/30 rounded-lg p-4 border border-border">
-        <Label className="mb-4 block font-medium">视频上传</Label>
+      <div className="bg-gray-800/50 rounded-lg p-4">
+        <Label className="text-white mb-4 block">视频上传</Label>
         <div className="space-y-3">
           <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={e => handleFileUpload(e, 'video')} />
           
           {formData.videoFileId ? <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Video className="h-6 w-6 text-green-500" />
+                  <Video className="h-6 w-6 text-green-400" />
                   <div>
-                    <p className="text-sm font-medium">视频已上传</p>
-                    <p className="text-xs text-muted-foreground">文件ID: {formData.videoFileId.substring(0, 20)}...</p>
+                    <p className="text-sm text-white">视频已上传</p>
+                    <p className="text-xs text-gray-400">文件ID: {formData.videoFileId.substring(0, 20)}...</p>
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => videoInputRef.current?.click()} className="px-3">
+                  <Button type="button" variant="outline" size="sm" onClick={() => videoInputRef.current?.click()} className="text-blue-400 border-blue-400 hover:bg-blue-400/10">
                     <Upload className="h-3 w-3 mr-1" />
                     更换
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => clearFile('video')} className="px-3 hover:text-destructive">
+                  <Button type="button" variant="outline" size="sm" onClick={() => clearFile('video')} className="text-red-400 border-red-400 hover:bg-red-400/10">
                     <X className="h-3 w-3 mr-1" />
                     清除
                   </Button>
                 </div>
               </div>
-              {videoPreviewUrl && <div className="border border-border rounded-lg p-2 bg-muted/50">
+              {videoPreviewUrl && <div className="border border-gray-600 rounded-lg p-2 bg-gray-900/30">
                   <video src={videoPreviewUrl} controls className="w-full h-32 object-cover rounded" />
                 </div>}
-            </div> : <div className="text-center border-2 border-dashed border-border rounded-lg p-6 hover:border-primary transition-colors cursor-pointer bg-muted/20" onClick={() => videoInputRef.current?.click()}>
+            </div> : <div className="text-center border-2 border-dashed border-gray-600 rounded-lg p-6 hover:border-gray-500 transition-colors cursor-pointer" onClick={() => videoInputRef.current?.click()}>
               <div className="space-y-3">
                 <div className="flex justify-center">
-                  <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center">
-                    <Video className="h-8 w-8 text-purple-500" />
+                  <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center">
+                    <Video className="h-8 w-8 text-purple-400" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-foreground font-medium">{uploadingVideo ? '上传中...' : '点击上传视频'}</p>
-                  <p className="text-muted-foreground text-sm mt-1">支持 MP4, MOV, AVI 格式</p>
+                  <p className="text-gray-300 font-medium">{uploadingVideo ? '上传中...' : '点击上传视频'}</p>
+                  <p className="text-gray-500 text-sm mt-1">支持 MP4, MOV, AVI 格式</p>
                 </div>
-                {uploadingVideo && <div className="w-full bg-muted rounded-full h-2">
+                {uploadingVideo && <div className="w-full bg-gray-700 rounded-full h-2">
                     <div className="bg-purple-500 h-2 rounded-full animate-pulse"></div>
                   </div>}
               </div>
@@ -746,19 +747,19 @@ export function POIForm({
   // 渲染样式配置标签页
   const renderStyleTab = () => <div className="space-y-6">
       {/* 字体配置 */}
-      <div className="bg-muted/30 rounded-lg p-4 border border-border">
-        <Label className="mb-4 block flex items-center font-medium">
+      <div className="bg-gray-800/50 rounded-lg p-4">
+        <Label className="text-white mb-4 block flex items-center">
           <Type className="h-4 w-4 mr-2" />
           字体配置
         </Label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <Label htmlFor="fontFamily" className="text-muted-foreground">字体</Label>
+            <Label htmlFor="fontFamily" className="text-gray-300">字体</Label>
             <Select value={formData.fontFamily} onValueChange={value => handleInputChange('fontFamily', value)}>
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white mt-1">
                 <SelectValue placeholder="选择字体" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-gray-800 border-gray-700">
                 <SelectItem value="Arial">Arial</SelectItem>
                 <SelectItem value="Microsoft YaHei">微软雅黑</SelectItem>
                 <SelectItem value="SimHei">黑体</SelectItem>
@@ -768,26 +769,26 @@ export function POIForm({
             </Select>
           </div>
           <div>
-            <Label htmlFor="fontSize" className="text-muted-foreground">字号</Label>
-            <Input id="fontSize" type="number" value={formData.fontSize} onChange={e => handleInputChange('fontSize', e.target.value)} placeholder="字号大小" className="mt-1" />
+            <Label htmlFor="fontSize" className="text-gray-300">字号</Label>
+            <Input id="fontSize" type="number" value={formData.fontSize} onChange={e => handleInputChange('fontSize', e.target.value)} placeholder="字号大小" className="bg-gray-700 border-gray-600 text-white mt-1" />
           </div>
           <div>
-            <Label htmlFor="fontColor" className="text-muted-foreground">字体颜色</Label>
+            <Label htmlFor="fontColor" className="text-gray-300">字体颜色</Label>
             <div className="flex items-center space-x-2 mt-1">
-              <Input id="fontColor" type="color" value={formData.fontColor} onChange={e => handleInputChange('fontColor', e.target.value)} className="h-10 w-16 p-1 cursor-pointer" />
-              <Input value={formData.fontColor} onChange={e => handleInputChange('fontColor', e.target.value)} placeholder="#000000" className="flex-1" />
+              <Input id="fontColor" type="color" value={formData.fontColor} onChange={e => handleInputChange('fontColor', e.target.value)} className="bg-gray-700 border-gray-600 text-white h-10 w-16 p-1" />
+              <Input value={formData.fontColor} onChange={e => handleInputChange('fontColor', e.target.value)} placeholder="#000000" className="bg-gray-700 border-gray-600 text-white flex-1" />
             </div>
           </div>
         </div>
       </div>
 
       {/* 字体效果预览 */}
-      <div className="bg-muted/30 rounded-lg p-4 border border-border">
-        <Label className="mb-4 block flex items-center font-medium">
+      <div className="bg-gray-800/50 rounded-lg p-4">
+        <Label className="text-white mb-4 block flex items-center">
           <Eye className="h-4 w-4 mr-2" />
           字体效果预览
         </Label>
-        <div className="bg-muted/50 rounded-lg p-6 border border-border">
+        <div className="bg-gray-900/50 rounded-lg p-6 border border-gray-700">
           <div className="text-center p-4 rounded-lg" style={{
           fontFamily: formData.fontFamily,
           fontSize: `${formData.fontSize}px`,
@@ -795,7 +796,7 @@ export function POIForm({
           backgroundColor: 'rgba(255,255,255,0.1)',
           border: '1px solid rgba(255,255,255,0.2)'
         }}>
-            <p className="font-semibold mb-2">{formData.name || 'POI名称预览'}</p>
+            <p className="text-lg font-semibold mb-2">{formData.name || 'POI名称预览'}</p>
             <p className="text-xs opacity-70 mt-2">字体: {formData.fontFamily} | 字号: {formData.fontSize}px | 颜色: {formData.fontColor}</p>
           </div>
         </div>
@@ -804,27 +805,27 @@ export function POIForm({
 
   // 渲染拓展配置标签页
   const renderExtensionTab = () => <div className="space-y-6">
-      <div className="bg-muted/30 rounded-lg p-4 border border-border">
-        <Label className="mb-4 block flex items-center font-medium">
+      <div className="bg-gray-800/50 rounded-lg p-4">
+        <Label className="text-white mb-4 block flex items-center">
           <Code className="h-4 w-4 mr-2" />
           拓展配置
         </Label>
         
         {/* JSON操作工具栏 */}
         <div className="flex flex-wrap gap-2 mb-4">
-          <Button type="button" onClick={formatJson} variant="outline" size="sm" className="h-8">
+          <Button type="button" onClick={formatJson} variant="outline" size="sm" className="text-blue-400 border-blue-400/50 hover:bg-blue-400/10">
             <Code className="h-3 w-3 mr-1" />
             格式化
           </Button>
-          <Button type="button" onClick={compressJson} variant="outline" size="sm" className="h-8">
+          <Button type="button" onClick={compressJson} variant="outline" size="sm" className="text-green-400 border-green-400/50 hover:bg-green-400/10">
             <RotateCcw className="h-3 w-3 mr-1" />
             压缩
           </Button>
-          <Button type="button" onClick={copyJson} variant="outline" size="sm" className="h-8">
+          <Button type="button" onClick={copyJson} variant="outline" size="sm" className="text-purple-400 border-purple-400/50 hover:bg-purple-400/10">
             <Copy className="h-3 w-3 mr-1" />
             复制
           </Button>
-          <Button type="button" onClick={clearJson} variant="outline" size="sm" className="h-8 hover:text-destructive">
+          <Button type="button" onClick={clearJson} variant="outline" size="sm" className="text-red-400 border-red-400/50 hover:bg-red-400/10">
             <X className="h-3 w-3 mr-1" />
             清空
           </Button>
@@ -832,36 +833,36 @@ export function POIForm({
 
         {/* JSON验证状态 */}
         <div className="flex items-center space-x-2 mb-3">
-          {formData.extension.trim() ? jsonValid ? <div className="flex items-center space-x-1 text-green-500 text-sm">
+          {formData.extension.trim() ? jsonValid ? <div className="flex items-center space-x-1 text-green-400 text-sm">
                 <CheckCircle className="h-4 w-4" />
                 <span>JSON格式正确</span>
-              </div> : <div className="flex items-center space-x-1 text-destructive text-sm">
+              </div> : <div className="flex items-center space-x-1 text-red-400 text-sm">
                 <AlertCircle className="h-4 w-4" />
                 <span>JSON格式错误</span>
-              </div> : <div className="text-muted-foreground text-sm">请输入JSON配置</div>}
+              </div> : <div className="text-gray-400 text-sm">请输入JSON配置</div>}
         </div>
 
         <div>
-          <Label htmlFor="extension" className="text-muted-foreground">拓展字段配置</Label>
-          <Textarea ref={extensionTextareaRef} id="extension" value={formData.extension} onChange={e => handleExtensionChange(e.target.value)} placeholder='{"customField1": "value1", "customField2": "value2"}' className={`mt-1 h-40 font-mono text-sm ${jsonError ? 'border-destructive' : jsonValid ? 'border-green-500' : ''}`} style={{
+          <Label htmlFor="extension" className="text-gray-300">拓展字段配置</Label>
+          <Textarea ref={extensionTextareaRef} id="extension" value={formData.extension} onChange={e => handleExtensionChange(e.target.value)} placeholder='{"customField1": "value1", "customField2": "value2"}' className={`bg-gray-700 border-gray-600 text-white mt-1 h-40 font-mono text-sm ${jsonError ? 'border-red-500' : jsonValid ? 'border-green-500' : ''}`} style={{
           fontFamily: 'Monaco, Menlo, Consolas, monospace',
           fontSize: '13px',
           lineHeight: '1.4'
         }} />
-          {jsonError && <p className="text-destructive text-xs mt-1 flex items-center space-x-1">
+          {jsonError && <p className="text-red-400 text-xs mt-1 flex items-center space-x-1">
               <AlertCircle className="h-3 w-3" />
               <span>{jsonError}</span>
             </p>}
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-gray-400 mt-2">
             支持JSON格式的自定义配置，可用于存储额外的POI配置信息。支持格式化、压缩、复制等操作。
           </p>
         </div>
       </div>
 
       {/* JSON示例 */}
-      <div className="bg-muted/30 rounded-lg p-4 border border-border">
-        <Label className="text-muted-foreground mb-2 block">JSON配置示例</Label>
-        <pre className="text-xs text-muted-foreground bg-muted/50 p-3 rounded border border-border overflow-x-auto">
+      <div className="bg-gray-800/30 rounded-lg p-4">
+        <Label className="text-gray-300 mb-2 block">JSON配置示例</Label>
+        <pre className="text-xs text-gray-400 bg-gray-900/50 p-3 rounded border border-gray-700 overflow-x-auto">
           {`{
   "displayOrder": 1,
   "interactionType": "click",
@@ -877,68 +878,78 @@ export function POIForm({
         </pre>
       </div>
     </div>;
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[70vh] bg-background border border-border shadow-xl rounded-lg flex flex-col p-0 overflow-hidden" onPointerDownOutside={e => e.preventDefault()}>
-        <DialogHeader className="flex-shrink-0 p-6 border-b border-border bg-card">
-          <DialogTitle className="flex items-center text-xl font-bold text-foreground">
-            <MapPin className="h-5 w-5 mr-2 text-primary" />
-            {poi ? '编辑POI' : '新建POI'}
-          </DialogTitle>
-        </DialogHeader>
+  return <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
+          <style>{`
+            .scrollbar-thin::-webkit-scrollbar {
+              width: 6px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+              background-color: rgba(156, 163, 175, 0.5);
+              border-radius: 3px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+              background-color: rgba(156, 163, 175, 0.7);
+            }
+          `}</style>
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center">
+              <MapPin className="h-5 w-5 mr-2 text-blue-400" />
+              {poi ? '编辑POI' : '新建POI'}
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="flex-1 flex flex-col min-h-0 bg-background/50">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <TabsList className="flex w-full bg-background border-b border-border rounded-none p-0 h-12 justify-start px-6 gap-6">
-              <TabsTrigger value="basic" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
-                <MapPin className="h-4 w-4 mr-2" />
-                基础信息
-              </TabsTrigger>
-              <TabsTrigger value="media" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
-                <Upload className="h-4 w-4 mr-2" />
-                媒体上传
-              </TabsTrigger>
-              <TabsTrigger value="style" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
-                <Palette className="h-4 w-4 mr-2" />
-                样式配置
-              </TabsTrigger>
-              <TabsTrigger value="extension" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
-                <Code className="h-4 w-4 mr-2" />
-                拓展配置
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-              <div className="space-y-6">
-                <TabsContent value="basic" className="space-y-6 mt-0">
-                  {renderBasicTab()}
-                </TabsContent>
-                <TabsContent value="media" className="space-y-6 mt-0">
-                  {renderMediaTab()}
-                </TabsContent>
-                <TabsContent value="style" className="space-y-6 mt-0">
-                  {renderStyleTab()}
-                </TabsContent>
-                <TabsContent value="extension" className="space-y-6 mt-0">
-                  {renderExtensionTab()}
-                </TabsContent>
-              </div>
-            </div>
-          </Tabs>
-
-          {/* 保存按钮区域 - 固定在底部 */}
-          <div className="flex-shrink-0 border-t border-border bg-card p-4">
-            <div className="flex justify-end space-x-3">
-              <Button type="button" variant="outline" onClick={onCancel} className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground">
-                <X className="w-4 h-4 mr-2" /> 取消
-              </Button>
-              <Button onClick={handleSaveClick} disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
-                <CheckCircle className="w-4 h-4 mr-2" /> {loading ? '保存中...' : poi ? '更新POI' : '创建POI'}
-              </Button>
-            </div>
+          {/* 标签页导航 */}
+          <div className="border-b border-gray-700">
+            <nav className="flex space-x-1">
+              {[{
+              id: 'basic',
+              label: '基础信息',
+              icon: MapPin
+            }, {
+              id: 'media',
+              label: '媒体上传',
+              icon: Upload
+            }, {
+              id: 'style',
+              label: '样式配置',
+              icon: Palette
+            }, {
+              id: 'extension',
+              label: '拓展配置',
+              icon: Code
+            }].map(tab => {
+              const Icon = tab.icon;
+              return <Button key={tab.id} variant="ghost" onClick={() => setActiveTab(tab.id)} className={`px-4 py-2 text-sm font-medium rounded-none border-b-2 transition-colors ${activeTab === tab.id ? 'border-blue-500 text-blue-400 bg-blue-900/20' : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'}`}>
+                    <Icon className="h-4 w-4 mr-2" />
+                    {tab.label}
+                  </Button>;
+            })}
+            </nav>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+
+          <form onSubmit={handleSubmit} className="space-y-6 mt-4 scrollbar-thin">
+            {/* 根据活动标签页渲染内容 */}
+            {activeTab === 'basic' && renderBasicTab()}
+            {activeTab === 'media' && renderMediaTab()}
+            {activeTab === 'style' && renderStyleTab()}
+            {activeTab === 'extension' && renderExtensionTab()}
+
+            {/* 操作按钮 */}
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-700">
+              <Button type="button" variant="outline" onClick={onCancel} className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
+                取消
+              </Button>
+              <Button type="submit" disabled={loading} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+                {loading ? '保存中...' : poi ? '更新POI' : '创建POI'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>;
 }
