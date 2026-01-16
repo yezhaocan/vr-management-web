@@ -26,3 +26,5 @@ export * from './BroadcastManager.jsx';
 export * from './BackgroundMusicUploader.jsx';
 export * from './EnhancedCard.jsx';
 export * from './Header.jsx';
+export * from './ThemeToggle.jsx';
+export * from './theme-provider.jsx';
