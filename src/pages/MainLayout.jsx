@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { $w as base$W } from "@/lib/weda-client";
 import { 
   LayoutDashboard, 
   Plane, 
@@ -108,7 +107,7 @@ function NavItem({
 // MainLayout 组件
 export function MainLayout({
     children,
-    $w = base$W
+    $w
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const navigate = useNavigate();
