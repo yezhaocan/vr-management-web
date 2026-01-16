@@ -3,36 +3,11 @@ import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore;
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, useToast, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 // @ts-ignore;
-import { Plus, Search, Edit, Trash2, Upload, Image, RefreshCw, X, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Upload, Image, RefreshCw, X, CheckCircle, Clock, Calendar, FileText, Tag } from 'lucide-react';
 
 // @ts-ignore;
 import { AuthGuard } from '@/components/AuthGuard';
-// @ts-ignore;
-import { UserMenu } from '@/components/UserMenu';
-
-// 自定义滚动条样式组件
-function CustomScrollbarStyles() {
-  return <style jsx global>{`
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 8px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: rgba(75, 85, 99, 0.3);
-      border-radius: 4px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(156, 163, 175, 0.6);
-      border-radius: 4px;
-      transition: background 0.2s ease;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: rgba(209, 213, 219, 0.8);
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:active {
-      background: rgba(255, 255, 255, 0.9);
-    }
-  `}</style>;
-}
+import { MainLayout } from './MainLayout';
 
 // Tips表单组件
 function TipsForm({
@@ -58,9 +33,7 @@ function TipsForm({
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [durationError, setDurationError] = useState('');
-  const [modalHeight, setModalHeight] = useState('auto');
   const formRef = useRef(null);
-  const contentRef = useRef(null);
 
   // 页面类型选项
   const pageTypes = [{
@@ -82,39 +55,6 @@ function TipsForm({
     value: 'videoRecordingExperience',
     label: '限定体验视频页'
   }];
-
-  // 动态计算弹窗高度
-  const calculateModalHeight = () => {
-    if (!contentRef.current) return 'auto';
-    const windowHeight = window.innerHeight;
-    const headerHeight = 80; // 弹窗头部高度估算
-    const footerHeight = 80; // 底部按钮区域高度估算
-    const padding = 32; // 内外边距
-
-    // 计算可用高度
-    const availableHeight = windowHeight - headerHeight - footerHeight - padding;
-
-    // 限制最小和最大高度
-    const minHeight = 400;
-    const maxHeight = Math.min(availableHeight, 800);
-    return Math.max(minHeight, maxHeight) + 'px';
-  };
-
-  // 监听窗口大小变化
-  useEffect(() => {
-    const handleResize = () => {
-      if (open) {
-        setModalHeight(calculateModalHeight());
-      }
-    };
-    if (open) {
-      setModalHeight(calculateModalHeight());
-      window.addEventListener('resize', handleResize);
-    }
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [open]);
 
   // 获取已使用的页面类型
   const getUsedPageTypes = () => {
@@ -188,16 +128,23 @@ function TipsForm({
 
   // 处理持续时长输入
   const handleDurationChange = value => {
+    // 清除之前的错误状态
     setDurationError('');
+
+    // 允许空值
     if (value === '') {
       handleInputChange('duration', 0);
       return;
     }
+
+    // 验证是否为有效数字
     const numValue = Number(value);
     if (isNaN(numValue)) {
       setDurationError('请输入有效的数字');
       return;
     }
+
+    // 验证范围
     if (numValue < 0) {
       setDurationError('持续时长不能小于0');
       return;
@@ -223,24 +170,38 @@ function TipsForm({
         title: '文件上传中',
         description: '图片文件正在上传...'
       });
+      
+       // 设置上传状态
       setUploadingImage(true);
+
+      // 使用腾讯云存储上传文件
       const tcb = await $w.cloud.getCloudInstance();
+
+      // 生成唯一的文件名
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 8);
       const fileName = `tips/images/${timestamp}_${randomStr}_${file.name}`;
+
+      // 上传文件到云存储
       const uploadResult = await tcb.uploadFile({
         cloudPath: fileName,
         filePath: file
       });
       const fileID = uploadResult.fileID;
+
+      // 获取临时链接用于预览
       const tempFileURLResult = await tcb.getTempFileURL({
         fileList: [fileID]
       });
       const previewUrl = tempFileURLResult.fileList[0].tempFileURL;
+
+      // 更新表单数据，存储文件ID而不是URL
       setFormData(prev => ({
         ...prev,
         imageFileId: fileID
       }));
+
+      // 设置预览链接
       setImagePreviewUrl(previewUrl);
       toast({
         title: '上传成功',
@@ -404,52 +365,52 @@ function TipsForm({
   // 优化后的图片上传组件
   const ImageUploadSection = () => {
     return <div>
-        <Label className="text-white mb-3 block">图片上传（可选）</Label>
-        <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-600">
+        <Label className="mb-3 block">图片上传（可选）</Label>
+        <div className="bg-muted/30 rounded-lg p-4 border border-border">
           {formData.imageFileId ? <div className="space-y-4">
               <div className="flex flex-col space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <CheckCircle className="h-4 w-4 text-green-400" />
+                      <CheckCircle className="h-4 w-4 text-green-500" />
                     </div>
                     <div>
-                      <p className="text-white font-medium text-sm">图片已上传</p>
-                      <p className="text-gray-400 text-xs">文件ID: {formData.imageFileId.substring(0, 15)}...</p>
+                      <p className="font-medium text-sm">图片已上传</p>
+                      <p className="text-muted-foreground text-xs">文件ID: {formData.imageFileId.substring(0, 15)}...</p>
                     </div>
                   </div>
                 </div>
                 <div className="flex space-x-2 justify-end">
-                  <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('imageFile').click()} className="text-blue-400 border-blue-400 hover:bg-blue-400/10 px-3">
+                  <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('imageFile').click()} className="px-3">
                     <Upload className="h-3 w-3 mr-1" />
                     更换
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={clearFile} className="text-red-400 border-red-400 hover:bg-red-400/10 px-3">
+                  <Button type="button" variant="outline" size="sm" onClick={clearFile} className="px-3 hover:text-destructive">
                     <X className="h-3 w-3 mr-1" />
                     清除
                   </Button>
                 </div>
               </div>
-              {imagePreviewUrl && <div className="border border-gray-600 rounded-lg p-2 bg-gray-900/50">
+              {imagePreviewUrl && <div className="border border-border rounded-lg p-2 bg-muted/50">
                   <img src={imagePreviewUrl} alt="预览" className="w-full h-32 object-cover rounded" />
-                  <p className="text-xs text-gray-400 mt-1 text-center">预览链接有效期1天</p>
+                  <p className="text-xs text-muted-foreground mt-1 text-center">预览链接有效期1天</p>
                 </div>}
             </div> : <div className="text-center cursor-pointer group" onClick={() => document.getElementById('imageFile').click()}>
               <input id="imageFile" type="file" accept="image/*" className="hidden" onChange={e => handleFileUpload(e.target.files[0])} />
               <div className="space-y-3">
                 <div className="flex justify-center">
-                  <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
-                    <Image className="h-5 w-5 text-purple-400" />
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <Image className="h-5 w-5 text-primary" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-gray-300 font-medium text-sm">
+                  <p className="text-foreground font-medium text-sm">
                     {uploadingImage ? '上传中...' : '点击上传图片'}
                   </p>
-                  <p className="text-gray-500 text-xs mt-1">支持 JPG, PNG 格式（可选）</p>
+                  <p className="text-muted-foreground text-xs mt-1">支持 JPG, PNG 格式（可选）</p>
                 </div>
-                {uploadingImage && <div className="w-full bg-gray-700 rounded-full h-1.5">
-                    <div className="bg-purple-500 h-1.5 rounded-full animate-pulse"></div>
+                {uploadingImage && <div className="w-full bg-muted rounded-full h-1.5">
+                    <div className="bg-primary h-1.5 rounded-full animate-pulse"></div>
                   </div>}
               </div>
             </div>}
@@ -458,58 +419,53 @@ function TipsForm({
   };
   const availablePageTypes = getAvailablePageTypes();
   return <>
-      <CustomScrollbarStyles />
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md bg-gray-900 border-gray-700 custom-scrollbar transition-all duration-300" style={{
-        maxHeight: modalHeight,
-        height: modalHeight === 'auto' ? 'auto' : modalHeight
-      }}>
-          <DialogHeader className="sticky top-0 bg-gray-900 z-10 pb-4 border-b border-gray-700">
-            <DialogTitle className="text-white text-xl font-bold">
+        <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto bg-card text-card-foreground border-border">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
               {tip ? '编辑Tips' : '新建Tips'}
             </DialogTitle>
           </DialogHeader>
 
-          <div ref={contentRef} className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2 transition-all duration-300">
-            {/* 修复：将整个表单内容包含在form标签内 */}
+          <div className="flex-1 overflow-y-auto pr-2 -mr-2">
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 py-4">
               {/* 基础信息 */}
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="name" className="text-white">Tips名称 *</Label>
-                  <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入Tips名称" className="bg-gray-800 border-gray-700 text-white mt-1" required />
+                  <Label htmlFor="name">Tips名称 *</Label>
+                  <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入Tips名称" className="mt-1" required />
                 </div>
 
                 <div>
-                  <Label htmlFor="type" className="text-white">页面类型 *</Label>
+                  <Label htmlFor="type">页面类型 *</Label>
                   <Select value={formData.type} onValueChange={value => handleInputChange('type', value)}>
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-1">
+                    <SelectTrigger className="mt-1">
                       <SelectValue placeholder="请选择页面类型" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      {availablePageTypes.map(pageType => <SelectItem key={pageType.value} value={pageType.value} disabled={pageType.disabled} className="text-white hover:bg-gray-700 data-[disabled]:text-gray-500 data-[disabled]:cursor-not-allowed">
+                    <SelectContent>
+                      {availablePageTypes.map(pageType => <SelectItem key={pageType.value} value={pageType.value} disabled={pageType.disabled} className="data-[disabled]:opacity-50">
                           {pageType.label}
-                          {pageType.disabled && <span className="ml-2 text-gray-500 text-xs">(已使用)</span>}
+                          {pageType.disabled && <span className="ml-2 text-muted-foreground text-xs">(已使用)</span>}
                         </SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="description" className="text-white">描述 *</Label>
-                  <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入Tips描述内容" className="bg-gray-800 border-gray-700 text-white mt-1 h-24" required />
+                  <Label htmlFor="description">描述 *</Label>
+                  <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入Tips描述内容" className="mt-1 h-24" required />
                 </div>
 
                 <div>
-                  <Label htmlFor="duration" className="text-white">持续时长</Label>
+                  <Label htmlFor="duration">持续时长</Label>
                   <div className="relative mt-1">
-                    <Input id="duration" type="number" min="0" max="86400" value={formData.duration} onChange={e => handleDurationChange(e.target.value)} placeholder="0" className={`bg-gray-800 border-gray-700 text-white pr-12 ${durationError ? 'border-red-500' : ''}`} />
+                    <Input id="duration" type="number" min="0" max="86400" value={formData.duration} onChange={e => handleDurationChange(e.target.value)} placeholder="0" className={`pr-12 ${durationError ? 'border-destructive' : ''}`} />
                     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <span className="text-gray-400 text-sm">s</span>
+                      <span className="text-muted-foreground text-sm">s</span>
                     </div>
                   </div>
-                  {durationError && <p className="text-red-400 text-xs mt-1">{durationError}</p>}
-                  <div className="flex items-center mt-1 text-gray-400 text-xs">
+                  {durationError && <p className="text-destructive text-xs mt-1">{durationError}</p>}
+                  <div className="flex items-center mt-1 text-muted-foreground text-xs">
                     <Clock className="h-3 w-3 mr-1" />
                     <span>范围: 0-86400秒 (0-24小时)</span>
                   </div>
@@ -519,16 +475,13 @@ function TipsForm({
               {/* 图片上传区域 */}
               <ImageUploadSection />
 
-              {/* 修复：将操作按钮移到表单内部 */}
-              <div className="sticky bottom-0 bg-gray-900 pt-4 border-t border-gray-700 mt-auto">
-                <div className="flex justify-end space-x-3">
-                  <Button type="button" variant="outline" onClick={onCancel} className="border-gray-600 text-gray-300 hover:bg-gray-700/50 transition-colors">
-                    取消
-                  </Button>
-                  <Button type="submit" disabled={loading} className="bg-blue-500 hover:bg-blue-600 transition-colors">
-                    {loading ? '保存中...' : tip ? '更新Tips' : '创建Tips'}
-                  </Button>
-                </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t border-border">
+                <Button type="button" variant="outline" onClick={onCancel}>
+                  取消
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? '保存中...' : tip ? '更新Tips' : '创建Tips'}
+                </Button>
               </div>
             </form>
           </div>
@@ -543,21 +496,19 @@ function CustomTag({
   label
 }) {
   const getBackgroundColor = () => {
+    // 使用Tailwind CSS变量或类名可能更好，但为了保持逻辑简单，这里使用CSS变量的颜色值或者直接映射到Tailwind颜色
     const colors = {
-      'homePage': 'rgba(59, 130, 246, 0.9)',
-      'realTimeWaitingPage': 'rgba(16, 185, 129, 0.9)',
-      'realFlightExperience': 'rgba(139, 92, 246, 0.9)',
-      'limitWaitingPage': 'rgba(245, 158, 11, 0.9)',
-      'limitedExperience': 'rgba(236, 72, 153, 0.9)',
-      'videoRecordingExperience': 'rgba(239, 68, 68, 0.9)'
+      'homePage': 'bg-blue-500',
+      'realTimeWaitingPage': 'bg-green-500',
+      'realFlightExperience': 'bg-purple-500',
+      'limitWaitingPage': 'bg-amber-500',
+      'limitedExperience': 'bg-pink-500',
+      'videoRecordingExperience': 'bg-red-500'
     };
-    return colors[type] || 'rgba(75, 85, 99, 0.9)';
+    return colors[type] || 'bg-gray-500';
   };
-  return <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium text-white border border-white/20" style={{
-    backgroundColor: getBackgroundColor(),
-    backdropFilter: 'blur(4px)',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
-  }}>
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium text-white ${getBackgroundColor()} shadow-sm`}>
+      <Tag className="h-3 w-3 mr-1" />
       {label}
     </span>;
 }
@@ -567,7 +518,7 @@ function DurationDisplay({
   duration
 }) {
   if (!duration || duration === 0) {
-    return <span className="text-gray-500 text-xs">未设置</span>;
+    return <span className="text-muted-foreground text-xs">未设置</span>;
   }
   const formatDuration = seconds => {
     if (seconds < 60) {
@@ -589,7 +540,7 @@ function DurationDisplay({
       }
     }
   };
-  return <div className="flex items-center text-gray-400 text-xs">
+  return <div className="flex items-center text-muted-foreground text-xs">
       <Clock className="h-3 w-3 mr-1" />
       <span>{formatDuration(duration)}</span>
     </div>;
@@ -766,125 +717,137 @@ export default function TipsPage(props) {
     setShowForm(false);
     setEditingTip(null);
   };
-  return <AuthGuard $w={$w}>
-      <div style={style} className="min-h-screen bg-gray-900">        
-        <div className="p-6 space-y-6">
-          {/* 头部操作区 */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Tips管理</h1>
-              <p className="text-gray-400">管理VR观光中的提示信息</p>
-            </div>
-            <div className="flex space-x-3">
-              <Button onClick={loadTipsList} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                刷新
-              </Button>
-              <Button onClick={handleNewTips} className="bg-blue-500 hover:bg-blue-600">
-                <Plus className="h-4 w-4 mr-2" />
-                新建Tips
-              </Button>
-            </div>
+  return <MainLayout $w={$w}>
+    <AuthGuard $w={$w}>
+        <div style={style} className="w-full h-full space-y-6 p-6">
+        {/* 头部操作区 */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex-1 w-full sm:w-auto flex items-center gap-4">
+             <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input 
+                  placeholder="搜索Tips名称或描述..." 
+                  value={searchTerm} 
+                  onChange={e => setSearchTerm(e.target.value)} 
+                  className="pl-10 bg-background border-input w-full hover:border-primary transition-colors duration-200" 
+                />
+             </div>
           </div>
-
-          {/* 搜索栏 */}
-          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input type="text" placeholder="搜索Tips名称或描述..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-            </div>
+          <div className="flex items-center space-x-2">
+            <Button onClick={loadTipsList} variant="outline" className="shadow-sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              刷新
+            </Button>
+            <Button onClick={handleNewTips} className="shadow-sm">
+              <Plus className="h-4 w-4 mr-2" />
+              新建TIPS
+            </Button>
           </div>
+        </div>
 
-          {/* Tips列表 */}
-          {loading ? <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-3 text-gray-300">加载中...</span>
-            </div> : filteredTipsList.length === 0 ? <div className="text-center py-12">
-              <div className="text-gray-500 mb-4">
-                <Image className="h-16 w-16 mx-auto opacity-30" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-300 mb-2">暂无Tips记录</h3>
-              <p className="text-gray-500 mb-4">创建第一个Tips记录开始管理</p>
-              <Button onClick={handleNewTips} className="bg-blue-500 hover:bg-blue-600">
-                <Plus className="h-4 w-4 mr-2" />
-                新建Tips
-              </Button>
-            </div> : <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredTipsList.map(tip => <Card key={tip._id} className="bg-gray-800/50 border-gray-700 hover:border-blue-500/30 transition-all duration-200">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-white text-lg">{tip.name}</CardTitle>
-                        <CardDescription className="text-gray-400">
-                          {tip.createdAt ? new Date(tip.createdAt).toLocaleDateString() : '未知时间'}
-                        </CardDescription>
+        {/* Tips列表 */}
+        {loading ? <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">加载中...</span>
+          </div> : filteredTipsList.length === 0 ? <div className="flex flex-col justify-center items-center py-12 border rounded-lg bg-card text-card-foreground">
+            <div className="text-muted-foreground mb-4">
+              <Image className="h-16 w-16 mx-auto opacity-30" />
+            </div>
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">暂无Tips记录</h3>
+            <p className="text-muted-foreground mb-4">创建第一个Tips记录开始管理</p>
+            <Button onClick={handleNewTips}>
+              <Plus className="h-4 w-4 mr-2" />
+              新建Tips
+            </Button>
+          </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredTipsList.map(tip => <Card key={tip._id} className="bg-card text-card-foreground border-border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden p-3 group">
+                <div className="flex flex-col md:flex-row h-full rounded-lg overflow-hidden bg-muted/20 border border-border/50 group-hover:border-border transition-colors">
+                  {/* 左侧：图片区域 (35%) */}
+                  <div className="w-full md:w-[35%] h-40 md:h-auto relative bg-muted flex-shrink-0">
+                    {tip.imageUrl ? 
+                      <img 
+                        src={tip.imageUrl} 
+                        alt={tip.name} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                      /> : 
+                      <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                        <Image className="h-8 w-8 text-muted-foreground/40" />
                       </div>
+                    }
+                    <div className="absolute top-2 left-2 z-10">
                       {getTypeBadge(tip.type)}
                     </div>
-                  </CardHeader>
-                  
-                  <CardContent className="pt-0">
-                    {/* 图片预览 */}
-                    {tip.imageUrl ? <div className="mb-3">
-                        <img src={tip.imageUrl} alt={tip.name} className="w-20 h-20 object-cover rounded-lg float-right ml-3" />
-                      </div> : <div className="mb-3 w-20 h-20 bg-gray-700 rounded-lg float-right ml-3 flex items-center justify-center">
-                        <Image className="h-6 w-6 text-gray-500" />
-                      </div>}
+                  </div>
 
-                    {/* 描述信息 */}
-                    <div className="mb-3">
-                      <p className="text-gray-400 text-sm line-clamp-4">{tip.description}</p>
+                  {/* 右侧：内容区域 (65%) */}
+                  <div className="flex-1 p-4 flex flex-col justify-between w-full md:w-[65%]">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground line-clamp-1 mb-1.5 group-hover:text-primary transition-colors">{tip.name}</h3>
+                        <div className="flex items-center text-[10px] text-muted-foreground">
+                          <Calendar className="h-3 w-3 mr-1 opacity-70" />
+                          <span>{tip.createdAt ? new Date(tip.createdAt).toLocaleDateString() : '未知时间'}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <FileText className="h-3 w-3 mr-1 mt-0.5 text-muted-foreground opacity-70 flex-shrink-0" />
+                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                          {tip.description}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center pt-0.5">
+                        <div className="flex items-center bg-muted/40 px-2 py-1 rounded text-[10px] text-muted-foreground">
+                           <DurationDisplay duration={tip.duration} />
+                        </div>
+                      </div>
                     </div>
 
-                    {/* 持续时长显示 */}
-                    <div className="mb-3">
-                      <DurationDisplay duration={tip.duration} />
-                    </div>
-
-                    {/* 操作按钮 */}
-                    <div className="flex justify-end space-x-2 pt-3 border-t border-gray-700 clear-both">
-                      <Button variant="outline" size="sm" onClick={() => handleEditTips(tip)} className="text-blue-400 border-blue-400 hover:bg-blue-400/10">
+                    <div className="flex justify-end space-x-2 mt-3 pt-3 border-t border-border/50">
+                      <Button variant="ghost" size="sm" onClick={() => handleEditTips(tip)} className="h-7 px-2 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
                         <Edit className="h-3 w-3 mr-1" />
                         编辑
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => {
-                  setTipToDelete(tip);
-                  setDeleteConfirmOpen(true);
-                }} className="text-red-400 border-red-400 hover:bg-red-400/10">
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        setTipToDelete(tip);
+                        setDeleteConfirmOpen(true);
+                      }} className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
                         <Trash2 className="h-3 w-3 mr-1" />
                         删除
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>)}
-            </div>}
+                  </div>
+                </div>
+              </Card>)}
+          </div>}
 
-          {/* Tips表单弹窗 */}
-          <TipsForm tip={editingTip} $w={$w} onSave={handleFormSuccess} onCancel={handleFormCancel} open={showForm} onOpenChange={setShowForm} existingTips={tipsList} />
+        {/* Tips表单弹窗 */}
+        <TipsForm tip={editingTip} $w={$w} onSave={handleFormSuccess} onCancel={handleFormCancel} open={showForm} onOpenChange={setShowForm} existingTips={tipsList} />
 
-          {/* 删除确认弹窗 */}
-          <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-            <DialogContent className="bg-gray-900 border-gray-700">
-              <DialogHeader>
-                <DialogTitle className="text-white">确认删除</DialogTitle>
-              </DialogHeader>
-              <div className="text-gray-400 mb-4">
-                确定要删除Tips "{tipToDelete?.name}" 吗？此操作不可恢复。
-              </div>
-              <div className="flex justify-end space-x-3">
-                <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} className="border-gray-600 text-gray-300 hover:bg-gray-700/50">
-                  取消
-                </Button>
-                <Button onClick={() => {
-                handleDelete(tipToDelete);
-                setDeleteConfirmOpen(false);
-              }} className="bg-red-500 hover:bg-red-600">
-                  确认删除
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+        {/* 删除确认弹窗 */}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent className="sm:max-w-[425px] bg-card text-card-foreground border-border">
+            <DialogHeader>
+              <DialogTitle>确认删除</DialogTitle>
+            </DialogHeader>
+            <div className="text-muted-foreground mb-4">
+              确定要删除Tips "{tipToDelete?.name}" 吗？此操作不可恢复。
+            </div>
+            <div className="flex justify-end space-x-3">
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+                取消
+              </Button>
+              <Button onClick={() => {
+              handleDelete(tipToDelete);
+              setDeleteConfirmOpen(false);
+            }} variant="destructive">
+                确认删除
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-    </AuthGuard>;
+      </AuthGuard>
+    </MainLayout>;
 }
