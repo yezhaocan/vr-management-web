@@ -111,42 +111,42 @@ export function VideoBasicInfo({
   return <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <Label htmlFor="name" className="font-medium">录像名称 *</Label>
-          <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入录像名称" className="mt-2" required />
+          <Label htmlFor="name" className="text-white text-lg font-medium">录像名称 *</Label>
+          <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入录像名称" className="bg-gray-800 border-gray-700 text-white mt-2 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required />
         </div>
 
         <div>
-          <Label htmlFor="description" className="font-medium">描述</Label>
-          <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入录像描述" className="mt-2 h-32" />
+          <Label htmlFor="description" className="text-white text-lg font-medium">描述</Label>
+          <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入录像描述" className="bg-gray-800 border-gray-700 text-white mt-2 p-3 rounded-lg h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
         </div>
 
         {/* 背景图片上传 */}
         <div>
-          <Label className="font-medium">背景图片</Label>
+          <Label className="text-white text-lg font-medium">背景图片</Label>
           <div className="mt-2 space-y-3">
             {/* 背景图预览 */}
             {backgroundPreview && <div className="relative">
-                <div className="text-sm text-slate-500 dark:text-slate-400 mb-2">背景图预览</div>
-                <div className="relative bg-slate-100 dark:bg-slate-800/50 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                <div className="text-sm text-gray-400 mb-2">背景图预览</div>
+                <div className="relative bg-gray-700 rounded-lg overflow-hidden border border-gray-600">
                   <img src={backgroundPreview} alt="背景图预览" className="w-full h-32 object-cover" />
-                  <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 shadow-sm" onClick={handleRemoveBackgroundImage}>
+                  <Button variant="destructive" size="sm" className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-700/80" onClick={handleRemoveBackgroundImage}>
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
               </div>}
 
             {/* 上传控件 */}
-            <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-4 text-center hover:border-primary dark:hover:border-primary transition-colors bg-slate-50 dark:bg-slate-800/20 group cursor-pointer">
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
               <input type="file" id="background-upload" accept="image/*" onChange={handleBackgroundImageUpload} className="hidden" />
-              <label htmlFor="background-upload" className="cursor-pointer w-full h-full block">
+              <label htmlFor="background-upload" className="cursor-pointer">
                 <div className="flex flex-col items-center justify-center space-y-2">
-                  <Upload className="h-6 w-6 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
+                  <Upload className="h-6 w-6 text-gray-400" />
                   <div>
-                    <div className="font-medium text-sm text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">点击上传背景图</div>
-                    <div className="text-slate-500 dark:text-slate-500 text-xs">支持 JPG、PNG、GIF 等格式</div>
+                    <div className="text-white font-medium text-sm">点击上传背景图</div>
+                    <div className="text-gray-400 text-xs">支持 JPG、PNG、GIF 等格式</div>
                   </div>
-                  {uploading && <div className="text-primary text-sm flex items-center">
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-1"></div>
+                  {uploading && <div className="text-blue-400 text-sm flex items-center">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-400 mr-1"></div>
                       上传中...
                     </div>}
                 </div>
@@ -157,29 +157,29 @@ export function VideoBasicInfo({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="startTime" className="font-medium">开始时间</Label>
-            <Input id="startTime" type="datetime-local" value={formData.startTime} onChange={e => handleInputChange('startTime', e.target.value)} className="mt-2" />
+            <Label htmlFor="startTime" className="text-white text-lg font-medium">开始时间</Label>
+            <Input id="startTime" type="datetime-local" value={formData.startTime} onChange={e => handleInputChange('startTime', e.target.value)} className="bg-gray-800 border-gray-700 text-white mt-2 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
           </div>
           <div>
-            <Label htmlFor="endTime" className="font-medium">结束时间</Label>
-            <Input id="endTime" type="datetime-local" value={formData.endTime} onChange={e => handleInputChange('endTime', e.target.value)} className="mt-2" />
+            <Label htmlFor="endTime" className="text-white text-lg font-medium">结束时间</Label>
+            <Input id="endTime" type="datetime-local" value={formData.endTime} onChange={e => handleInputChange('endTime', e.target.value)} className="bg-gray-800 border-gray-700 text-white mt-2 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
           </div>
         </div>
 
         {/* 时长字段 - 只在有开始时间和结束时间时显示 */}
-        {shouldShowDuration && <div className="pt-4 border-t border-border">
+        {shouldShowDuration && <div className="pt-4 border-t border-gray-600">
             <div className="space-y-3">
-              <Label className="font-medium flex items-center">
-                <Clock className="h-5 w-5 mr-2 text-orange-500" />
+              <Label className="text-white text-lg font-medium flex items-center">
+                <Clock className="h-5 w-5 mr-2 text-orange-400" />
                 录像时长 (HH:MM:SS)
               </Label>
               <div className="flex items-center space-x-4">
-                <Input type="text" value={formData.duration} onChange={e => handleDurationChange(e.target.value)} placeholder="01:10:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$" className="w-32" />
-                <Button type="button" onClick={updateDuration} size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                <Input type="text" value={formData.duration} onChange={e => handleDurationChange(e.target.value)} placeholder="01:10:00" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$" className="bg-gray-800 border-gray-700 text-white p-3 rounded-lg w-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                <Button type="button" onClick={updateDuration} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm">
                   自动计算
                 </Button>
               </div>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-gray-400 text-sm">
                 格式：HH:MM:SS（如01:10:00表示1小时10分钟），点击"自动计算"可根据开始和结束时间计算时长
               </p>
             </div>

@@ -406,46 +406,45 @@ export function VideoUploadForm({
     }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col overflow-hidden bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 border border-slate-200 dark:border-slate-800 p-0 gap-0 shadow-2xl">
-        <DialogHeader className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex-none bg-white dark:bg-slate-900">
-          <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
             {video ? '编辑录像' : '创建录像'}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col overflow-hidden">
-          <TabsList className="w-full justify-start rounded-none border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50 p-0 h-auto flex-none">
-            <TabsTrigger value="basic" className="rounded-none border-b-2 border-transparent px-6 py-3 text-slate-600 dark:text-slate-400 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary dark:data-[state=active]:text-primary hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-600 rounded-t-xl">
+            <TabsTrigger value="basic" className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-blue-400 data-[state=active]:border-b-2 data-[state=active]:border-blue-400">
               基础信息
             </TabsTrigger>
-            <TabsTrigger value="video" className="rounded-none border-b-2 border-transparent px-6 py-3 text-slate-600 dark:text-slate-400 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary dark:data-[state=active]:text-primary hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+            <TabsTrigger value="video" className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-blue-400 data-[state=active]:border-b-2 data-[state=active]:border-blue-400">
               录像管理
             </TabsTrigger>
-            <TabsTrigger value="broadcast" className="rounded-none border-b-2 border-transparent px-6 py-3 text-slate-600 dark:text-slate-400 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary dark:data-[state=active]:text-primary hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+            <TabsTrigger value="broadcast" className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-blue-400 data-[state=active]:border-b-2 data-[state=active]:border-blue-400">
               播报管理
             </TabsTrigger>
-            <TabsTrigger value="music" className="rounded-none border-b-2 border-transparent px-6 py-3 text-slate-600 dark:text-slate-400 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary dark:data-[state=active]:text-primary hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+            <TabsTrigger value="music" className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-blue-400 data-[state=active]:border-b-2 data-[state=active]:border-blue-400">
               背景音乐
             </TabsTrigger>
           </TabsList>
 
-          <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden min-h-0 bg-white dark:bg-slate-900">
-            <div className="flex-1 overflow-y-auto p-6 space-y-8">
-              <TabsContent value="basic" className="space-y-8 mt-0">
+          <form onSubmit={handleSubmit} className="space-y-8 p-8 bg-gray-800/30 backdrop-blur-sm min-h-[600px]">
+            <TabsContent value="basic" className="space-y-8">
               <VideoBasicInfo formData={formData} handleInputChange={handleInputChange} handleDurationChange={handleDurationChange} updateDuration={updateDuration} $w={$w}
             // 传递背景图片上传相关函数
             onBackgroundImageUpload={handleBackgroundImageUpload} onRemoveBackgroundImage={handleRemoveBackgroundImage} />
             </TabsContent>
 
-            <TabsContent value="video" className="space-y-8 mt-0">
+            <TabsContent value="video" className="space-y-8">
               <VideoFileUpload type="thumbnail" label="缩略图" accept="image/*" icon={Image} fileId={formData.thumbnailFileId} uploading={uploadingThumbnail} onFileUpload={handleFileUpload} onClearFile={clearFile} />
 
               <div className="space-y-6">
                 <div className="flex space-x-4 mb-6">
-                  <Button type="button" onClick={() => setVideoUploadType('upload')} variant={videoUploadType === 'upload' ? 'default' : 'outline'} className="flex-1">
+                  <Button type="button" onClick={() => setVideoUploadType('upload')} className={`px-6 py-3 rounded-lg ${videoUploadType === 'upload' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'}`}>
                     上传文件
                   </Button>
-                  <Button type="button" onClick={() => setVideoUploadType('url')} variant={videoUploadType === 'url' ? 'default' : 'outline'} className="flex-1">
+                  <Button type="button" onClick={() => setVideoUploadType('url')} className={`px-6 py-3 rounded-lg ${videoUploadType === 'url' ? 'bg-purple-500 text-white' : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'}`}>
                     输入地址
                   </Button>
                 </div>
@@ -453,89 +452,88 @@ export function VideoUploadForm({
                 {videoUploadType === 'upload' ? <VideoFileUpload type="video" label="录像文件" accept="video/*" icon={VideoIcon} required={true} fileId={formData.videoFileId} uploading={uploadingVideo} onFileUpload={handleFileUpload} onClearFile={clearFile} /> : <VideoUrlInput videoUrl={formData.videoUrl} onVideoUrlChange={value => handleInputChange('videoUrl', value)} onClearVideoFile={() => handleInputChange('videoFileId', '')} />}
               
                 {/* 视频朝向和视频角度字段 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-600">
                   {/* 视频朝向 */}
                   <div className="space-y-3">
-                    <Label className="font-medium flex items-center text-slate-900 dark:text-slate-50">
-                      <RotateCcw className="h-4 w-4 mr-2 text-primary" />
+                    <Label className="text-white font-medium flex items-center">
+                      <RotateCcw className="h-4 w-4 mr-2 text-blue-400" />
                       视频朝向
                     </Label>
                     <Select value={formData.isUpside ? 'true' : 'false'} onValueChange={value => handleInputChange('isUpside', value === 'true')}>
-                      <SelectTrigger className="w-full bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-50">
+                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white p-3 rounded-lg w-full">
                         <SelectValue placeholder="选择视频朝向" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                        <SelectItem value="true" className="focus:bg-slate-100 dark:focus:bg-slate-700">
-                          <div className="flex items-center text-slate-900 dark:text-slate-50">
-                            <RotateCcw className="h-4 w-4 mr-2 text-green-600 dark:text-green-500" />
+                      <SelectContent className="bg-gray-800 border-gray-600">
+                        <SelectItem value="true" className="text-white hover:bg-gray-700">
+                          <div className="flex items-center">
+                            <RotateCcw className="h-4 w-4 mr-2 text-green-400" />
                             正
                           </div>
                         </SelectItem>
-                        <SelectItem value="false" className="focus:bg-slate-100 dark:focus:bg-slate-700">
-                          <div className="flex items-center text-slate-900 dark:text-slate-50">
-                            <RotateCw className="h-4 w-4 mr-2 text-red-600 dark:text-red-500" />
+                        <SelectItem value="false" className="text-white hover:bg-gray-700">
+                          <div className="flex items-center">
+                            <RotateCw className="h-4 w-4 mr-2 text-red-400" />
                             反
                           </div>
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">选择视频播放时的朝向：正为正常播放，反为倒置播放</p>
+                    <p className="text-gray-400 text-sm">选择视频播放时的朝向：正为正常播放，反为倒置播放</p>
                   </div>
 
                   {/* 视频角度 */}
                   <div className="space-y-3">
-                    <Label className="font-medium flex items-center text-slate-900 dark:text-slate-50">
-                      <RotateCw className="h-4 w-4 mr-2 text-primary" />
+                    <Label className="text-white font-medium flex items-center">
+                      <RotateCw className="h-4 w-4 mr-2 text-purple-400" />
                       视频朝向初始角度 (°)
                     </Label>
-                    <Input type="number" value={formData.videoAngle} onChange={e => handleInputChange('videoAngle', e.target.value)} placeholder="0.00" step="0.01" min="-360" max="360" className="w-full bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-50" />
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">输入视频旋转角度，支持2位小数，范围：-360° 到 360°</p>
+                    <Input type="number" value={formData.videoAngle} onChange={e => handleInputChange('videoAngle', e.target.value)} placeholder="0.00" step="0.01" min="-360" max="360" className="bg-gray-700 border-gray-600 text-white p-3 rounded-lg w-full" />
+                    <p className="text-gray-400 text-sm">输入视频旋转角度，支持2位小数，范围：-360° 到 360°</p>
                   </div>
                 </div>
 
                 {/* 是否播放视频原声字段 */}
-                <div className="pt-6 border-t border-slate-200 dark:border-slate-700">
+                <div className="pt-6 border-t border-gray-600">
                   <div className="space-y-3">
-                    <Label className="font-medium flex items-center text-slate-900 dark:text-slate-50">
-                      <Volume2 className="h-4 w-4 mr-2 text-primary" />
+                    <Label className="text-white font-medium flex items-center">
+                      <Volume2 className="h-4 w-4 mr-2 text-yellow-400" />
                       是否播放视频原声
                     </Label>
                     <RadioGroup value={formData.isPlayOriginalSound ? 'true' : 'false'} onValueChange={value => handleInputChange('isPlayOriginalSound', value === 'true')} className="flex space-x-4">
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="true" id="play-sound-true" className="border-slate-400 text-primary" />
-                        <Label htmlFor="play-sound-true" className="flex items-center cursor-pointer text-slate-900 dark:text-slate-50">
-                          <Volume2 className="h-4 w-4 mr-2 text-green-600 dark:text-green-500" />
+                        <RadioGroupItem value="true" id="play-sound-true" className="text-blue-400 border-gray-600" />
+                        <Label htmlFor="play-sound-true" className="text-white flex items-center cursor-pointer">
+                          <Volume2 className="h-4 w-4 mr-2 text-green-400" />
                           是
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="false" id="play-sound-false" className="border-slate-400 text-primary" />
-                        <Label htmlFor="play-sound-false" className="flex items-center cursor-pointer text-slate-900 dark:text-slate-50">
-                          <VolumeX className="h-4 w-4 mr-2 text-red-600 dark:text-red-500" />
+                        <RadioGroupItem value="false" id="play-sound-false" className="text-blue-400 border-gray-600" />
+                        <Label htmlFor="play-sound-false" className="text-white flex items-center cursor-pointer">
+                          <VolumeX className="h-4 w-4 mr-2 text-red-400" />
                           否
                         </Label>
                       </div>
                     </RadioGroup>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">选择是否播放视频的原始声音，选择"否"时将静音播放</p>
+                    <p className="text-gray-400 text-sm">选择是否播放视频的原始声音，选择"否"时将静音播放</p>
                   </div>
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="broadcast" className="space-y-8 mt-0">
+            <TabsContent value="broadcast" className="space-y-8">
               <BroadcastManager broadcasts={formData.broadcasts} onBroadcastsChange={handleBroadcastsChange} $w={$w} />
             </TabsContent>
 
-            <TabsContent value="music" className="space-y-8 mt-0">
+            <TabsContent value="music" className="space-y-8">
               <BackgroundMusicUploader backgroundMusicFileId={formData.backgroundMusicFileId} onBackgroundMusicFileIdChange={handleBackgroundMusicFileIdChange} $w={$w} />
             </TabsContent>
 
-            </div>
-            <div className="flex-none flex justify-end space-x-4 px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-              <Button type="button" variant="outline" onClick={onCancel} className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">
+            <div className="flex justify-end space-x-4 pt-8 border-t border-gray-600">
+              <Button type="button" onClick={onCancel} className="px-6 py-2 bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600">
                 取消
               </Button>
-              <Button type="submit" disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
+              <Button type="submit" disabled={loading} className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white">
                 <Save className="h-4 w-4 mr-2" />
                 {loading ? '保存中...' : video ? '更新录像' : '创建录像'}
               </Button>

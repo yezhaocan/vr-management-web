@@ -3,11 +3,10 @@ import React, { useState, useEffect } from 'react';
 // @ts-ignore;
 import { Button, Card, CardContent, CardHeader, CardTitle, useToast, Textarea, Label } from '@/components/ui';
 // @ts-ignore;
-import { Save, CheckCircle, XCircle, Settings, FileJson, AlertCircle, Info } from 'lucide-react';
+import { Save, CheckCircle, XCircle } from 'lucide-react';
 
 import { AuthGuard } from '@/components/AuthGuard';
-import { MainLayout } from './MainLayout';
-
+import { UserMenu } from '@/components/UserMenu';
 export default function ConfigPage(props) {
   const {
     $w,
@@ -151,43 +150,26 @@ export default function ConfigPage(props) {
       setSaving(false);
     }
   };
-  return <MainLayout $w={$w}>
-    <AuthGuard $w={$w}>
-        <div style={style} className="w-full h-full space-y-6 p-6">
-          <div className="w-full mx-auto space-y-6">
-        
-        {/* 使用说明 - 移动到顶部 */}
-        <Card className="bg-card text-card-foreground border-border shadow-sm w-full">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Info className="h-5 w-5 mr-2 text-primary" />
-              使用说明
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-muted-foreground space-y-2 text-sm">
-              <p className="flex items-start"><span className="mr-2 text-primary">•</span>配置数据以JSON格式存储，支持嵌套对象和数组</p>
-              <p className="flex items-start"><span className="mr-2 text-primary">•</span>系统会自动获取第一条配置记录，如果没有记录则创建新记录</p>
-              <p className="flex items-start"><span className="mr-2 text-primary">•</span>每次保存都会更新同一条记录，确保配置的唯一性</p>
-              <p className="flex items-start"><span className="mr-2 text-destructive">•</span>JSON格式错误时无法保存，请确保格式正确</p>
-            </div>
-          </CardContent>
-        </Card>
+  return <AuthGuard $w={$w}>
+    <div style={style} className="min-h-screen bg-gray-900">
+      <div className="max-w-4xl mx-auto p-6">
+        {/* 页面标题 */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold mb-2">全局配置</h1>
+          <p className="text-gray-400">管理系统全局配置，配置数据将保存到global_config数据模型</p>
+        </div>
 
-        {/* 配置编辑卡片 - 移动到下方 */}
-        <Card className="bg-card text-card-foreground border-border shadow-sm w-full">
+        {/* 配置编辑卡片 */}
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Settings className="h-5 w-5 mr-2 text-primary" />
-                <span>配置编辑器</span>
-              </div>
+            <CardTitle className="text-white flex items-center justify-between">
+              <span>配置编辑器</span>
               <div className="flex items-center space-x-2">
-                {jsonValid ? <div className="flex items-center text-green-500 text-sm font-normal bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md border border-green-200 dark:border-green-800">
+                {jsonValid ? <div className="flex items-center text-green-400 text-sm">
                   <CheckCircle className="h-4 w-4 mr-1" />
                   JSON格式正确
-                </div> : <div className="flex items-center text-destructive text-sm font-normal bg-destructive/10 px-2 py-1 rounded-md border border-destructive/20">
-                  <AlertCircle className="h-4 w-4 mr-1" />
+                </div> : <div className="flex items-center text-red-400 text-sm">
+                  <XCircle className="h-4 w-4 mr-1" />
                   JSON格式错误
                 </div>}
               </div>
@@ -196,10 +178,7 @@ export default function ConfigPage(props) {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="config-json" className="mb-2 flex items-center">
-                  <FileJson className="h-4 w-4 mr-2 text-muted-foreground" />
-                  配置数据 (JSON格式)
-                </Label>
+                <Label htmlFor="config-json" className="text-white mb-2 block">配置数据 (JSON格式)</Label>
                 <Textarea id="config-json" value={configData} onChange={handleConfigChange} placeholder='{
   "system": {
     "name": "无人机管理系统",
@@ -209,15 +188,14 @@ export default function ConfigPage(props) {
     "autoSave": true,
     "notifications": true
   }
-}' className="font-mono text-sm h-80 resize-none bg-muted/50 border-input w-full" />
-                <div className="text-xs text-muted-foreground mt-2 flex items-center justify-end">
-                  <Info className="h-3 w-3 mr-1" />
+}' className="bg-gray-700 border-gray-600 text-white font-mono text-sm h-96 resize-none" />
+                <div className="text-xs text-gray-400 mt-2">
                   {existingConfig ? `最后更新: ${existingConfig.updatedAt ? new Date(existingConfig.updatedAt).toLocaleString() : '未知'}` : '暂无配置数据'}
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button onClick={saveConfig} disabled={saving || !jsonValid} className="shadow-sm">
+                <Button onClick={saveConfig} disabled={saving || !jsonValid} className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600">
                   <Save className="h-4 w-4 mr-2" />
                   {saving ? '保存中...' : existingConfig ? '更新配置' : '保存配置'}
                 </Button>
@@ -225,8 +203,23 @@ export default function ConfigPage(props) {
             </div>
           </CardContent>
         </Card>
+
+        {/* 使用说明 */}
+        <Card className="bg-gray-800 border-gray-700 mt-6">
+          <CardHeader>
+            <CardTitle className="text-white">使用说明</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-gray-300 space-y-2 text-sm">
+              <p>• 配置数据以JSON格式存储，支持嵌套对象和数组</p>
+              <p>• 系统会自动获取第一条配置记录，如果没有记录则创建新记录</p>
+              <p>• 每次保存都会更新同一条记录，确保配置的唯一性</p>
+              <p>• JSON格式错误时无法保存，请确保格式正确</p>
+              <p>• 配置数据存储在global_config数据模型的config字段中</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
-      </AuthGuard>
-    </MainLayout>;
+  </AuthGuard>;
 }

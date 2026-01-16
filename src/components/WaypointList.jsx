@@ -17,42 +17,79 @@ export function WaypointList({
     return waypoint.voiceGuide && waypoint.voiceGuide.enabled && waypoint.voiceGuide.audioFileId && waypoint.voiceGuide.audioFileId.trim() !== '';
   };
   return <div className="flex-1 overflow-y-auto">
+      <div className="flex justify-between items-center mb-3">
+        <h4 className="text-blue-400 text-sm font-semibold">已添加航点 ({waypoints.length})</h4>
+        {locked && <div className="flex items-center space-x-1 text-gray-400 text-xs">
+            <Lock className="h-3 w-3" />
+            <span>列表已锁定</span>
+          </div>}
+      </div>
       <div className="space-y-2">
-        {waypoints.map((waypoint, index) => <div key={waypoint.id} className={`flex items-center justify-between px-4 rounded-lg border cursor-pointer transition-all h-[56px] group ${selectedVoiceIndex === index ? 'bg-primary/10 border-primary' : 'bg-card border-border hover:bg-muted/50'}`} onClick={() => onSelectWaypoint(index)}>
-            <div className="flex items-center space-x-3 overflow-hidden">
-              {/* 航点序号 - 优化样式 - 适配深色模式 */}
-              <div className="flex-shrink-0 text-xs text-muted-foreground w-4 text-center font-medium">
-                {index + 1}
+        {waypoints.map((waypoint, index) => <Card key={waypoint.id} className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-xl cursor-pointer transition-all hover:bg-gray-700/50" onClick={() => onSelectWaypoint(index)}>
+            <CardContent className="p-3">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex items-center space-x-3">
+                  {/* 航点序号 - 固定位置 */}
+                  <div className="flex-shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">{index + 1}</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium text-sm">{waypoint.name}</p>
+                    {/* 显示8位小数精度 */}
+                    <p className="text-gray-400 text-xs">{waypoint.lat.toFixed(8)}, {waypoint.lng.toFixed(8)}</p>
+                  </div>
+                </div>
+                <div className="flex space-x-1">
+                  {/* 删除按钮 */}
+                  <Button variant="ghost" size="sm" onClick={e => {
+                e.stopPropagation();
+                onDeleteWaypoint(index);
+              }} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
               </div>
               
-              <div className="flex flex-col min-w-0">
-                <p className="text-foreground text-sm font-medium truncate">{waypoint.name}</p>
+              <div className="text-xs text-gray-500">
+                速度: {waypoint.flightSpeed}m/s | 悬停: {waypoint.hoverDuration}s | 高度: {waypoint.altitude}m
               </div>
-
-              {/* 语音讲解标识 - 适配深色模式 */}
-              {hasVoiceRecording(waypoint) && <div className="flex items-center text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                  <Volume2 className="w-3 h-3 mr-1" />
-                  <span>语音</span>
-                </div>}
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon" onClick={e => {
-            e.stopPropagation();
-            onDeleteWaypoint(index);
-          }} className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>)}
+              
+              {/* 语音讲解录音标识 */}
+              {hasVoiceRecording(waypoint) ? <div className="mt-2 p-2 bg-green-900/10 border border-green-500/20 rounded">
+                  <div className="flex items-center space-x-2">
+                    <Volume2 className="w-3 h-3 text-green-400" />
+                    <span className="text-green-400 text-xs font-medium">已生成语音讲解</span>
+                    <span className="text-gray-400 text-xs truncate" title={waypoint.voiceGuide.audioFileId}>
+                      ID: {waypoint.voiceGuide.audioFileId.substring(0, 8)}...
+                    </span>
+                  </div>
+                </div> : waypoint.voiceGuide && waypoint.voiceGuide.enabled ? <div className="mt-2 p-2 bg-yellow-900/10 border border-yellow-500/20 rounded">
+                  <div className="flex items-center space-x-2">
+                    <VolumeX className="w-3 h-3 text-yellow-400" />
+                    <span className="text-yellow-400 text-xs">语音讲解已启用，但未生成录音</span>
+                  </div>
+                </div> : null}
+              
+              {selectedVoiceIndex === index && <Badge variant="default" className="mt-2 bg-blue-500 text-white text-xs">
+                  当前选中
+                </Badge>}
+            </CardContent>
+          </Card>)}
       </div>
       
       {/* 空状态提示 */}
       {waypoints.length === 0 && <div className="text-center py-8">
-          <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-            <Move className="w-5 h-5 text-muted-foreground" />
+          <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Move className="w-6 h-6 text-gray-500" />
           </div>
-          <p className="text-muted-foreground text-sm">暂无航点，请在地图上添加航点</p>
+          <p className="text-gray-400 text-sm">暂无航点，请在地图上添加航点</p>
+        </div>}
+      
+      {/* 连线提示 */}
+      {waypoints.length >= 2 && <div className="mt-3 p-2 bg-blue-900/10 border border-blue-500/20 rounded">
+          <p className="text-blue-400 text-xs">
+            ✓ 航点已自动连线，点击地图上的连线可高亮显示航段
+          </p>
         </div>}
     </div>;
 }
