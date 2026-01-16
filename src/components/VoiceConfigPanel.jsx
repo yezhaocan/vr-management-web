@@ -109,101 +109,66 @@ export function VoiceConfigPanel({
       variant: 'default'
     });
   };
-  return <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-600 shadow-lg rounded-2xl">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-blue-400 text-sm font-semibold">配置 {waypoint.name}</CardTitle>
+  return <div className="space-y-6">
+    <Card className="bg-card border-border shadow-sm rounded-lg h-full overflow-hidden">
+      <CardHeader className="pb-3 border-b border-border">
+        <CardTitle className="text-primary text-sm font-semibold">语音配置</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center space-x-2">
+      <CardContent className="space-y-6 pt-6 overflow-y-auto">
+        <div className="flex items-center justify-between bg-muted/30 p-3 rounded-lg border border-border">
+          <Label className="text-foreground text-sm font-medium">启用语音讲解</Label>
           <Switch checked={voiceGuide.enabled} onCheckedChange={checked => onVoiceConfigChange('enabled', checked)} />
-          <Label className="text-white">启用语音讲解</Label>
         </div>
 
-        {voiceGuide.enabled && <div className="space-y-4">
-            <div>
-              <Label className="text-gray-300 text-xs font-medium">文字稿</Label>
-              <Textarea placeholder="请输入语音讲解文字" value={voiceGuide.text} onChange={e => onVoiceConfigChange('text', e.target.value)} rows={3} className="bg-gray-700 border-gray-600 text-white text-sm" />
-            </div>
-
-            {/* 三个配置项放在同一行 */}
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <Label className="text-gray-300 text-xs font-medium">人物形象</Label>
-                <Select value={voiceGuide.character} onValueChange={value => onVoiceConfigChange('character', value)}>
-                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-600 text-white">
-                    <SelectItem value="导游" className="text-white hover:bg-gray-700">导游</SelectItem>
-                    <SelectItem value="讲解员" className="text-white hover:bg-gray-700">讲解员</SelectItem>
-                    <SelectItem value="卡通人物" className="text-white hover:bg-gray-700">卡通人物</SelectItem>
-                    <SelectItem value="历史人物" className="text-white hover:bg-gray-700">历史人物</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-gray-300 text-xs font-medium">人物音色</Label>
-                <Select value={voiceGuide.voice} onValueChange={value => onVoiceConfigChange('voice', value)}>
-                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-600 text-white">
-                    <SelectItem value="男声" className="text-white hover:bg-gray-700">男声</SelectItem>
-                    <SelectItem value="女声" className="text-white hover:bg-gray-700">女声</SelectItem>
-                    <SelectItem value="童声" className="text-white hover:bg-gray-700">童声</SelectItem>
-                    <SelectItem value="老人声" className="text-white hover:bg-gray-700">老人声</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-gray-300 text-xs font-medium">播放时机</Label>
-                <Select value={voiceGuide.triggerType} onValueChange={value => onVoiceConfigChange('triggerType', value)}>
-                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-600 text-white">
-                    <SelectItem value="time" className="text-white hover:bg-gray-700">飞行时间</SelectItem>
-                    <SelectItem value="position" className="text-white hover:bg-gray-700">飞行位置</SelectItem>
-                  </SelectContent>
-                </Select>
+        {voiceGuide.enabled && <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="space-y-2">
+              <Label className="text-foreground text-sm font-medium">文字稿</Label>
+              <Textarea placeholder="请输入语音讲解文字（最多500字）" value={voiceGuide.text} onChange={e => onVoiceConfigChange('text', e.target.value)} rows={4} maxLength={500} className="common-input resize-y min-h-[100px]" />
+              <div className="text-right text-xs text-muted-foreground">
+                {voiceGuide.text.length}/500
               </div>
             </div>
 
-            {/* 语音合成组件 - 传递当前航点的文件ID */}
-            <VoiceSynthesisComponent text={voiceGuide.text} voice={voiceGuide.voice} onSynthesisComplete={onSynthesisComplete} $w={$w} waypointName={waypoint.name} currentFileId={voiceGuide.audioFileId} />
+            {/* 语音合成组件 - 包含语音文件上传和时长显示 */}
+            <div className="pt-2 border-t border-border mt-6">
+              <Label className="text-foreground text-sm font-medium mb-4 block">语音设置</Label>
+              <VoiceSynthesisComponent text={voiceGuide.text} voice={voiceGuide.voice} onSynthesisComplete={onSynthesisComplete} $w={$w} waypointName={waypoint.name} currentFileId={voiceGuide.audioFileId} />
+            </div>
 
-            {/* 字幕文件上传区域（新增） */}
-            <div className="space-y-3 pt-4 border-t border-gray-600">
-              <Label className="text-gray-300 text-xs font-medium flex items-center">
-                <FileText className="h-4 w-4 mr-2 text-purple-400" />
+            {/* 字幕文件上传区域 */}
+            <div className="space-y-3 pt-6 border-t border-border">
+              <Label className="text-foreground text-sm font-medium flex items-center">
+                <FileText className="h-4 w-4 mr-2 text-primary" />
                 字幕文件（可选）
               </Label>
               
               {/* 字幕文件预览 */}
               {voiceGuide.subtitleFileId && <div className="relative">
-                  <div className="flex items-center space-x-2 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                    <FileText className="h-4 w-4 text-purple-400" />
-                    <div className="flex-1">
-                      <span className="text-purple-400 text-sm font-medium">字幕文件已关联</span>
-                      <p className="text-purple-400/70 text-xs mt-1">云存储ID: {voiceGuide.subtitleFileId.substring(0, 20)}...</p>
+                  <div className="flex items-center space-x-3 p-3 bg-primary/5 rounded-lg border border-primary/20 transition-all hover:shadow-sm">
+                    <div className="p-2 bg-primary/10 rounded-full">
+                      <FileText className="h-4 w-4 text-primary" />
                     </div>
-                    <Button type="button" onClick={handleRemoveSubtitle} className="px-2 py-1 border border-red-400 text-red-400 hover:bg-red-400/10 bg-transparent">
-                      <X className="h-3 w-3" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-foreground text-sm font-medium block">字幕文件已关联</span>
+                      <p className="text-muted-foreground text-xs mt-0.5 truncate">ID: {voiceGuide.subtitleFileId}</p>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={handleRemoveSubtitle} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>}
 
               {/* 字幕文件上传控件 */}
-              <div className="relative">
+              <div className="relative group">
                 <input type="file" accept=".srt,.vtt,.ass,.ssa,.txt,.sub" onChange={handleSubtitleUpload} className="hidden" id="subtitle-file-upload" disabled={uploadingSubtitle} />
-                <label htmlFor="subtitle-file-upload" className={`flex flex-col items-center justify-center w-full h-16 border-2 border-dashed rounded-xl transition-all duration-200 cursor-pointer group ${uploadingSubtitle ? 'border-gray-400/50 bg-gray-900/10 cursor-not-allowed' : 'border-purple-400/50 bg-purple-900/10 hover:bg-purple-900/20'}`}>
-                  <div className="flex flex-col items-center justify-center">
-                    <Upload className={`w-5 h-5 mb-1 transition-colors ${uploadingSubtitle ? 'text-gray-400' : 'text-purple-400 group-hover:text-purple-300'}`} />
-                    <span className={`font-medium text-sm ${uploadingSubtitle ? 'text-gray-400' : 'text-purple-300'}`}>
-                      {uploadingSubtitle ? '上传中...' : '选择字幕文件上传'}
+                <label htmlFor="subtitle-file-upload" className={`flex flex-col items-center justify-center w-full h-24 border border-dashed rounded-lg transition-all duration-300 cursor-pointer ${uploadingSubtitle ? 'border-border bg-muted/50 cursor-not-allowed' : 'border-border bg-card hover:border-primary/50 hover:bg-accent/5 hover:shadow-sm'}`}>
+                  <div className="flex flex-col items-center justify-center text-center p-4">
+                    <Upload className={`w-5 h-5 mb-2 transition-transform duration-300 ${uploadingSubtitle ? 'text-muted-foreground' : 'text-primary group-hover:scale-110'}`} />
+                    <span className={`font-medium text-sm ${uploadingSubtitle ? 'text-muted-foreground' : 'text-foreground'}`}>
+                      {uploadingSubtitle ? '上传中...' : '点击或拖拽上传字幕文件'}
                     </span>
-                    <span className={`text-xs mt-1 ${uploadingSubtitle ? 'text-gray-400/70' : 'text-purple-400/70'}`}>
-                      支持srt、vtt、ass、ssa、txt等格式
+                    <span className="text-xs text-muted-foreground mt-1">
+                      支持 srt, vtt, ass, ssa, txt
                     </span>
                   </div>
                 </label>
@@ -211,5 +176,6 @@ export function VoiceConfigPanel({
             </div>
           </div>}
       </CardContent>
-    </Card>;
+    </Card>
+  </div>;
 }
