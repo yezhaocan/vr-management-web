@@ -106,16 +106,45 @@
     /* 移动端 (默认) */
     width: 100%;
 
-    /* 平板 (md >= 768px) */
+    /* 平板 (md &gt;= 768px) */
     @media (min-width: 768px) {
       width: 90%;
       max-width: 90%;
     }
 
-    /* 桌面 (xl >= 1280px) - 使用95%宽度而非固定1200px，适配大屏 */
+    /* 桌面 (xl &gt;= 1280px) - 使用95%宽度而非固定1200px，适配大屏 */
     @media (min-width: 1280px) {
       width: 100%;
       max-width: 100%;
     }
+  }
+}
+
+@layer components {
+  /* 全局滚动条样式：浅色/深色模式适配，Chrome/Edge/Safari 使用 WebKit 伪元素 */
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    @apply rounded;
+    border-radius: 4px;
+    background-color: theme('colors.gray.100');
+  }
+  .dark *::-webkit-scrollbar-track {
+    background-color: theme('colors.gray.800');
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply rounded;
+    border-radius: 4px;
+    background-color: hsl(var(--primary));
+  }
+  /* Firefox 兼容性：全局设置细滚动条与颜色（滑块使用主题主色，轨道随明暗模式切换） */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary)) theme('colors.gray.100');
+  }
+  .dark html {
+    scrollbar-color: hsl(var(--primary)) theme('colors.gray.800');
   }
 }
