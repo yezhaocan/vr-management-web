@@ -3,7 +3,7 @@ import { Header } from '@/components/Header';
 import { ThemeProvider } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserMenu } from '@/components/UserMenu';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui';
 import { MapPin, Bell, HelpCircle, LayoutGrid } from 'lucide-react';
 
 export function Header({ $w, title, subtitle }) {
