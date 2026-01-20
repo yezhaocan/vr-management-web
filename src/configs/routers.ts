@@ -12,6 +12,7 @@ import SCENIC_MANAGEMENT from '../pages/scenic-management.jsx';
 import LOGIN from '../pages/login.jsx';
 import MAINLAYOUT from '../pages/MainLayout.jsx';
 import SUBTITLE_ALIGNMENT from '../pages/subtitle-alignment.jsx';
+import SRT_GENERATOR from '../pages/srt-generator.jsx';
 export const routers = [{
   id: "dashboard",
   component: DASHBOARD
@@ -54,4 +55,7 @@ export const routers = [{
 }, {
   id: "subtitle-alignment",
   component: SUBTITLE_ALIGNMENT
+}, {
+  id: "srt-generator",
+  component: SRT_GENERATOR
 }]
