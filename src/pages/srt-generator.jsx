@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { generateSRT, generateAlignedSrt } from "@/lib/subtitle-alignment";
+import { generateSRT, generateAlignedSrt } from "./subtitle-alignment";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
