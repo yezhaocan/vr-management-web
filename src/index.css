@@ -4,51 +4,38 @@
 
 @layer base {
   :root {
-    /* Base Colors */
     --background: 0 0% 100%;
-    --foreground: 0 0% 20%; /* #333333 */
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 20%; /* #333333 */
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 20%; /* #333333 */
+    --popover-foreground: 222.2 84% 4.9%;
 
-    /* Primary Blue #1890ff -> HSL: 209 100% 55% approx. Converted: 209 100% 54.7% */
-    --primary: 209 100% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    /* Secondary Grey #f0f0f0 -> HSL: 0 0% 94% */
-    --secondary: 0 0% 94%;
-    --secondary-foreground: 0 0% 20%; /* #333333 */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 0 0% 94%; /* Same as secondary */
+    --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 0 0% 94%; /* Same as secondary */
-    --accent-foreground: 0 0% 20%; /* #333333 */
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-    /* Error Red #f5222d -> HSL: 356 90% 55% approx. */
-    --destructive: 356 90% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 209 100% 55%; /* Primary */
+    --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
-    
-    /* Spacing Variables */
-    --spacing-form-gap: 24px;
-    --spacing-internal-gap: 16px;
-    --spacing-page-edge: 32px;
   }
 
   .dark {
-    /* Keeping dark mode but adjusting to match the blue theme if needed, 
-       or maybe the user wants these specific colors to apply everywhere?
-       The requirement said "Colors ... unified to #333". This usually implies light mode.
-       I will set the primary/error colors to be consistent. */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -58,8 +45,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 209 100% 55%; /* Keep Primary Blue */
-    --primary-foreground: 0 0% 100%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -70,12 +57,12 @@
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 356 90% 55%; /* Keep Error Red */
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 209 100% 55%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -85,66 +72,5 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-  
-  /* 
-   * 统一内容区域样式
-   * 
-   * 包含：
-   * - 固定内边距: 20px
-   * - 宽度: 100%
-   * - 高度: 自适应
-   * - 响应式布局:
-   *   - 移动端: 100%
-   *   - 平板: 90%
-   *   - 桌面: 固定 1200px
-   */
-  .main-content-area {
-    @apply w-full h-auto mx-auto box-border animate-in fade-in duration-500;
-    padding: 20px;
-
-    /* 移动端 (默认) */
-    width: 100%;
-
-    /* 平板 (md >= 768px) */
-    @media (min-width: 768px) {
-      width: 90%;
-      max-width: 90%;
-    }
-
-    /* 桌面 (xl >= 1280px) - 使用95%宽度而非固定1200px，适配大屏 */
-    @media (min-width: 1280px) {
-      width: 100%;
-      max-width: 100%;
-    }
-  }
-}
-
-@layer components {
-  /* 全局滚动条样式：浅色/深色模式适配，Chrome/Edge/Safari 使用 WebKit 伪元素 */
-  *::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  *::-webkit-scrollbar-track {
-    @apply rounded;
-    border-radius: 4px;
-    background-color: theme('colors.gray.100');
-  }
-  .dark *::-webkit-scrollbar-track {
-    background-color: theme('colors.gray.800');
-  }
-  *::-webkit-scrollbar-thumb {
-    @apply rounded;
-    border-radius: 4px;
-    background-color: hsl(var(--primary));
-  }
-  /* Firefox 兼容性：全局设置细滚动条与颜色（滑块使用主题主色，轨道随明暗模式切换） */
-  html {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--primary)) theme('colors.gray.100');
-  }
-  .dark html {
-    scrollbar-color: hsl(var(--primary)) theme('colors.gray.800');
   }
 }
