@@ -473,15 +473,21 @@ export function RouteEditor(props) {
     console.log(`更新航点${index}的${field}:`, value);
   };
 
-  // 处理语音合成完成 - 修复：只保存audioFileId，不保存audioUrl
-  const handleSpeechSynthesisComplete = (fileId, audioUrl) => {
+  // 处理语音合成完成 - 修复：保存 audioFileId 和 subtitleFileId
+  const handleSpeechSynthesisComplete = (fileId, audioUrl, subtitleFileId) => {
     if (selectedVoiceIndex !== null) {
       // 修复：只保存云存储ID到audioFileId字段
       updateWaypointVoiceConfig(selectedVoiceIndex, 'audioFileId', fileId);
+      
+      // 如果有字幕文件ID，也一并保存
+      if (subtitleFileId) {
+        updateWaypointVoiceConfig(selectedVoiceIndex, 'subtitleFileId', subtitleFileId);
+      }
+      
       // 不保存临时链接到audioUrl字段
       toast({
-        title: '语音文件ID已保存',
-        description: `航点${selectedVoiceIndex + 1}的语音文件ID已保存到audioFileId字段`,
+        title: '语音和字幕已保存',
+        description: `航点${selectedVoiceIndex + 1}的语音配置已更新`,
         variant: 'default'
       });
     }
