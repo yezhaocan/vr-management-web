@@ -4,7 +4,7 @@ import { Button, useToast, Progress, Tooltip, TooltipContent, TooltipProvider, T
 // @ts-ignore;
 import { Volume2, Download, Upload, Play, Square, Loader2, FileAudio, FileText, Info } from 'lucide-react';
 // @ts-ignore;
-import { generateAlignedSrt } from '../pages/subtitle-alignment';
+import { generateAlignedSrt } from '../lib/subtitle-alignment';
 
 export function VoiceSynthesisComponent({
   text,
