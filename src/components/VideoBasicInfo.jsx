@@ -1,7 +1,8 @@
 // @ts-ignore;
 import React from 'react';
 // @ts-ignore;
-import { Input, Label, Textarea, Button, useToast } from '@/components/ui';
+import { Input, Label, Textarea, Button, useToast, } from '@/components/ui';
+import { DatePicker } from '@/components/newUi/date-picker';
 // @ts-ignore;
 import { Clock, Upload, X } from 'lucide-react';
 
@@ -158,11 +159,21 @@ export function VideoBasicInfo({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label htmlFor="startTime" className="font-medium">开始时间</Label>
-            <Input id="startTime" type="datetime-local" value={formData.startTime} onChange={e => handleInputChange('startTime', e.target.value)} className="mt-2" />
+            <DatePicker 
+              selected={formData.startTime} 
+              onChange={(date) => handleInputChange('startTime', date)} 
+              className="mt-2" 
+              placeholder="选择开始时间"
+            />
           </div>
           <div>
             <Label htmlFor="endTime" className="font-medium">结束时间</Label>
-            <Input id="endTime" type="datetime-local" value={formData.endTime} onChange={e => handleInputChange('endTime', e.target.value)} className="mt-2" />
+            <DatePicker 
+              selected={formData.endTime} 
+              onChange={(date) => handleInputChange('endTime', date)} 
+              className="mt-2" 
+              placeholder="选择结束时间"
+            />
           </div>
         </div>
 
