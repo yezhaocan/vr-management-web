@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import { Button } from "@/components/ui";
-import { Textarea } from "@/components/ui";
-import { Input } from "@/components/ui";
-import { Label } from "@/components/ui";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { generateSRT, generateAlignedSrt } from "../lib/subtitle-alignment";
+import { Button, Textarea, Input, Label, Card, CardContent, CardHeader, CardTitle, useToast } from "@/components/ui";
+import { generateSRT, generateAlignedSrt } from "@/lib/subtitle-alignment";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 const SrtGeneratorPage = () => {
   const [text, setText] = useState('');
@@ -14,10 +9,15 @@ const SrtGeneratorPage = () => {
   const [result, setResult] = useState('');
   const [mode, setMode] = useState('simple'); // 'simple' | 'advanced'
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (!text) {
-      toast.error("请输入有效的文本");
+      toast({
+        title: "验证失败",
+        description: "请输入有效的文本",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -25,22 +25,38 @@ const SrtGeneratorPage = () => {
       if (mode === 'simple') {
         const dur = parseFloat(duration);
         if (isNaN(dur)) {
-          toast.error("请输入有效的音频时长");
+          toast({
+            title: "验证失败",
+            description: "请输入有效的音频时长",
+            variant: "destructive"
+          });
           return;
         }
         const srt = generateSRT(text, dur);
         setResult(srt);
-        toast.success("生成成功");
+        toast({
+          title: "生成成功",
+          description: "SRT 字幕已生成",
+          variant: "default"
+        });
       } else {
         // Advanced mode: TTS + ASR + Alignment
         setLoading(true);
-        const srt = await generateAlignedSrt(text);
+        const { srt } = await generateAlignedSrt(text);
         setResult(srt);
-        toast.success("智能生成成功");
+        toast({
+          title: "智能生成成功",
+          description: "语音和字幕已生成",
+          variant: "default"
+        });
       }
     } catch (error) {
       console.error(error);
-      toast.error(`生成失败: ${error.message}`);
+      toast({
+        title: "生成失败",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
