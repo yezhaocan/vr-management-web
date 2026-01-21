@@ -28,3 +28,4 @@ export * from './EnhancedCard.jsx';
 export * from './Header.jsx';
 export * from './ThemeToggle.jsx';
 export * from './theme-provider.jsx';
+export * from './newUi/date-picker.jsx';
