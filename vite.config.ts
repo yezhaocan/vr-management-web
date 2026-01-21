@@ -9,6 +9,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/cgs/api': {
+        target: 'https://newdev.rdapp.com:10015',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   plugins: [react(), cloudStudio()].filter(Boolean),
   resolve: {

@@ -10,7 +10,6 @@ import VIDEO_RECORD from '../pages/video-record.jsx';
 import TIPS from '../pages/tips.jsx';
 import SCENIC_MANAGEMENT from '../pages/scenic-management.jsx';
 import LOGIN from '../pages/login.jsx';
-import MAINLAYOUT from '../pages/MainLayout.jsx';
 import SRT_GENERATOR from '../pages/srt-generator.jsx';
 export const routers = [{
   id: "dashboard",
@@ -48,9 +47,6 @@ export const routers = [{
 }, {
   id: "login",
   component: LOGIN
-}, {
-  id: "MainLayout",
-  component: MAINLAYOUT
 }, {
   id: "srt-generator",
   component: SRT_GENERATOR

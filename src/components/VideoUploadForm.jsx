@@ -30,8 +30,8 @@ export function VideoUploadForm({
     thumbnailFileId: '',
     videoFileId: '',
     videoUrl: '',
-    startTime: '',
-    endTime: '',
+    startTime: undefined,
+    endTime: undefined,
     duration: '00:00:00',
     // 新增：时长字段，格式HH:MM:SS
     broadcasts: [],
@@ -49,29 +49,20 @@ export function VideoUploadForm({
   const [activeTab, setActiveTab] = useState('basic');
   const [videoUploadType, setVideoUploadType] = useState('upload');
 
-  // 将时间戳转换为datetime-local格式
-  const timestampToDateTimeLocal = timestamp => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
-
-  // 将datetime-local格式转换为时间戳
-  const dateTimeLocalToTimestamp = dateTimeStr => {
-    if (!dateTimeStr) return null;
-    return new Date(dateTimeStr).getTime();
+  // 将时间戳转换为Date对象
+  const timestampToDate = timestamp => {
+    if (!timestamp) return undefined;
+    return new Date(timestamp);
   };
 
   // 计算时长（秒数转换为HH:MM:SS格式）
   const calculateDuration = (startTime, endTime) => {
     if (!startTime || !endTime) return '00:00:00';
-    const start = dateTimeLocalToTimestamp(startTime);
-    const end = dateTimeLocalToTimestamp(endTime);
+    
+    // startTime 和 endTime 应该是 Date 对象
+    const start = startTime instanceof Date ? startTime.getTime() : 0;
+    const end = endTime instanceof Date ? endTime.getTime() : 0;
+    
     if (!start || !end || end <= start) return '00:00:00';
     const durationSeconds = Math.floor((end - start) / 1000);
     const hours = Math.floor(durationSeconds / 3600);
@@ -186,8 +177,8 @@ export function VideoUploadForm({
           thumbnailFileId: video.imageFileId || '',
           videoFileId: video.videoFileId || '',
           videoUrl: video.videoUrl || '',
-          startTime: timestampToDateTimeLocal(video.startTime) || '',
-          endTime: timestampToDateTimeLocal(video.endTime) || '',
+          startTime: timestampToDate(video.startTime),
+          endTime: timestampToDate(video.endTime),
           duration: durationValue,
           broadcasts: broadcasts,
           backgroundMusicFileId: video.backgroundMusicFileId || '',
@@ -206,8 +197,8 @@ export function VideoUploadForm({
           thumbnailFileId: '',
           videoFileId: '',
           videoUrl: '',
-          startTime: '',
-          endTime: '',
+          startTime: undefined,
+          endTime: undefined,
           duration: '00:00:00',
           broadcasts: [],
           backgroundMusicFileId: '',
@@ -324,6 +315,18 @@ export function VideoUploadForm({
       return;
     }
 
+    // 验证开始时间不能晚于结束时间
+    if (formData.startTime && formData.endTime) {
+        if (formData.startTime.getTime() > formData.endTime.getTime()) {
+            toast({
+                title: '表单验证失败',
+                description: '开始时间不能晚于结束时间',
+                variant: 'destructive'
+            });
+            return;
+        }
+    }
+
     // 验证时长格式
     const durationRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
     if (!durationRegex.test(formData.duration)) {
@@ -342,8 +345,8 @@ export function VideoUploadForm({
         imageFileId: formData.thumbnailFileId,
         videoFileId: formData.videoFileId,
         videoUrl: formData.videoUrl,
-        startTime: formData.startTime ? new Date(formData.startTime).getTime() : null,
-        endTime: formData.endTime ? new Date(formData.endTime).getTime() : null,
+        startTime: formData.startTime ? formData.startTime.getTime() : null,
+        endTime: formData.endTime ? formData.endTime.getTime() : null,
         broadcasts: formData.broadcasts.length > 0 ? formData.broadcasts : null,
         backgroundMusicFileId: formData.backgroundMusicFileId || null,
         backgroundImageId: formData.backgroundImageId || null,

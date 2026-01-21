@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 // @ts-ignore;
 import { Button, Input, Label, Textarea, Card, CardContent, Badge, useToast } from '@/components/ui';
 // @ts-ignore;
-import { Upload, Megaphone, Clock, Plus, Trash2, CheckCircle, Play, Download, Volume2, FileText } from 'lucide-react';
+import { Upload, Megaphone, Clock, Plus, Trash2, CheckCircle, Play, Download, Volume2, FileText, Wand2, FileDown, PlayCircle } from 'lucide-react';
+import { generateAlignedSrt } from '@/lib/subtitle-alignment';
 
 export function BroadcastManager({
   broadcasts,
@@ -20,6 +21,8 @@ export function BroadcastManager({
   });
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [uploadingSubtitle, setUploadingSubtitle] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedSrt, setGeneratedSrt] = useState('');
   const [synthesizedAudio, setSynthesizedAudio] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
   const [showDownloadButton, setShowDownloadButton] = useState(false);
@@ -83,132 +86,143 @@ export function BroadcastManager({
     });
   };
 
-  // 语音合成功能
-  const handleVoiceSynthesis = async () => {
+  // 智能生成功能
+  const handleSmartGenerate = async () => {
     if (!newBroadcast.text || newBroadcast.text.trim() === '') {
       toast({
         title: '文字稿为空',
-        description: '请先输入要合成的文字稿',
+        description: '请先输入要生成的文字稿',
         variant: 'destructive'
       });
       return;
     }
-    if (!window.SpeechSynthesisUtterance || !window.speechSynthesis) {
-      toast({
-        title: '浏览器不支持',
-        description: '您的浏览器不支持语音合成功能',
-        variant: 'destructive'
-      });
-      return;
-    }
-    if (!window.MediaRecorder) {
-      toast({
-        title: '浏览器不支持',
-        description: '您的浏览器不支持音频录制功能',
-        variant: 'destructive'
-      });
-      return;
-    }
+
     try {
-      setUploadingAudio(true);
-      // 停止当前播放
-      if (synthesizedAudio) {
-        setSynthesizedAudio(null);
-        setAudioBlob(null);
-      }
-      // 获取媒体流权限
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 44100
-        }
-      });
-      // 创建MediaRecorder
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-      const audioChunks = [];
-      mediaRecorder.ondataavailable = event => {
-        if (event.data && event.data.size > 0) {
-          audioChunks.push(event.data);
-        }
-      };
-      mediaRecorder.onstop = async () => {
-        try {
-          if (audioChunks.length === 0) {
-            throw new Error('录制数据为空');
-          }
-          const audioBlob = new Blob(audioChunks, {
-            type: 'audio/webm;codecs=opus'
-          });
-          // 创建音频URL
-          const audioUrl = URL.createObjectURL(audioBlob);
-          setAudioBlob(audioBlob);
-          setSynthesizedAudio(audioUrl);
-          setShowDownloadButton(true);
-          toast({
-            title: '语音合成成功',
-            description: '语音已合成，请下载音频文件后上传',
-            variant: 'default'
-          });
-        } catch (error) {
-          console.error('音频处理失败:', error);
-          toast({
-            title: '音频处理失败',
-            description: error.message,
-            variant: 'destructive'
-          });
-        } finally {
-          // 停止所有媒体流
-          stream.getTracks().forEach(track => track.stop());
-          setUploadingAudio(false);
-        }
-      };
-      // 开始录制
-      mediaRecorder.start(100);
-      // 等待录制开始
-      await new Promise(resolve => setTimeout(resolve, 100));
-      // 创建语音合成实例
-      const utterance = new SpeechSynthesisUtterance(newBroadcast.text);
-      utterance.lang = 'zh-CN';
-      utterance.rate = 0.8;
-      utterance.pitch = 1;
-      utterance.volume = 1;
-      // 获取语音
-      const voices = window.speechSynthesis.getVoices();
-      const selectedVoice = voices.find(v => v.lang === 'zh-CN') || voices[0];
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      }
-      // 语音合成事件处理
-      utterance.onend = () => {
-        setTimeout(() => {
-          if (mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
-          }
-        }, 500);
-      };
-      utterance.onerror = error => {
-        console.error('语音合成错误:', error);
-        if (mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
-        }
-        setUploadingAudio(false);
+      setIsGenerating(true);
+      
+      // 清理之前的状态
+      setSynthesizedAudio(null);
+      setAudioBlob(null);
+      setGeneratedSrt('');
+      setShowDownloadButton(false);
+
+      // 调用智能生成接口
+      const { srt, audioBlob } = await generateAlignedSrt(newBroadcast.text);
+      
+      // 创建音频URL用于预览
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      setAudioBlob(audioBlob);
+      setSynthesizedAudio(audioUrl);
+      setGeneratedSrt(srt);
+      setShowDownloadButton(true);
+
+      // 自动上传音频和字幕文件
+      try {
+        const tcb = await $w.cloud.getCloudInstance();
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 8);
+
+        // 1. 上传音频文件
+        const audioFileName = `video_broadcasts/generated_audio_${timestamp}_${randomStr}.wav`;
+        const audioFile = new File([audioBlob], audioFileName, { type: 'audio/wav' });
+        
+        const audioUploadResult = await tcb.uploadFile({
+          cloudPath: audioFileName,
+          filePath: audioFile
+        });
+        
+        const audioTempUrlResult = await tcb.getTempFileURL({
+          fileList: [audioUploadResult.fileID]
+        });
+
+        // 2. 上传字幕文件
+        const srtFileName = `video_broadcasts/generated_subtitle_${timestamp}_${randomStr}.srt`;
+        const srtFile = new File([srt], srtFileName, { type: 'text/plain' });
+        
+        const srtUploadResult = await tcb.uploadFile({
+          cloudPath: srtFileName,
+          filePath: srtFile
+        });
+
+        const srtTempUrlResult = await tcb.getTempFileURL({
+          fileList: [srtUploadResult.fileID]
+        });
+
+        // 3. 更新状态，自动填充
+        setNewBroadcast(prev => ({
+          ...prev,
+          audioFileId: audioUploadResult.fileID,
+          audioUrl: audioTempUrlResult.fileList[0].tempFileURL,
+          subtitleFileId: srtUploadResult.fileID,
+          subtitleUrl: srtTempUrlResult.fileList[0].tempFileURL
+        }));
+
         toast({
-          title: '语音合成失败',
-          description: '语音合成过程中出现错误',
+          title: '智能生成成功',
+          description: '音频和字幕已自动生成并填充',
+          variant: 'default'
+        });
+
+      } catch (uploadError) {
+        console.error('自动上传失败:', uploadError);
+        toast({
+          title: '生成成功但上传失败',
+          description: '请手动下载文件后上传',
+          variant: 'warning'
+        });
+      }
+
+    } catch (error) {
+      console.error('智能生成失败:', error);
+      toast({
+        title: '生成失败',
+        description: error.message || '请重试',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // 预览音频
+  const handlePreviewAudio = () => {
+    if (synthesizedAudio) {
+      const audio = new Audio(synthesizedAudio);
+      audio.play().catch(e => {
+        toast({
+          title: '播放失败',
+          description: '无法播放音频',
           variant: 'destructive'
         });
-      };
-      // 开始语音合成
-      window.speechSynthesis.speak(utterance);
-    } catch (error) {
-      console.error('语音合成初始化失败:', error);
-      setUploadingAudio(false);
+      });
+    }
+  };
+
+  // 下载 SRT
+  const handleDownloadSrt = () => {
+    if (!generatedSrt) return;
+    try {
+      const blob = new Blob([generatedSrt], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `subtitle_${newBroadcast.triggerTime || 'generated'}_${Date.now()}.srt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
       toast({
-        title: '语音合成失败',
-        description: error.message || '请检查麦克风权限和浏览器支持',
+        title: '下载成功',
+        description: 'SRT字幕文件已下载',
+        variant: 'default'
+      });
+    } catch (error) {
+      console.error('SRT下载失败:', error);
+      toast({
+        title: '下载失败',
+        description: '文件下载过程中出现错误',
         variant: 'destructive'
       });
     }
@@ -431,6 +445,82 @@ export function BroadcastManager({
                 <Textarea value={newBroadcast.text || ''} onChange={e => handleInputChange('text', e.target.value)} placeholder="请输入播报文字内容" className="bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-50 p-3 rounded-lg h-24 w-full" rows={4} />
               </div>
 
+              {/* 智能生成区域 */}
+              <div className="space-y-4 mb-4">
+                <Label className="text-slate-900 dark:text-slate-50 font-medium">智能生成</Label>
+                
+                {/* 智能生成按钮 */}
+                <Button 
+                  type="button" 
+                  onClick={handleSmartGenerate} 
+                  disabled={isGenerating || !newBroadcast.text || !!newBroadcast.audioFileId} 
+                  className={`w-full px-4 py-3 font-medium rounded-lg text-white ${
+                    !!newBroadcast.audioFileId 
+                      ? 'bg-slate-400 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700'
+                  }`}
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      生成中...
+                    </>
+                  ) : !!newBroadcast.audioFileId ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      已检测到音频文件 (智能生成已禁用)
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      智能生成 (音频 + 字幕)
+                    </>
+                  )}
+                </Button>
+
+                {/* 生成后的操作按钮组 */}
+                {showDownloadButton && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* 预览音频 */}
+                    <Button 
+                      type="button" 
+                      onClick={handlePreviewAudio} 
+                      variant="outline"
+                      className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-900/20"
+                    >
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      预览音频
+                    </Button>
+
+                    {/* 下载音频 */}
+                    <Button 
+                      type="button" 
+                      onClick={handleDownloadAudio} 
+                      variant="outline"
+                      className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      下载音频
+                    </Button>
+
+                    {/* 下载SRT */}
+                    <Button 
+                      type="button" 
+                      onClick={handleDownloadSrt} 
+                      variant="outline"
+                      className="w-full border-green-200 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-900/20"
+                    >
+                      <FileDown className="h-4 w-4 mr-2" />
+                      下载SRT
+                    </Button>
+                  </div>
+                )}
+
+                <p className="text-slate-500 dark:text-slate-400 text-sm text-center">
+                  生成后请下载音频和字幕文件，并上传到云存储以完成配置
+                </p>
+              </div>
+
               {/* 字幕文件上传区域（新增） */}
               <div className="space-y-3 mb-4">
                 <Label className="text-slate-900 dark:text-slate-50 font-medium">字幕文件（可选）</Label>
@@ -464,32 +554,6 @@ export function BroadcastManager({
                     </div>
                   </label>
                 </div>
-              </div>
-
-              {/* 语音合成区域 */}
-              <div className="space-y-4 mb-4">
-                <Label className="text-slate-900 dark:text-slate-50 font-medium">语音合成</Label>
-                
-                {/* 语音合成按钮 */}
-                <Button type="button" onClick={handleVoiceSynthesis} disabled={uploadingAudio || !newBroadcast.text} className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-lg">
-                  {uploadingAudio ? <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      合成中...
-                    </> : <>
-                      <Volume2 className="h-4 w-4 mr-2" />
-                      语音合成
-                    </>}
-                </Button>
-
-                {/* 下载按钮（合成后显示） */}
-                {showDownloadButton && <Button type="button" onClick={handleDownloadAudio} className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg">
-                    <Download className="h-4 w-4 mr-2" />
-                    下载音频文件
-                  </Button>}
-
-                <p className="text-slate-500 dark:text-slate-400 text-sm text-center">
-                  合成语音后下载音频文件，然后上传到云存储
-                </p>
               </div>
 
               {/* 音频文件上传区域 */}
