@@ -336,7 +336,7 @@ export function alignSubtitles(originalText, asrSegments) {
       // 2. 调用 TTS 接口生成语音
       // /cgs/api/api/UniformSpeech
       console.log('[SRT Generator] Step 1: Calling TTS API...');
-      const ttsResponse = await fetch('https://pre-release.genew.com:53839/cgs/api/api/UniformSpeech', {
+      const ttsResponse = await fetch('https://vr.genew.com/cgs/api/api/UniformSpeech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
