@@ -356,7 +356,7 @@ export function alignSubtitles(originalText, asrSegments) {
   
   
       // 3. 下载语音文件并准备传给 ASR
-      const audioFileResponse = await fetch(`https://vr.genew.com/whisper/${ttsData.filePath}`);
+      const audioFileResponse = await fetch(`https://vr.genew.com/cgs/api${ttsData.filePath}`);
       if (!audioFileResponse.ok) {
         throw new Error(`Failed to download audio file: ${ttsData.filePath}`);
       }
@@ -370,7 +370,7 @@ export function alignSubtitles(originalText, asrSegments) {
       formData.append('file', audioFile);
       formData.append('model', '1');
   
-      const asrResponse = await fetch('http://10.8.109.236:20091/v1/audio/transcriptions', {
+      const asrResponse = await fetch('https://vr.genew.com/whisper/v1/audio/transcriptions', {
         method: 'POST',
         body: formData,
       });
