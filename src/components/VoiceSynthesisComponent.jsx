@@ -54,18 +54,20 @@ export function VoiceSynthesisComponent({
       const tempAudioData = tempFileStorage.get(currentAudioFileId);
       
       if (tempAudioData && tempAudioData.blob) {
-        // 清理之前的 URL（避免内存泄漏）
-        if (audioState.synthesizedUrl && audioState.synthesizedUrl.startsWith('blob:')) {
-          URL.revokeObjectURL(audioState.synthesizedUrl);
-        }
-        
         // 恢复临时生成的音频文件显示
         const audioUrl = URL.createObjectURL(tempAudioData.blob);
-        setAudioState(prev => ({
-          ...prev,
-          synthesizedUrl: audioUrl,
-          fileSize: tempAudioData.blob.size
-        }));
+        setAudioState(prev => {
+          // 清理之前的 URL（避免内存泄漏）
+          if (prev.synthesizedUrl && prev.synthesizedUrl.startsWith('blob:') && prev.synthesizedUrl !== audioUrl) {
+            URL.revokeObjectURL(prev.synthesizedUrl);
+          }
+          
+          return {
+            ...prev,
+            synthesizedUrl: audioUrl,
+            fileSize: tempAudioData.blob.size
+          };
+        });
         
         // 确保音频元素正确设置
         setTimeout(() => {
@@ -79,15 +81,20 @@ export function VoiceSynthesisComponent({
       }
     } else if (!currentAudioFileId) {
       // 清除音频相关状态
-      if (audioState.synthesizedUrl && audioState.synthesizedUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(audioState.synthesizedUrl);
-      }
-      setAudioState(prev => ({
-        ...prev,
-        synthesizedUrl: null,
-        fileSize: 0,
-        isPlaying: false
-      }));
+      setAudioState(prev => {
+        // 清理之前的 URL（避免内存泄漏）
+        if (prev.synthesizedUrl && prev.synthesizedUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(prev.synthesizedUrl);
+        }
+        
+        return {
+          ...prev,
+          synthesizedUrl: null,
+          fileSize: 0,
+          isPlaying: false
+        };
+      });
+      
       if (audioRef.current) {
         audioRef.current.src = '';
       }
@@ -119,23 +126,26 @@ export function VoiceSynthesisComponent({
         fileSize: 0
       }));
     }
-  }, [currentAudioFileId, currentSubtitleFileId, tempFileStorage, audioState.synthesizedUrl]);
+  }, [currentAudioFileId, currentSubtitleFileId, tempFileStorage]);
 
   // 当航点名称变化时，停止播放（表示切换了航点）
   useEffect(() => {
-    if (audioState.isPlaying) {
-      stopAudio();
+    if (audioState.isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setAudioState(prev => ({ ...prev, isPlaying: false }));
     }
-  }, [waypointName, audioState.isPlaying]);
+  }, [waypointName]);
 
   // 组件卸载时清理 Blob URL
   useEffect(() => {
     return () => {
+      // 清理当前的 Blob URL
       if (audioState.synthesizedUrl && audioState.synthesizedUrl.startsWith('blob:')) {
         URL.revokeObjectURL(audioState.synthesizedUrl);
       }
     };
-  }, [audioState.synthesizedUrl]);
+  }, []); // 空依赖数组，只在组件卸载时执行
 
   // 播放音频
   const playAudio = () => {
