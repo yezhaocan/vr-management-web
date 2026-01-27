@@ -43,7 +43,7 @@ export function VoiceSynthesisComponent({
   } = useToast();
   const audioRef = useRef(null);
 
-  // 监听 props 变化，同步内部状态（合并所有相关的状态更新）
+  // 监听 props 变化，同步内部状态变更（合并所有相关的状态更新）
   useEffect(() => {
     // 更新文件ID状态
     setAudioState(prev => ({ ...prev, fileId: currentAudioFileId }));
