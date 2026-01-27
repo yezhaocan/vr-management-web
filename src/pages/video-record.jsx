@@ -164,7 +164,7 @@ export default function VideoRecord(props) {
   };
   return <MainLayout $w={$w}>
     <AuthGuard $w={$w}>
-        <div style={style} className="space-y-6 animate-in fade-in duration-500 p-6">
+        <div style={style} className="space-y-6 animate-in fade-in duration-500">
         {/* 头部操作区 */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1 w-full sm:w-auto flex items-center gap-4">

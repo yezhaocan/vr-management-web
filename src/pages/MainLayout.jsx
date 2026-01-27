@@ -185,7 +185,7 @@ export function MainLayout({
                             sidebarOpen ? "md:ml-60" : "md:ml-16"
                         )}
                     >
-                        <div className="main-content-area">
+                        <div className="main-content-area p-6">
                             {children}
                         </div>
                     </main>

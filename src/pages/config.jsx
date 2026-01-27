@@ -153,7 +153,7 @@ export default function ConfigPage(props) {
   };
   return <MainLayout $w={$w}>
     <AuthGuard $w={$w}>
-        <div style={style} className="w-full h-full space-y-6 p-6">
+        <div style={style} className="w-full h-full space-y-6">
           <div className="w-full mx-auto space-y-6">
         
         {/* 使用说明 - 移动到顶部 */}

@@ -225,12 +225,20 @@ export function SimpleMap({
 
   // 初始化地图
   const initializeMap = async () => {
-    if (!mapContainerRef.current || mapLoaded) return;
+    if (!mapContainerRef.current || mapLoaded || mapInstanceRef.current) return;
     try {
       // 加载 Leaflet 资源
       await Promise.all([loadLeafletCSS(), loadLeafletJS()]);
-      if (!mapContainerRef.current) {
-        throw new Error('地图容器不存在');
+      
+      // 再次检查容器和实例状态（因为是异步操作）
+      if (!mapContainerRef.current || mapInstanceRef.current) {
+        return;
+      }
+
+      // 检查容器是否已经被 Leaflet 初始化
+      // @ts-ignore
+      if (mapContainerRef.current._leaflet_id) {
+        return;
       }
 
       // 创建地图实例
@@ -372,8 +380,11 @@ export function SimpleMap({
     }
   }, [onClearConnections]);
   useEffect(() => {
-    setTimeout(() => initializeMap(), 300);
-    return () => cleanupMap();
+    const timer = setTimeout(() => initializeMap(), 300);
+    return () => {
+      clearTimeout(timer);
+      cleanupMap();
+    };
   }, []);
   return <div className={`w-full ${className} bg-card rounded-lg border border-border overflow-hidden`}>
       <div ref={mapContainerRef} className="w-full h-full bg-card" style={{

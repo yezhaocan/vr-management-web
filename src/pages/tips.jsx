@@ -719,7 +719,7 @@ export default function TipsPage(props) {
   };
   return <MainLayout $w={$w}>
     <AuthGuard $w={$w}>
-        <div style={style} className="w-full h-full space-y-6 p-6">
+        <div style={style} className="w-full h-full space-y-6">
         {/* 头部操作区 */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1 w-full sm:w-auto flex items-center gap-4">

@@ -99,11 +99,7 @@ function BackgroundMusicUploader({
       });
       return;
     }
-    console.log('上传文件信息:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
+    
     setIsUploading(true);
     try {
       // 获取云开发实例
@@ -221,6 +217,11 @@ export function RouteEditor(props) {
     hasBackgroundMusic: false,
     cloudStorageId: '' // 修复：使用正确的字段名
   });
+  // 生成下一个航点的默认名称
+  const getNextWaypointName = (currentWaypoints = formData.waypoints) => {
+    return `航点${currentWaypoints.length + 1}`;
+  };
+
   const [newWaypoint, setNewWaypoint] = useState({
     name: '航点1',
     flightSpeed: 5,
@@ -233,6 +234,18 @@ export function RouteEditor(props) {
   const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(null);
   const [scenicCenter, setScenicCenter] = useState([39.9042, 116.4074]);
   const [clearConnectionsTrigger, setClearConnectionsTrigger] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [tempFileStorage, setTempFileStorage] = useState(new Map()); // 存储临时文件数据
+
+  // 初始化时设置正确的航点名称
+  useEffect(() => {
+    if (editingIndex === null) {
+      setNewWaypoint(prev => ({
+        ...prev,
+        name: getNextWaypointName()
+      }));
+    }
+  }, [formData.waypoints.length, editingIndex]);
   const {
     toast
   } = useToast();
@@ -290,11 +303,11 @@ export function RouteEditor(props) {
           hasBackgroundMusic: hasBackgroundMusic,
           cloudStorageId: route.cloudStorageId || ''
         });
+        // 更新新航点名称为下一个序号
         setNewWaypoint(prev => ({
           ...prev,
-          name: `航点${waypoints.length + 1}`
+          name: getNextWaypointName(waypoints)
         }));
-        console.log('初始化航点数据:', waypoints);
       }
     };
     initializeData();
@@ -353,13 +366,32 @@ export function RouteEditor(props) {
         return;
       }
 
+      // 检查航点名称是否重复
+      const trimmedName = newWaypoint.name.trim();
+      const isDuplicateName = formData.waypoints.some((waypoint, index) => {
+        // 如果是编辑模式，排除当前正在编辑的航点
+        if (editingIndex !== null && index === editingIndex) {
+          return false;
+        }
+        return waypoint.name.trim() === trimmedName;
+      });
+
+      if (isDuplicateName) {
+        toast({
+          title: '名称重复',
+          description: '航点名称不能重复，请使用其他名称',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       // 验证坐标精度
       const validatedLat = validateCoordinate(newWaypoint.lat, '纬度');
       const validatedLng = validateCoordinate(newWaypoint.lng, '经度');
 
       // 构造标准航点对象
       const waypointData = {
-        name: newWaypoint.name,
+        name: trimmedName, // 使用去除空格的名称
         flightSpeed: Number(newWaypoint.flightSpeed),
         hoverDuration: Number(newWaypoint.hoverDuration),
         altitude: Number(newWaypoint.altitude),
@@ -440,9 +472,10 @@ export function RouteEditor(props) {
       ...prev,
       waypoints: updatedWaypoints
     }));
+    // 重置新航点名称
     setNewWaypoint(prev => ({
       ...prev,
-      name: `航点${updatedWaypoints.length + 1}`
+      name: getNextWaypointName(updatedWaypoints)
     }));
   };
 
@@ -458,36 +491,61 @@ export function RouteEditor(props) {
 
   // 更新航点语音配置 - 修复：确保audioFileId和subtitleFileId正确保存
   const updateWaypointVoiceConfig = (index, field, value) => {
-    const updatedWaypoints = [...formData.waypoints];
-    updatedWaypoints[index] = {
-      ...updatedWaypoints[index],
-      voiceGuide: {
-        ...updatedWaypoints[index].voiceGuide,
-        [field]: value
+    
+    setFormData(prev => {
+      // 必须在回调函数内部基于 prev.waypoints 创建副本
+      // 否则连续调用时会基于旧的 formData.waypoints 进行修改
+      const updatedWaypoints = [...prev.waypoints];
+      updatedWaypoints[index] = {
+        ...updatedWaypoints[index],
+        voiceGuide: {
+          ...updatedWaypoints[index].voiceGuide,
+          [field]: value
+        }
+      };
+
+      return {
+        ...prev,
+        waypoints: updatedWaypoints
       }
-    };
-    setFormData(prev => ({
-      ...prev,
-      waypoints: updatedWaypoints
-    }));
-    console.log(`更新航点${index}的${field}:`, value);
+    });
   };
 
-  // 处理语音合成完成 - 修复：保存 audioFileId 和 subtitleFileId
-  const handleSpeechSynthesisComplete = (fileId, audioUrl, subtitleFileId) => {
+  // 处理语音合成完成 - 修复：存储临时文件数据，延迟上传
+  const handleSpeechSynthesisComplete = (tempAudioId, audioUrl, tempSubtitleId, blobData) => {
     if (selectedVoiceIndex !== null) {
-      // 修复：只保存云存储ID到audioFileId字段
-      updateWaypointVoiceConfig(selectedVoiceIndex, 'audioFileId', fileId);
+      // 存储临时文件数据
+      const newTempStorage = new Map(tempFileStorage);
       
-      // 如果有字幕文件ID，也一并保存
-      if (subtitleFileId) {
-        updateWaypointVoiceConfig(selectedVoiceIndex, 'subtitleFileId', subtitleFileId);
+      if (blobData.audioBlob) {
+        newTempStorage.set(tempAudioId, {
+          type: 'audio',
+          blob: blobData.audioBlob,
+          waypointName: blobData.waypointName,
+          waypointIndex: selectedVoiceIndex
+        });
       }
       
-      // 不保存临时链接到audioUrl字段
+      if (blobData.subtitleBlob) {
+        newTempStorage.set(tempSubtitleId, {
+          type: 'subtitle', 
+          blob: blobData.subtitleBlob,
+          waypointName: blobData.waypointName,
+          waypointIndex: selectedVoiceIndex
+        });
+      }
+      
+      setTempFileStorage(newTempStorage);
+      
+      // 更新航点配置为临时ID（保存时会替换为真实文件ID）
+      updateWaypointVoiceConfig(selectedVoiceIndex, 'audioFileId', tempAudioId);
+      if (tempSubtitleId) {
+        updateWaypointVoiceConfig(selectedVoiceIndex, 'subtitleFileId', tempSubtitleId);
+      }
+      
       toast({
-        title: '语音和字幕已保存',
-        description: `航点${selectedVoiceIndex + 1}的语音配置已更新`,
+        title: '语音和字幕已生成',
+        description: `航点${selectedVoiceIndex + 1}的文件将在保存航线时上传到云存储`,
         variant: 'default'
       });
     }
@@ -507,7 +565,6 @@ export function RouteEditor(props) {
 
     if (existingIndex !== -1) {
       // [场景A] 坐标匹配到已有航点 -> 进入/保持编辑模式
-      console.log('[RouteEditor] 坐标匹配成功，切换至编辑模式:', existingIndex);
       setEditingIndex(existingIndex);
       
       // 同步航点信息到表单
@@ -526,7 +583,6 @@ export function RouteEditor(props) {
     } else {
       // [场景B] 坐标未匹配 -> 保持/切换至新增模式
       // 注意：此函数不负责重置为新航点默认值（除非显式调用），主要用于状态判断
-      console.log('[RouteEditor] 坐标未匹配，保持新增模式');
       // 如果需要重置编辑状态
       // setEditingIndex(null); 
       return false; // 返回false表示是新坐标
@@ -544,7 +600,6 @@ export function RouteEditor(props) {
       // 如果直接传递了index，则直接使用index（优化性能）
       if (typeof location.index !== 'undefined') {
         const index = location.index;
-        console.log('[RouteEditor] 通过索引选中航点:', index);
         setEditingIndex(index);
         setNewWaypoint({
           name: formData.waypoints[index].name,
@@ -568,14 +623,13 @@ export function RouteEditor(props) {
         // [场景B] 点击了地图空白区域（非现有航点位置）
         if (editingIndex !== null) {
           // [需求实现] 当前处于编辑模式 -> 自动退出编辑模式 (切换至新增模式)
-          console.log('[RouteEditor] 编辑模式下点击空白处 -> 退出编辑，切换至新增模式');
           
           // 1. 清除当前选中的编辑对象
           setEditingIndex(null);
           
           // 2. 重置表单内容 (清空输入、恢复默认值、清除验证状态)
           setNewWaypoint({
-            name: `航点${formData.waypoints.length + 1}`, // 自动生成默认名称
+            name: getNextWaypointName(), // 自动生成默认名称
             flightSpeed: 5,
             hoverDuration: 0,
             altitude: 100,
@@ -597,7 +651,6 @@ export function RouteEditor(props) {
           toast({ title: '新增模式', description: '已退出编辑，切换至新增航点模式', duration: 2000 });
         } else {
           // [场景C] 当前处于新增模式 -> 仅更新新航点坐标
-          console.log('[RouteEditor] 新增模式下更新坐标');
           
           // 确保处于新增模式（重置底部按钮状态）
           setEditingIndex(null);
@@ -637,7 +690,7 @@ export function RouteEditor(props) {
 
         // 4. 重置表单为新航点默认值
         setNewWaypoint({
-          name: `航点${updatedWaypoints.length + 1}`,
+          name: getNextWaypointName(updatedWaypoints),
           flightSpeed: 5,
           hoverDuration: 0,
           altitude: 100,
@@ -672,7 +725,7 @@ export function RouteEditor(props) {
     } else {
       // 新增模式下的重置逻辑
       setNewWaypoint({
-        name: `航点${formData.waypoints.length + 1}`,
+        name: getNextWaypointName(),
         flightSpeed: 5,
         hoverDuration: 0,
         altitude: 100,
@@ -697,7 +750,43 @@ export function RouteEditor(props) {
     }
   };
 
-  // 保存航线 - 确保所有数据正确保存到数据库
+  // 批量上传临时文件到云存储
+  const uploadTempFiles = async () => {
+    const tempFiles = Array.from(tempFileStorage.entries());
+    if (tempFiles.length === 0) return {};
+
+    const uploadResults = {};
+    const tcb = await $w.cloud.getCloudInstance();
+
+    for (const [tempId, fileData] of tempFiles) {
+      try {
+        const { type, blob, waypointName } = fileData;
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        
+        let cloudPath;
+        if (type === 'audio') {
+          cloudPath = `audio/${waypointName}_${timestamp}_${randomStr}.webm`;
+        } else if (type === 'subtitle') {
+          cloudPath = `subtitle/${waypointName}_${timestamp}_${randomStr}.srt`;
+        }
+
+        const uploadResult = await tcb.uploadFile({
+          cloudPath: cloudPath,
+          filePath: blob
+        });
+
+        uploadResults[tempId] = uploadResult.fileID;
+      } catch (error) {
+        console.error(`上传失败: ${tempId}`, error);
+        throw new Error(`上传${fileData.type}文件失败: ${error.message}`);
+      }
+    }
+
+    return uploadResults;
+  };
+
+  // 保存航线 - 增加批量上传逻辑
   const handleSave = async () => {
     try {
       if (!formData.name.trim()) {
@@ -717,34 +806,56 @@ export function RouteEditor(props) {
         return;
       }
 
-      // 验证所有航点的坐标精度
+      setIsSaving(true);
+
+      // 1. 批量上传临时文件
+      let uploadResults = {};
+      if (tempFileStorage.size > 0) {
+        toast({
+          title: '上传中',
+          description: '正在上传语音和字幕文件到云存储...',
+          variant: 'default'
+        });
+        uploadResults = await uploadTempFiles();
+      }
+
+      // 2. 验证所有航点的坐标精度并替换临时ID为真实文件ID
       const validatedWaypoints = formData.waypoints.map((waypoint, index) => {
         const validatedLat = validateCoordinate(waypoint.lat, '纬度');
         const validatedLng = validateCoordinate(waypoint.lng, '经度');
+        
+        // 替换临时ID为真实文件ID
+        let audioFileId = waypoint.voiceGuide.audioFileId;
+        let subtitleFileId = waypoint.voiceGuide.subtitleFileId;
+        
+        if (audioFileId && uploadResults[audioFileId]) {
+          audioFileId = uploadResults[audioFileId];
+        }
+        if (subtitleFileId && uploadResults[subtitleFileId]) {
+          subtitleFileId = uploadResults[subtitleFileId];
+        }
+        
         return {
           name: waypoint.name,
           flightSpeed: waypoint.flightSpeed,
           hoverDuration: waypoint.hoverDuration,
           altitude: waypoint.altitude,
           lat: validatedLat,
-          // 确保8位小数精度
           lng: validatedLng,
-          // 确保8位小数精度
           voiceGuide: {
             enabled: waypoint.voiceGuide.enabled,
             text: waypoint.voiceGuide.text,
             character: waypoint.voiceGuide.character,
             voice: waypoint.voiceGuide.voice,
             triggerType: waypoint.voiceGuide.triggerType,
-            audioFileId: waypoint.voiceGuide.audioFileId,
-            audioUrl: '',
-            // 修复：不保存临时链接，只保存云存储ID
-            subtitleFileId: waypoint.voiceGuide.subtitleFileId // 新增：保存字幕文件ID
+            audioFileId: audioFileId,
+            audioUrl: '', // 不保存临时链接
+            subtitleFileId: subtitleFileId
           }
         };
       });
 
-      // 修复：准备保存数据，确保包含所有航点语音配置和背景音乐云存储ID
+      // 3. 准备保存数据
       const saveData = {
         name: formData.name,
         description: formData.description,
@@ -755,13 +866,8 @@ export function RouteEditor(props) {
         hasBackgroundMusic: formData.hasBackgroundMusic,
         cloudStorageId: formData.cloudStorageId
       };
-      console.log('保存数据:', saveData);
-      console.log('航点坐标精度验证:', validatedWaypoints.map((wp, i) => ({
-        index: i,
-        name: wp.name,
-        lat: wp.lat.toFixed(8),
-        lng: wp.lng.toFixed(8)
-      })));
+
+      // 4. 保存到数据库
       if (route) {
         // 更新现有航线
         const result = await $w.cloud.callDataSource({
@@ -778,10 +884,9 @@ export function RouteEditor(props) {
             }
           }
         });
-        console.log('更新航线结果:', result);
         toast({
           title: '更新成功',
-          description: '航线、语音文件ID、字幕文件ID和背景音乐云存储ID已更新到数据库，坐标精度: 8位小数',
+          description: '航线和所有文件已成功保存到云存储和数据库',
           variant: 'default'
         });
       } else {
@@ -793,13 +898,16 @@ export function RouteEditor(props) {
             data: saveData
           }
         });
-        console.log('创建航线结果:', result);
         toast({
           title: '创建成功',
-          description: '航线、语音文件ID、字幕文件ID和背景音乐云存储ID已保存到数据库，坐标精度: 8位小数',
+          description: '航线和所有文件已成功保存到云存储和数据库',
           variant: 'default'
         });
       }
+
+      // 5. 清理临时文件存储
+      setTempFileStorage(new Map());
+      
       onSuccess();
     } catch (error) {
       console.error('保存航线失败:', error);
@@ -808,6 +916,8 @@ export function RouteEditor(props) {
         description: error.message || '请稍后重试',
         variant: 'destructive'
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -852,7 +962,7 @@ export function RouteEditor(props) {
       <div className="flex flex-col h-full min-h-0">
         <h4 className="text-foreground text-sm font-semibold mb-3">语音配置详情</h4>
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-          <VoiceConfigPanel waypoint={selectedVoiceIndex !== null ? formData.waypoints[selectedVoiceIndex] : null} onVoiceConfigChange={(field, value) => updateWaypointVoiceConfig(selectedVoiceIndex, field, value)} onSynthesisComplete={handleSpeechSynthesisComplete} $w={$w} />
+          <VoiceConfigPanel waypoint={selectedVoiceIndex !== null ? formData.waypoints[selectedVoiceIndex] : null} onVoiceConfigChange={(field, value) => updateWaypointVoiceConfig(selectedVoiceIndex, field, value)} onSynthesisComplete={handleSpeechSynthesisComplete} $w={$w} tempFileStorage={tempFileStorage} />
         </div>
       </div>
     </div>;
@@ -913,11 +1023,20 @@ export function RouteEditor(props) {
           {/* 保存按钮区域 - 固定在底部 */}
           <div className="flex-shrink-0 border-t border-border bg-card p-4">
             <div className="flex justify-end space-x-3">
-              <Button variant="outline" onClick={onClose} className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground">
+              <Button variant="outline" onClick={onClose} className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground" disabled={isSaving}>
                 <X className="w-4 h-4 mr-2" /> 取消
               </Button>
-              <Button onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
-                <Save className="w-4 h-4 mr-2" /> 保存航线
+              <Button onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></div>
+                    保存中...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" /> 保存航线
+                  </>
+                )}
               </Button>
             </div>
           </div>
