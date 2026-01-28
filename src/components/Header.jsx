@@ -2,7 +2,7 @@ import React from 'react';
 import { UserMenu } from '@/components/UserMenu';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui';
-import { MapPin, Bell, HelpCircle, LayoutGrid } from 'lucide-react';
+import { Bell, HelpCircle, LayoutGrid } from 'lucide-react';
 
 export function Header({ $w, title, subtitle }) {
   return (
@@ -14,9 +14,11 @@ export function Header({ $w, title, subtitle }) {
           <div className="flex items-center space-x-4">
             {/* 品牌标识 */}
             <div className="flex items-center space-x-2 mr-4 border-r border-border/50 pr-4">
-               <div className="p-1.5 bg-primary rounded-lg">
-                  <MapPin className="h-5 w-5 text-primary-foreground" />
-               </div>
+               <img 
+                 src="https://636c-cloud1-1grrg77xa07045b0-1362525855.cos.ap-shanghai.myqcloud.com/vr-logo.png?q-sign-algorithm=sha1&q-ak=AKIDIa8WpUzOYYD_uH2dewDnAgKZtae2_38jpdeQe6B8iZZh0lcZFn6CRU4L_0gCS5Lv&q-sign-time=1769587841;1769591441&q-key-time=1769587841;1769591441&q-header-list=host&q-url-param-list=&q-signature=7d8427b8fab12cec77ba30adc519b505922e2f2e&x-cos-security-token=rorEQMA0Vl9s5hs4mcYSyJljb7AJ5FUa8a8a3c0fe28418b6b9d5a3b140a55802IDqf_zbL9NOHOApYfgGtCH_S1ScGPIAW8Qp5uTLf4SKcY3iP_5YKoZNq66GQOdtpIkcdKjdGXpZMNfyGSgD5Y-labiyqINnTrtWaAPL8mnr95d4Kve7qi0uSqLMuSVrJpOAL6HygavsChfqUlsaCdA4kHOJlxNVScqpZxH7PsPdJ17KgLNqrGKa1wTbAnP5kh9neQjiW0yi7gB9ivabotsDXj5RtT4lypqpxIVlIvk1W2PKARMWPd5lQ4i4ND8k2LMXtKBRtT2DKlrqlDp-xXA" 
+                 alt="VR观光管理系统" 
+                 className="h-8 w-auto object-contain" 
+               />
                <span className="text-lg font-bold text-foreground hidden md:block">VR观光管理系统</span>
             </div>
 
