@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Header } from '@/components/Header';
 import { ThemeProvider } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
@@ -125,6 +125,11 @@ export function MainLayout({
         const item = menuItems.find(item => item.id === activeMenuId);
         return item?.label || '管理控制台';
     }, [activeMenuId]);
+
+    // 同步浏览器标题
+    useEffect(() => {
+        document.title = `${currentTitle} - VR观光运营平台`;
+    }, [currentTitle]);
 
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
