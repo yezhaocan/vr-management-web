@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Tabs, TabsContent, TabsList, TabsTrigger, useToast, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, RadioGroup, RadioGroupItem, Card, CardContent, CardHeader, CardTitle, CardDescription, Separator } from '@/components/ui';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Save, Image, Video as VideoIcon, RotateCcw, RotateCw, Volume2, VolumeX } from 'lucide-react';
@@ -11,39 +9,33 @@ import { VideoFileUpload, VideoUrlInput } from '@/components/VideoFileUpload';
 import { BroadcastManager } from '@/components/BroadcastManager';
 import { BackgroundMusicUploader } from '@/components/BackgroundMusicUploader';
 
-const formSchema = z.object({
-  name: z.string().min(1, "请输入录像名称"),
-  description: z.string().optional(),
-  thumbnailFileId: z.string().optional(),
-  videoFileId: z.string().optional(),
-  videoUrl: z.string().optional(),
-  startTime: z.date().optional(),
-  endTime: z.date().optional(),
-  duration: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, "时长格式不正确").optional(),
-  broadcasts: z.array(z.any()).optional(),
-  backgroundMusicFileId: z.string().optional(),
-  backgroundImageId: z.string().optional(),
-  status: z.string().default('active'),
-  isUpside: z.boolean().default(true),
-  videoAngle: z.coerce.number().default(0),
-  isPlayOriginalSound: z.boolean().default(true)
-}).refine(data => {
-  if (!data.videoFileId && !data.videoUrl) {
-    return false;
-  }
-  return true;
-}, {
-  message: "请上传录像文件或输入视频地址",
-  path: ["videoFileId"]
-}).refine(data => {
-    if (data.startTime && data.endTime && data.startTime > data.endTime) {
-        return false;
+// 表单验证规则
+const validationRules = {
+  name: {
+    required: "请输入录像名称",
+    minLength: {
+      value: 1,
+      message: "录像名称不能为空"
     }
-    return true;
-}, {
-    message: "开始时间不能晚于结束时间",
-    path: ["startTime"]
-});
+  },
+  duration: {
+    pattern: {
+      value: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/,
+      message: "时长格式不正确"
+    }
+  },
+  videoAngle: {
+    valueAsNumber: true,
+    min: {
+      value: -360,
+      message: "角度不能小于-360"
+    },
+    max: {
+      value: 360,
+      message: "角度不能大于360"
+    }
+  }
+};
 
 const defaultFormValues = {
   name: '',
@@ -76,8 +68,8 @@ export function VideoUploadForm({
   } = useToast();
   
   const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: defaultFormValues
+    defaultValues: defaultFormValues,
+    mode: 'onChange'
   });
 
   const [loading, setLoading] = useState(false);
@@ -87,7 +79,38 @@ export function VideoUploadForm({
   const [videoUploadType, setVideoUploadType] = useState('upload');
   const [pendingBackgroundImage, setPendingBackgroundImage] = useState(null);
 
-  // 重置所有状态
+  // 自定义验证函数
+  const validateFormData = (data) => {
+    const errors = {};
+    
+    // 验证录像名称
+    if (!data.name || data.name.trim().length === 0) {
+      errors.name = "请输入录像名称";
+    }
+    
+    // 验证视频文件或URL（至少需要一个）
+    if (!data.videoFileId && !data.videoUrl) {
+      errors.videoFileId = "请上传录像文件或输入视频地址";
+    }
+    
+    // 验证开始时间和结束时间
+    if (data.startTime && data.endTime && data.startTime > data.endTime) {
+      errors.startTime = "开始时间不能晚于结束时间";
+    }
+    
+    // 验证时长格式
+    if (data.duration && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/.test(data.duration)) {
+      errors.duration = "时长格式不正确";
+    }
+    
+    // 验证视频角度
+    const angle = parseFloat(data.videoAngle);
+    if (!isNaN(angle) && (angle < -360 || angle > 360)) {
+      errors.videoAngle = "角度范围应在-360°到360°之间";
+    }
+    
+    return errors;
+  };
   const resetAllStates = () => {
     form.reset(defaultFormValues);
     setActiveTab('basic');
@@ -233,6 +256,23 @@ export function VideoUploadForm({
 
   const handleInputChange = (field, value) => {
     form.setValue(field, value);
+    
+    // 清除相关字段的验证错误
+    if (field === 'videoUrl' && value) {
+      form.clearErrors('videoFileId');
+    }
+    if (field === 'name' && value) {
+      form.clearErrors('name');
+    }
+    if (field === 'startTime' || field === 'endTime') {
+      form.clearErrors('startTime');
+    }
+    if (field === 'videoAngle') {
+      form.clearErrors('videoAngle');
+    }
+    if (field === 'duration') {
+      form.clearErrors('duration');
+    }
   };
 
   const handleFileUpload = async (file, type) => {
@@ -255,6 +295,8 @@ export function VideoUploadForm({
         form.setValue('videoFileId', fileID);
         form.setValue('videoUrl', '');
         setVideoUploadType('upload');
+        // 清除视频文件的验证错误
+        form.clearErrors('videoFileId');
       }
       toast({
         title: '上传成功',
@@ -290,6 +332,17 @@ export function VideoUploadForm({
   };
 
   const onSubmit = async (values) => {
+    // 执行自定义验证
+    const validationErrors = validateFormData(values);
+    
+    // 如果有验证错误，设置表单错误并返回
+    if (Object.keys(validationErrors).length > 0) {
+      Object.keys(validationErrors).forEach(field => {
+        form.setError(field, { message: validationErrors[field] });
+      });
+      return;
+    }
+    
     setLoading(true);
     try {
       // ----------------------------------------------------------------
@@ -640,6 +693,7 @@ export function VideoUploadForm({
                         <FormField
                           control={form.control}
                           name="videoAngle"
+                          rules={validationRules.videoAngle}
                           render={({ field }) => (
                             <FormItem className="space-y-3">
                               <FormLabel className="font-medium flex items-center">
