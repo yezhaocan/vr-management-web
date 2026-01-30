@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Input, Label, Textarea, Card, CardContent, Badge, useToast, Form, FormField, FormItem, FormLabel, FormControl, FormMessage, Button } from '@/components/ui';
 import { Upload, Megaphone, Clock, Plus, Trash2, CheckCircle, Play, Download, Volume2, FileText, Wand2, FileDown, PlayCircle } from 'lucide-react';
 import { generateAlignedSrt } from '@/lib/subtitle-alignment';
 
-const broadcastSchema = z.object({
-  triggerTime: z.coerce.number().min(0, "触发时间必须大于等于0"),
-  text: z.string().min(1, "请输入文字稿"),
-  audioFileId: z.string().min(1, "请上传音频文件"),
-  audioUrl: z.string().optional(),
-  subtitleFileId: z.string().optional(),
-  subtitleUrl: z.string().optional(),
-});
+// 表单验证规则
+const validationRules = {
+  triggerTime: {
+    required: "请输入触发时间",
+    min: {
+      value: 0,
+      message: "触发时间必须大于等于0"
+    },
+    valueAsNumber: true
+  },
+  text: {
+    required: "请输入播报内容",
+    minLength: {
+      value: 1,
+      message: "播报内容不能为空"
+    }
+  },
+  audioFileId: {
+    required: "请上传音频文件"
+  }
+};
 
 export function BroadcastManager({
   broadcasts,
@@ -36,7 +47,6 @@ export function BroadcastManager({
   } = useToast();
 
   const form = useForm({
-    resolver: zodResolver(broadcastSchema),
     defaultValues: {
       triggerTime: '',
       text: '',
@@ -44,11 +54,39 @@ export function BroadcastManager({
       audioUrl: '',
       subtitleFileId: '',
       subtitleUrl: ''
-    }
+    },
+    mode: 'onChange'
   });
 
   // 添加播报
   const onAddBroadcast = (data) => {
+    // 手动验证
+    const errors = {};
+    
+    // 验证触发时间
+    const triggerTime = parseFloat(data.triggerTime);
+    if (!data.triggerTime || isNaN(triggerTime) || triggerTime < 0) {
+      errors.triggerTime = "触发时间必须大于等于0";
+    }
+    
+    // 验证文字稿
+    if (!data.text || data.text.trim().length === 0) {
+      errors.text = "请输入播报内容";
+    }
+    
+    // 验证音频文件
+    if (!data.audioFileId || data.audioFileId.trim().length === 0) {
+      errors.audioFileId = "请上传音频文件";
+    }
+    
+    // 如果有错误，设置表单错误并返回
+    if (Object.keys(errors).length > 0) {
+      Object.keys(errors).forEach(field => {
+        form.setError(field, { message: errors[field] });
+      });
+      return;
+    }
+    
     // 构建播报对象
     const broadcast = {
       id: Date.now(),
@@ -149,6 +187,9 @@ export function BroadcastManager({
       form.setValue('audioUrl', audioUrl);
       form.setValue('subtitleFileId', tempSubtitleId);
       form.setValue('subtitleUrl', srtUrl);
+
+      // 清除音频文件的验证错误
+      form.clearErrors('audioFileId');
 
       toast({
         title: '智能生成成功',
@@ -288,6 +329,9 @@ export function BroadcastManager({
       form.setValue('audioFileId', tempId);
       form.setValue('audioUrl', tempUrl);
       
+      // 清除音频文件的验证错误
+      form.clearErrors('audioFileId');
+      
       setSynthesizedAudio(null);
       setAudioBlob(null);
       setShowDownloadButton(false);
@@ -426,6 +470,7 @@ export function BroadcastManager({
                   <FormField
                     control={form.control}
                     name="triggerTime"
+                    rules={validationRules.triggerTime}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm">触发时间（秒）</FormLabel>
@@ -441,6 +486,7 @@ export function BroadcastManager({
                   <FormField
                     control={form.control}
                     name="text"
+                    rules={validationRules.text}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm">播报内容</FormLabel>
@@ -507,6 +553,7 @@ export function BroadcastManager({
                   <FormField
                     control={form.control}
                     name="audioFileId"
+                    rules={validationRules.audioFileId}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm">音频文件</FormLabel>

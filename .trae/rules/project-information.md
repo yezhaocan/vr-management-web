@@ -1,29 +1,28 @@
-项目结构说明
+项目结构及编码规则
 
-**注意**：
-1. 用户的工作空间为根目录（/），以下文件夹与文件介绍的全部是相对于根目录的放置情况；
-2. 以下的结构仅用于说明，实际项目结构可能会有所不同，但创建新文件夹与文件时请严格遵循这个目录结构；
-3. 修改文件时，关注组件、文件之间的引用关系，避免出现空引用的情况。
-4. 创建新文件不能创建TypeScript文件（.ts或.tsx），只能创建JavaScript文件（.js或.jsx）。
-5. 可以在 `components` 目录下生成自定义组件，然后在 pages 或其他 components 中使用，例如 `compontns/List.jsx`（使用 `import { List } from  "@/components/List.jsx"` 的方式引用，而非 `import { List } from "@/components"`）。
-6. **不要**操作`components/ui`目录，这是预置**只读**shadcn/ui 组件。
+一、核心约束
 
-├── .ai/                 # 生成中间文件的目录
-├── .datasources/        # 数据源 Root
-│   └── ${name}/             # 数据源名称
-│       ├── schema.json         # 数据模型定义
-│       └── data.json           # 示例数据
-├── .functions/          # 云函数 Root
-│   └── ${name}/             # 单个云函数目录
-├── src/                 # 前端源代码目录
-│   ├── components/          # 组件 Root
-│   │   ├── ui/                 # shadcn/ui 组件库目录，只读
-│   │   └── ${componentName}.jsx          # 自定义组件，可读写
-│   ├── lib/
-│   │   └── utils.js        # 工具方法，可读写
-│   ├── pages/               # 各个页面 Root
-│   │   └── ${pageId}.jsx            # 应用页面，可读写
-│   ├── App.jsx        # 应用入口，使用 react-router-dom 渲染 pages/*.jsx 页面，不可读写
-│   └── index.css            # 全局样式，默认包含 `:root`、`.dark` 时 css 变量定义，可读写
-├── lowcode.json         # 只读，全局配置，main 表示默认页面Id
-└── tailwind.config.ts   # Tailwind 配置，可读写
+1. 工作空间为根目录（/），创建新文件夹/文件需严格遵循指定目录结构
+2. 修改文件时需关注组件、文件间引用关系，避免空引用/无效引用。
+3. 仅允许创建JavaScript文件（.js/.jsx），禁止创建TypeScript文件（.ts/.tsx）。
+4. 编码仅可使用指定npm包，禁止使用清单外第三方包，优先用原生JS/框架内置API：
+
+react、react-dom、react-router-dom、recharts、react-hook-form、date-fns、lucide-react、clsx、tailwind-merge、mobx、@cloudbase/js-sdk、@cloudbase/weda-cloud-sdk、@cloudbase/weda-client、@zxing/library、@cloudbase/lowcode-render
+
+5. 自定义组件需放在src/components/，引用时用完整路径（例：import { List } from "@/components/List.jsx"），禁止简写。
+6. 禁止操作src/components/ui/目录（预置只读shadcn/ui组件库）。
+
+二、核心目录及文件说明（相对根目录）
+- .ai/：生成中间文件的专用目录
+- .datasources/${name}/：数据源目
+  - schema.json：数据模型定义
+  - data.json：示例数据
+- .functions/${name}/：单个云函数存放目录
+- src/：前端源代码根目录
+  - components/：组件根目录（自定义组件可读写，ui/目录只读）
+  - lib/utils.js：可读写工具方法文件
+  - pages/${pageId}.jsx：可读写应用页面
+  - App.jsx：不可读写应用入口（用react-router-dom渲染页面）
+  - index.css：可读写全局样式（含默认css变量定义）
+  - lowcode.json：只读全局配置，main字段指定默认页面Id
+  - tailwind.config.ts：可读写Tailwind配置文件
