@@ -1,5 +1,4 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
 import { cn } from "@/lib/utils"
 
 // Button 样式变体 - 基于 Tailwind CSS
@@ -136,9 +135,7 @@ export const combineButtonStyles = (variant = 'primary', size = 'md', type = 'so
 };
 
 const Button = React.forwardRef(
-  ({ className, variant = "primary", size = "default", asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-
+  ({ className, variant = "primary", size = "default", asChild = false, children, ...props }, ref) => {
     // Map 'size' prop to button-variants.js sizes
     // Original: default, sm, lg, icon
     // button-variants.js: sm, md, lg, xl
@@ -230,12 +227,24 @@ const Button = React.forwardRef(
     // We should probably merge the essential structural classes from original button to ensure "core functionality" and consistency.
     const baseStructure = "gap-2 whitespace-nowrap disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
 
+    // Handle asChild prop - render children directly if asChild is true
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(children, {
+        className: cn(baseStructure, buttonClasses, iconClasses, className, children.props.className),
+        ref,
+        ...props,
+        ...children.props
+      })
+    }
+
     return (
-      <Comp
+      <button
         className={cn(baseStructure, buttonClasses, iconClasses, className)}
         ref={ref}
         {...props}
-      />
+      >
+        {children}
+      </button>
     )
   }
 )
