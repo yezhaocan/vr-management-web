@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Header } from '@/components/Header';
 import { ThemeProvider } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
@@ -116,7 +116,12 @@ export function MainLayout({
     // 获取当前激活的菜单 ID
     const activeMenuId = useMemo(() => {
         const currentPath = location.pathname;
-        const item = menuItems.find(item => item.path === currentPath);
+        // 移除末尾的斜杠（如果存在且不是根路径）以匹配菜单配置
+        const normalizedPath = currentPath.length > 1 && currentPath.endsWith('/') 
+            ? currentPath.slice(0, -1) 
+            : currentPath;
+            
+        const item = menuItems.find(item => item.path === normalizedPath);
         return item?.id || '';
     }, [location.pathname]);
 
@@ -125,6 +130,11 @@ export function MainLayout({
         const item = menuItems.find(item => item.id === activeMenuId);
         return item?.label || '管理控制台';
     }, [activeMenuId]);
+
+    // 同步浏览器标题
+    useEffect(() => {
+        document.title = `${currentTitle} - VR观光运营平台`;
+    }, [currentTitle]);
 
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">

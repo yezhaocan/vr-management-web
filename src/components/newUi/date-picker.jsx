@@ -106,7 +106,6 @@ export function DatePicker({
                         type="time"
                         id="time-picker"
                         step="1"
-                        defaultValue="10:30:00"
                         value={timeValue}
                         onChange={handleTimeChange}
                         className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none flex-1"

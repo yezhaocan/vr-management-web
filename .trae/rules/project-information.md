@@ -5,6 +5,8 @@
 2. 以下的结构仅用于说明，实际项目结构可能会有所不同，但创建新文件夹与文件时请严格遵循这个目录结构；
 3. 修改文件时，关注组件、文件之间的引用关系，避免出现空引用的情况。
 4. 创建新文件不能创建TypeScript文件（.ts或.tsx），只能创建JavaScript文件（.js或.jsx）。
+5. 可以在 `components` 目录下生成自定义组件，然后在 pages 或其他 components 中使用，例如 `compontns/List.jsx`（使用 `import { List } from  "@/components/List.jsx"` 的方式引用，而非 `import { List } from "@/components"`）。
+6. **不要**操作`components/ui`目录，这是预置**只读**shadcn/ui 组件。
 
 ├── .ai/                 # 生成中间文件的目录
 ├── .datasources/        # 数据源 Root
@@ -25,5 +27,3 @@
 │   └── index.css            # 全局样式，默认包含 `:root`、`.dark` 时 css 变量定义，可读写
 ├── lowcode.json         # 只读，全局配置，main 表示默认页面Id
 └── tailwind.config.ts   # Tailwind 配置，可读写
-
-可以在 `components` 目录下生成自定义组件，然后在 pages 或其他 components 中使用，例如 `compontns/List.jsx`（使用 `import { List } from  "@/components/List.jsx"` 的方式引用，而非 `import { List } from "@/components"`）。**不要**操作`components/ui`目录，这是预置**只读**shadcn/ui 组件。
