@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Input, Label, Textarea, Card, CardContent, Badge, useToast, Form, FormField, FormItem, FormLabel, FormControl, FormMessage, Button } from '@/components/ui';
-import { Upload, Megaphone, Clock, Plus, Trash2, CheckCircle, Play, Download, Volume2, FileText, Wand2, FileDown, PlayCircle } from 'lucide-react';
+import { Upload, Megaphone, Clock, Plus, Trash2, CheckCircle, Play, Download, Volume2, FileText, Wand2, FileDown, PlayCircle, ArrowRight } from 'lucide-react';
 import { generateAlignedSrt } from '@/lib/subtitle-alignment';
 
 // 表单验证规则
@@ -440,32 +440,28 @@ export function BroadcastManager({
 
   return (
     <div className="h-full flex flex-col">
-      {/* 简化标题 */}
-      <div className="flex items-center justify-between mb-6">
+      {/* 标题区域 */}
+      <div className="flex items-center mb-6">
         <h3 className="text-xl font-semibold text-foreground flex items-center">
           <Megaphone className="h-5 w-5 text-orange-600 dark:text-orange-400 mr-2" />
           播报管理
         </h3>
-        <Button 
-          type="button" 
-          onClick={form.handleSubmit(onAddBroadcast)} 
-          variant="default"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          添加播报
-        </Button>
       </div>
 
-      {/* 左右分栏布局 */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* 左侧：配置面板 (2/5) */}
-        <div className="lg:col-span-2">
-          <Card className="h-full">
-            <CardContent className="p-4">
-              <h4 className="font-medium mb-4">配置播报</h4>
-              
+      {/* 穿梭框布局 - 5-2-5 网格 */}
+      <div className="flex-1 grid grid-cols-12 gap-4 items-start">
+        {/* 左侧：配置区域 (5/12) */}
+        <div className="col-span-5">
+          <Card className="h-full border-2 border-border">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="font-semibold text-lg text-foreground">
+                  配置播报
+                </h4>
+              </div>
+
               <Form {...form}>
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {/* 触发时间 */}
                   <FormField
                     control={form.control}
@@ -473,9 +469,17 @@ export function BroadcastManager({
                     rules={validationRules.triggerTime}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm">触发时间（秒）</FormLabel>
+                        <FormLabel className="text-sm font-medium">
+                          触发时间（秒）
+                        </FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="10" min="0" {...field} />
+                          <Input
+                            type="number"
+                            placeholder="10"
+                            min="0"
+                            {...field}
+                            className="border-2"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -489,9 +493,15 @@ export function BroadcastManager({
                     rules={validationRules.text}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm">播报内容</FormLabel>
+                        <FormLabel className="text-sm font-medium">
+                          播报内容
+                        </FormLabel>
                         <FormControl>
-                          <Textarea placeholder="输入播报文字" className="h-20 resize-none" {...field} />
+                          <Textarea
+                            placeholder="输入播报文字"
+                            className="h-24 resize-none border-2"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -499,12 +509,12 @@ export function BroadcastManager({
                   />
 
                   {/* 智能生成 */}
-                  <Button 
-                    type="button" 
-                    onClick={handleSmartGenerate} 
-                    disabled={isGenerating} 
+                  <Button
+                    type="button"
+                    onClick={handleSmartGenerate}
+                    disabled={isGenerating}
                     variant="default"
-                    className="w-full"
+                    className="w-full font-medium bg-orange-500 hover:bg-orange-600 text-white"
                   >
                     {isGenerating ? (
                       <>
@@ -522,27 +532,30 @@ export function BroadcastManager({
                   {/* 生成后操作 */}
                   {showDownloadButton && (
                     <div className="grid grid-cols-3 gap-2">
-                      <Button 
-                        type="button" 
-                        onClick={handlePreviewAudio} 
+                      <Button
+                        type="button"
+                        onClick={handlePreviewAudio}
                         variant="outline"
                         size="sm"
+                        className="border-2 border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
                       >
                         <PlayCircle className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        type="button" 
-                        onClick={handleDownloadAudio} 
+                      <Button
+                        type="button"
+                        onClick={handleDownloadAudio}
                         variant="outline"
                         size="sm"
+                        className="border-2 border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        type="button" 
-                        onClick={handleDownloadSrt} 
+                      <Button
+                        type="button"
+                        onClick={handleDownloadSrt}
                         variant="outline"
                         size="sm"
+                        className="border-2 border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
                       >
                         <FileDown className="h-4 w-4" />
                       </Button>
@@ -556,36 +569,38 @@ export function BroadcastManager({
                     rules={validationRules.audioFileId}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm">音频文件</FormLabel>
+                        <FormLabel className="text-sm font-medium">
+                          音频文件
+                        </FormLabel>
                         {!audioFileId ? (
                           <div className="relative">
-                            <input 
-                              type="file" 
-                              accept="audio/*,.webm,.mp3,.wav,.ogg,.m4a,.aac,.flac,.mpeg" 
-                              onChange={handleAudioUpload} 
-                              className="hidden" 
-                              id="audio-file-upload" 
-                              disabled={uploadingAudio} 
+                            <input
+                              type="file"
+                              accept="audio/*,.webm,.mp3,.wav,.ogg,.m4a,.aac,.flac,.mpeg"
+                              onChange={handleAudioUpload}
+                              className="hidden"
+                              id="audio-file-upload"
+                              disabled={uploadingAudio}
                             />
-                            <label 
-                              htmlFor="audio-file-upload" 
-                              className="flex items-center justify-center w-full h-12 border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors"
+                            <label
+                              htmlFor="audio-file-upload"
+                              className="flex items-center justify-center w-full h-14 border-2 border-dashed border-muted-foreground/40 rounded-lg cursor-pointer hover:border-muted-foreground/60 transition-all"
                             >
-                              <Upload className="w-4 h-4 mr-2 text-muted-foreground" />
-                              <span className="text-sm text-muted-foreground">
+                              <Upload className="w-5 h-5 mr-2 text-muted-foreground" />
+                              <span className="text-sm font-medium text-muted-foreground">
                                 {uploadingAudio ? '处理中...' : '选择音频文件'}
                               </span>
                             </label>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                          <div className="flex items-center justify-between p-3 bg-muted rounded-lg border-2 border-green-600">
                             <div className="flex items-center">
-                              <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                              <span className="text-sm">音频已准备</span>
+                              <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+                              <span className="text-sm font-medium">音频已准备</span>
                             </div>
-                            <Button 
-                              type="button" 
-                              onClick={handleRemoveAudio} 
+                            <Button
+                              type="button"
+                              onClick={handleRemoveAudio}
                               variant="ghost"
                               size="sm"
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -604,20 +619,20 @@ export function BroadcastManager({
 
                   {/* 字幕上传（可选） */}
                   <div>
-                    <Label className="text-sm text-muted-foreground">字幕文件（可选）</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">字幕文件（可选）</Label>
                     {!subtitleFileId ? (
                       <div className="relative mt-2">
-                        <input 
-                          type="file" 
-                          accept=".srt,.vtt,.ass,.ssa,.txt,.sub" 
-                          onChange={handleSubtitleUpload} 
-                          className="hidden" 
-                          id="subtitle-file-upload" 
-                          disabled={uploadingSubtitle} 
+                        <input
+                          type="file"
+                          accept=".srt,.vtt,.ass,.ssa,.txt,.sub"
+                          onChange={handleSubtitleUpload}
+                          className="hidden"
+                          id="subtitle-file-upload"
+                          disabled={uploadingSubtitle}
                         />
-                        <label 
-                          htmlFor="subtitle-file-upload" 
-                          className="flex items-center justify-center w-full h-10 border border-muted-foreground/25 rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors"
+                        <label
+                          htmlFor="subtitle-file-upload"
+                          className="flex items-center justify-center w-full h-12 border-2 border-muted-foreground/40 rounded-lg cursor-pointer hover:border-muted-foreground/60 transition-all"
                         >
                           <Upload className="w-4 h-4 mr-2 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">
@@ -626,14 +641,14 @@ export function BroadcastManager({
                         </label>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between p-2 bg-muted rounded-lg mt-2">
+                      <div className="flex items-center justify-between p-3 bg-muted rounded-lg border-2 border-blue-500 mt-2">
                         <div className="flex items-center">
-                          <FileText className="h-4 w-4 text-blue-600 mr-2" />
-                          <span className="text-sm">字幕已准备</span>
+                          <FileText className="h-5 w-5 mr-2 text-blue-500" />
+                          <span className="text-sm font-medium">字幕已准备</span>
                         </div>
-                        <Button 
-                          type="button" 
-                          onClick={handleRemoveSubtitle} 
+                        <Button
+                          type="button"
+                          onClick={handleRemoveSubtitle}
                           variant="ghost"
                           size="sm"
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -643,67 +658,93 @@ export function BroadcastManager({
                       </div>
                     )}
                   </div>
-
-                  {/* 添加按钮 - 移除，因为已经移到标题右侧 */}
                 </div>
               </Form>
             </CardContent>
           </Card>
         </div>
 
-        {/* 右侧：播报列表 (3/5) */}
-        <div className="lg:col-span-3">
-          <Card className="h-full">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium">播报列表</h4>
-                <Badge className="bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+        {/* 中间：穿梭操作区域 (2/12) */}
+        <div className="col-span-2 flex items-center justify-center h-full">
+          <div className="flex flex-col items-center space-y-2">
+            <Button
+              type="button"
+              onClick={form.handleSubmit(onAddBroadcast)}
+              variant="default"
+              size="lg"
+              className="w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-orange-500 hover:bg-orange-600 border-4 border-background"
+            >
+              <ArrowRight className="h-6 w-6 text-white" />
+            </Button>
+            <span className="text-xs font-medium text-center text-muted-foreground uppercase tracking-wider">
+              添加
+            </span>
+          </div>
+        </div>
+
+        {/* 右侧：播报列表区域 (5/12) */}
+        <div className="col-span-5">
+          <Card className="h-full border-2 border-border">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="font-semibold text-lg text-foreground">
+                  播报列表
+                </h4>
+                <Badge className="px-3 py-1 font-medium bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
                   {broadcasts.length} 个播报点
                 </Badge>
               </div>
-              
+
               {broadcasts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                  <Megaphone className="h-12 w-12 mb-3 opacity-50" />
-                  <p>暂无播报配置</p>
+                <div className="flex flex-col items-center justify-center h-96 text-muted-foreground">
+                  <Megaphone className="h-16 w-16 mb-4 opacity-40" />
+                  <p className="font-medium">暂无播报配置</p>
+                  <p className="text-sm mt-2">从左侧添加播报点</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+                <div className="space-y-3 max-h-[calc(100vh-240px)] overflow-y-auto pr-2">
                   {broadcasts.map((broadcast, index) => (
-                    <Card key={broadcast.id} className="border-l-4 border-l-orange-500">
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3 flex-1">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4 text-orange-500" />
-                              <span className="font-medium text-sm">{broadcast.triggerTime}s</span>
+                    <Card
+                      key={broadcast.id}
+                      className="border-l-4 border-l-orange-500 border-2 hover:shadow-md transition-shadow duration-200"
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-3 flex-1">
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Clock className="h-5 w-5 text-orange-500" />
+                              <span className="font-bold text-base text-foreground">
+                                {broadcast.triggerTime}s
+                              </span>
                             </div>
-                            
+
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm text-muted-foreground truncate">{broadcast.text}</p>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              {broadcast.audioFileId && (
-                                <div className="flex items-center text-green-600 text-xs">
-                                  <Volume2 className="h-3 w-3 mr-1" />
-                                  <span>音频</span>
-                                </div>
-                              )}
-                              {broadcast.subtitleFileId && (
-                                <div className="flex items-center text-blue-600 text-xs">
-                                  <FileText className="h-3 w-3 mr-1" />
-                                  <span>字幕</span>
-                                </div>
-                              )}
+                              <p className="text-sm leading-relaxed text-foreground">
+                                {broadcast.text}
+                              </p>
+
+                              <div className="flex items-center space-x-3 mt-3">
+                                {broadcast.audioFileId && (
+                                  <div className="flex items-center px-2 py-1 rounded bg-green-100 dark:bg-green-500/20">
+                                    <Volume2 className="h-3 w-3 mr-1 text-green-600" />
+                                    <span className="text-xs font-medium text-green-600">音频</span>
+                                  </div>
+                                )}
+                                {broadcast.subtitleFileId && (
+                                  <div className="flex items-center px-2 py-1 rounded bg-blue-100 dark:bg-blue-500/20">
+                                    <FileText className="h-3 w-3 mr-1 text-blue-600" />
+                                    <span className="text-xs font-medium text-blue-600">字幕</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          
-                          <div className="flex items-center space-x-2 ml-3">
+
+                          <div className="flex items-center space-x-2 ml-4">
                             {/* 预览按钮 */}
                             {broadcast.tempFiles?.audio && (
-                              <Button 
-                                type="button" 
+                              <Button
+                                type="button"
                                 onClick={() => {
                                   const audioUrl = URL.createObjectURL(broadcast.tempFiles.audio);
                                   const audio = new Audio(audioUrl);
@@ -717,20 +758,20 @@ export function BroadcastManager({
                                 }}
                                 variant="outline"
                                 size="sm"
-                                className="text-orange-500 border-orange-500 hover:bg-orange-50"
+                                className="border-2 border-orange-500 text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950"
                               >
-                                <Play className="h-3 w-3" />
+                                <Play className="h-4 w-4" />
                               </Button>
                             )}
-                            
-                            <Button 
-                              type="button" 
-                              onClick={() => deleteBroadcast(index)} 
+
+                            <Button
+                              type="button"
+                              onClick={() => deleteBroadcast(index)}
                               variant="ghost"
                               size="sm"
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>

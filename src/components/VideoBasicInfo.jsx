@@ -2,7 +2,7 @@ import React from 'react';
 import { useFormContext } from "react-hook-form";
 import { Input, Label, Textarea, Button, useToast, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui';
 import { DatePicker } from '@/components/newUi/date-picker';
-import { Clock, Upload, X } from 'lucide-react';
+import { Clock, Upload, X, CheckCircle } from 'lucide-react';
 
 export function VideoBasicInfo({
   updateDuration,
@@ -10,7 +10,7 @@ export function VideoBasicInfo({
   onBackgroundImageUpload,
   onRemoveBackgroundImage
 }) {
-  const { control, watch, setValue } = useFormContext();
+  const { control, watch, setValue, clearErrors, formState } = useFormContext();
   const {
     toast
   } = useToast();
@@ -102,11 +102,14 @@ export function VideoBasicInfo({
       setBackgroundPreview(objectUrl);
       setBackgroundImage(file);
 
+      // 清除背景图片的验证错误
+      clearErrors('backgroundImageId');
+
       // 调用父组件处理函数
       if (onBackgroundImageUpload) {
         onBackgroundImageUpload(file);
       }
-      
+
       toast({
         title: '图片已选择',
         description: '背景图片已暂存，将在创建录像时上传',
@@ -152,7 +155,10 @@ export function VideoBasicInfo({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-medium">录像名称 *</FormLabel>
+              <FormLabel className="font-medium text-base">
+                录像名称
+                <span className="required-marker ml-1">*</span>
+              </FormLabel>
               <FormControl>
                 <Input placeholder="请输入录像名称" {...field} />
               </FormControl>
@@ -166,7 +172,10 @@ export function VideoBasicInfo({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-medium">描述</FormLabel>
+              <FormLabel className="font-medium text-base">
+                描述
+                <span className="required-marker ml-1">*</span>
+              </FormLabel>
               <FormControl>
                 <Textarea placeholder="请输入录像描述" className="h-32" {...field} />
               </FormControl>
@@ -176,44 +185,100 @@ export function VideoBasicInfo({
         />
 
         {/* 背景图片上传 */}
-        <div>
-          <Label className="font-medium">背景图片</Label>
-          <div className="mt-2 space-y-3">
-            {/* 背景图预览 */}
-            {backgroundPreview && (
-              <div className="relative">
-                <div className="text-sm text-muted-foreground mb-2">背景图预览</div>
-                <div className="relative bg-muted/50 rounded-lg overflow-hidden border border-border">
-                  <img src={backgroundPreview} alt="背景图预览" className="w-full h-32 object-cover" />
-                  <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6 shadow-sm" onClick={handleRemoveBackgroundImage} type="button">
-                    <X className="h-3 w-3" />
-                  </Button>
+        <div className="space-y-4">
+          <Label className="font-medium text-base">
+            背景图片
+            <span className="required-marker ml-1">*</span>
+          </Label>
+          
+          <div className="bg-muted/30 rounded-xl p-6 border-2 border-border hover:border-primary/50 transition-colors">
+            {backgroundPreview || backgroundImageId ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center">
+                      <Upload className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-lg">
+                        {backgroundPreview && backgroundPreview.startsWith('blob:') ? '图片已选择' : '图片已上传'}
+                      </p>
+                      <p className="text-muted-foreground text-sm">
+                        {backgroundImage ? `文件名: ${backgroundImage.name}` : '背景图片已设置'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-3">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => document.getElementById('background-upload').click()} 
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      更换
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleRemoveBackgroundImage} 
+                      className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      清除
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* 背景图预览 */}
+                {backgroundPreview && (
+                  <div className="mt-4">
+                    <div className="text-sm text-muted-foreground mb-2">预览</div>
+                    <div className="relative bg-muted/50 rounded-lg overflow-hidden border border-border">
+                      <img src={backgroundPreview} alt="背景图预览" className="w-full h-32 object-cover" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center cursor-pointer group" onClick={() => document.getElementById('background-upload').click()}>
+                <div className="space-y-6">
+                  <div className="flex justify-center">
+                    <div className="w-24 h-24 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 transition-colors">
+                      <Upload className="h-10 w-10 text-blue-500 dark:text-blue-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-foreground font-medium text-xl">
+                      点击上传背景图片
+                    </p>
+                    <p className="text-muted-foreground text-sm mt-2">
+                      支持 JPG, PNG, GIF 格式
+                    </p>
+                  </div>
+                  {uploading && (
+                    <div className="w-full bg-muted rounded-full h-3">
+                      <div className="bg-primary h-3 rounded-full animate-pulse"></div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
-
-            {/* 上传控件 */}
-            {!backgroundPreview && (
-              <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary transition-colors bg-muted/20 group cursor-pointer">
-                <input type="file" id="background-upload" accept="image/*" onChange={handleBackgroundImageUpload} className="hidden" />
-                <label htmlFor="background-upload" className="cursor-pointer w-full h-full block">
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <Upload className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <div>
-                      <div className="font-medium text-sm text-foreground group-hover:text-primary transition-colors">点击上传背景图</div>
-                      <div className="text-muted-foreground text-xs">支持 JPG、PNG、GIF 等格式</div>
-                    </div>
-                    {uploading && (
-                      <div className="text-primary text-sm flex items-center">
-                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-1"></div>
-                        上传中...
-                      </div>
-                    )}
-                  </div>
-                </label>
-              </div>
-            )}
           </div>
+          <input
+            type="file"
+            id="background-upload"
+            accept="image/*"
+            onChange={handleBackgroundImageUpload}
+            className="hidden"
+          />
+          {formState.errors.backgroundImageId && (
+            <p className="text-sm font-medium text-destructive">
+              {formState.errors.backgroundImageId.message}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -222,11 +287,14 @@ export function VideoBasicInfo({
             name="startTime"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-medium">开始时间</FormLabel>
+                <FormLabel className="font-medium text-base">
+                  开始时间
+                  <span className="required-marker ml-1">*</span>
+                </FormLabel>
                 <FormControl>
-                  <DatePicker 
-                    selected={field.value} 
-                    onChange={field.onChange} 
+                  <DatePicker
+                    selected={field.value}
+                    onChange={field.onChange}
                     placeholder="选择开始时间"
                   />
                 </FormControl>
@@ -240,11 +308,14 @@ export function VideoBasicInfo({
             name="endTime"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-medium">结束时间</FormLabel>
+                <FormLabel className="font-medium text-base">
+                  结束时间
+                  <span className="required-marker ml-1">*</span>
+                </FormLabel>
                 <FormControl>
-                  <DatePicker 
-                    selected={field.value} 
-                    onChange={field.onChange} 
+                  <DatePicker
+                    selected={field.value}
+                    onChange={field.onChange}
                     placeholder="选择结束时间"
                   />
                 </FormControl>
@@ -262,9 +333,10 @@ export function VideoBasicInfo({
               name="duration"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel className="font-medium flex items-center">
+                  <FormLabel className="font-medium text-base flex items-center">
                     <Clock className="h-5 w-5 mr-2 text-orange-500" />
                     录像时长 (HH:MM:SS)
+                    <span className="required-marker ml-1">*</span>
                   </FormLabel>
                   <div className="flex items-center space-x-4">
                     <FormControl>

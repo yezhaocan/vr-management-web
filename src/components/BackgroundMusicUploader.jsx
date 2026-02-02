@@ -32,18 +32,7 @@ export function BackgroundMusicUploader({
     onBackgroundMusicFileIdChange('');
   };
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-purple-100 dark:bg-purple-500/20 rounded-full flex items-center justify-center">
-          <Music className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-        </div>
-        <div>
-          <h3 className="text-xl font-semibold text-foreground">背景音乐</h3>
-          <p className="text-muted-foreground">为录像添加背景音乐</p>
-        </div>
-      </div>
-
-      <div className="bg-muted/30 rounded-xl p-6 border-2 border-border hover:border-purple-500/50 transition-colors">
+    <div className="bg-muted/30 rounded-xl p-6 border-2 border-border hover:border-purple-500/50 transition-colors">
         {backgroundMusicFileId ? (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -102,6 +91,5 @@ export function BackgroundMusicUploader({
           </div>
         )}
       </div>
-    </div>
   );
 }

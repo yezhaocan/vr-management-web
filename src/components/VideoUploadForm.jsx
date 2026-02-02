@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Tabs, TabsContent, TabsList, TabsTrigger, useToast, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, RadioGroup, RadioGroupItem, Card, CardContent, CardHeader, CardTitle, CardDescription, Separator } from '@/components/ui';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
-import { Save, Image, Video as VideoIcon, RotateCcw, RotateCw, Volume2, VolumeX } from 'lucide-react';
+import { Save, Image, Video as VideoIcon, RotateCcw, RotateCw, Volume2, VolumeX, Upload, CheckCircle, X, Link } from 'lucide-react';
 
 import { VideoBasicInfo } from '@/components/VideoBasicInfo';
-import { VideoFileUpload, VideoUrlInput } from '@/components/VideoFileUpload';
 import { BroadcastManager } from '@/components/BroadcastManager';
 import { BackgroundMusicUploader } from '@/components/BackgroundMusicUploader';
 
@@ -78,37 +77,61 @@ export function VideoUploadForm({
   const [activeTab, setActiveTab] = useState('basic');
   const [videoUploadType, setVideoUploadType] = useState('upload');
   const [pendingBackgroundImage, setPendingBackgroundImage] = useState(null);
+  const [pendingThumbnailFile, setPendingThumbnailFile] = useState(null);
+  const [pendingVideoFile, setPendingVideoFile] = useState(null);
 
   // 自定义验证函数
   const validateFormData = (data) => {
     const errors = {};
-    
-    // 验证录像名称
+
+    // 验证录像名称（必填）
     if (!data.name || data.name.trim().length === 0) {
       errors.name = "请输入录像名称";
     }
-    
-    // 验证视频文件或URL（至少需要一个）
-    if (!data.videoFileId && !data.videoUrl) {
+
+    // 验证描述（必填）
+    if (!data.description || data.description.trim().length === 0) {
+      errors.description = "请输入录像描述";
+    }
+
+    // 验证视频文件或URL（至少需要一个，必填）
+    if (!data.videoFileId && !data.videoUrl && !pendingVideoFile) {
       errors.videoFileId = "请上传录像文件或输入视频地址";
     }
-    
-    // 验证开始时间和结束时间
-    if (data.startTime && data.endTime && data.startTime > data.endTime) {
-      errors.startTime = "开始时间不能晚于结束时间";
+
+    // 验证背景图片（必填）
+    if (!data.backgroundImageId && !pendingBackgroundImage) {
+      errors.backgroundImageId = "请上传背景图片";
     }
-    
-    // 验证时长格式
-    if (data.duration && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/.test(data.duration)) {
-      errors.duration = "时长格式不正确";
+
+    // 验证开始时间（必填）
+    if (!data.startTime) {
+      errors.startTime = "请选择开始时间";
     }
-    
+
+    // 验证结束时间（必填）
+    if (!data.endTime) {
+      errors.endTime = "请选择结束时间";
+    }
+
+    // 验证开始时间和结束时间的逻辑关系
+    if (data.startTime && data.endTime && data.startTime >= data.endTime) {
+      errors.endTime = "结束时间必须晚于开始时间";
+    }
+
+    // 验证时长格式（必填）
+    if (!data.duration || data.duration === '00:00:00') {
+      errors.duration = "请输入有效的录像时长";
+    } else if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/.test(data.duration)) {
+      errors.duration = "时长格式不正确，应为HH:MM:SS格式";
+    }
+
     // 验证视频角度
     const angle = parseFloat(data.videoAngle);
     if (!isNaN(angle) && (angle < -360 || angle > 360)) {
       errors.videoAngle = "角度范围应在-360°到360°之间";
     }
-    
+
     return errors;
   };
   const resetAllStates = () => {
@@ -119,6 +142,8 @@ export function VideoUploadForm({
     setUploadingThumbnail(false);
     setUploadingVideo(false);
     setPendingBackgroundImage(null);
+    setPendingThumbnailFile(null);
+    setPendingVideoFile(null);
   };
 
   // 将时间戳转换为Date对象
@@ -156,8 +181,8 @@ export function VideoUploadForm({
     form.setValue('duration', duration);
   };
 
-  // 处理背景图片上传（仅暂存，不立即上传）
-  const handleBackgroundImageUpload = file => {
+  // 处理缩略图文件选择（仅暂存，不立即上传）
+  const handleThumbnailFileSelect = file => {
     if (!file) return;
 
     // 验证文件类型
@@ -171,7 +196,63 @@ export function VideoUploadForm({
     }
     
     // 暂存文件
+    setPendingThumbnailFile(file);
+  };
+
+  // 移除缩略图
+  const handleRemoveThumbnail = () => {
+    setPendingThumbnailFile(null);
+    form.setValue('thumbnailFileId', '');
+  };
+
+  // 处理视频文件选择（仅暂存，不立即上传）
+  const handleVideoFileSelect = file => {
+    if (!file) return;
+
+    // 验证文件类型
+    if (!file.type.startsWith('video/')) {
+      toast({
+        title: '文件类型错误',
+        description: '请上传视频文件',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // 暂存文件
+    setPendingVideoFile(file);
+    // 清除视频URL和之前的文件ID
+    form.setValue('videoUrl', '');
+    form.setValue('videoFileId', '');
+    setVideoUploadType('upload');
+    // 清除视频文件的验证错误
+    form.clearErrors('videoFileId');
+  };
+
+  // 移除视频文件
+  const handleRemoveVideo = () => {
+    setPendingVideoFile(null);
+    form.setValue('videoFileId', '');
+  };
+
+  // 处理背景图片上传（仅暂存，不立即上传）
+  const handleBackgroundImageUpload = file => {
+    if (!file) return;
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: '文件类型错误',
+        description: '请上传图片文件',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // 暂存文件
     setPendingBackgroundImage(file);
+    // 清除背景图片的验证错误
+    form.clearErrors('backgroundImageId');
     // 注意：这里不设置 backgroundImageId，因为文件还没上传
     // 但我们需要确保如果之前有 ID（编辑模式或之前已上传），逻辑上应该被替换
     // 不过由于我们有 pendingBackgroundImage，提交时会优先使用它
@@ -256,70 +337,36 @@ export function VideoUploadForm({
 
   const handleInputChange = (field, value) => {
     form.setValue(field, value);
-    
+
     // 清除相关字段的验证错误
     if (field === 'videoUrl' && value) {
       form.clearErrors('videoFileId');
+      // 清除暂存的视频文件
+      setPendingVideoFile(null);
     }
     if (field === 'name' && value) {
       form.clearErrors('name');
     }
-    if (field === 'startTime' || field === 'endTime') {
+    if (field === 'description' && value) {
+      form.clearErrors('description');
+    }
+    if (field === 'startTime') {
       form.clearErrors('startTime');
+      if (value) {
+        form.clearErrors('endTime'); // 清除结束时间的关联错误
+      }
+    }
+    if (field === 'endTime') {
+      form.clearErrors('endTime');
+      if (value) {
+        form.clearErrors('startTime'); // 清除开始时间的关联错误
+      }
     }
     if (field === 'videoAngle') {
       form.clearErrors('videoAngle');
     }
     if (field === 'duration') {
       form.clearErrors('duration');
-    }
-  };
-
-  const handleFileUpload = async (file, type) => {
-    try {
-      if (!file) return;
-      if (type === 'thumbnail') setUploadingThumbnail(true);
-      if (type === 'video') setUploadingVideo(true);
-      const tcb = await $w.cloud.getCloudInstance();
-      const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(2, 8);
-      const fileName = `video_record/${type === 'thumbnail' ? 'thumbnails' : 'videos'}/${timestamp}_${randomStr}_${file.name}`;
-      const uploadResult = await tcb.uploadFile({
-        cloudPath: fileName,
-        filePath: file
-      });
-      const fileID = uploadResult.fileID;
-      if (type === 'thumbnail') {
-        form.setValue('thumbnailFileId', fileID);
-      } else {
-        form.setValue('videoFileId', fileID);
-        form.setValue('videoUrl', '');
-        setVideoUploadType('upload');
-        // 清除视频文件的验证错误
-        form.clearErrors('videoFileId');
-      }
-      toast({
-        title: '上传成功',
-        description: `${type === 'thumbnail' ? '缩略图' : '录像'}文件已上传`
-      });
-    } catch (error) {
-      toast({
-        title: '上传失败',
-        description: error.message || '请检查网络连接',
-        variant: 'destructive'
-      });
-    } finally {
-      if (type === 'thumbnail') setUploadingThumbnail(false);
-      if (type === 'video') setUploadingVideo(false);
-    }
-  };
-
-  const clearFile = type => {
-    if (type === 'thumbnail') {
-      form.setValue('thumbnailFileId', '');
-    } else {
-      form.setValue('videoFileId', '');
-      form.setValue('videoUrl', '');
     }
   };
 
@@ -334,17 +381,82 @@ export function VideoUploadForm({
   const onSubmit = async (values) => {
     // 执行自定义验证
     const validationErrors = validateFormData(values);
-    
+
     // 如果有验证错误，设置表单错误并返回
     if (Object.keys(validationErrors).length > 0) {
       Object.keys(validationErrors).forEach(field => {
         form.setError(field, { message: validationErrors[field] });
       });
+
+      // 如果有基础信息相关的错误，切换到基础信息标签页
+      const basicInfoFields = ['name', 'description', 'backgroundImageId', 'startTime', 'endTime', 'duration', 'videoFileId', 'videoUrl'];
+      const hasBasicInfoError = Object.keys(validationErrors).some(field => basicInfoFields.includes(field));
+      if (hasBasicInfoError && activeTab !== 'basic') {
+        setActiveTab('basic');
+      }
+
+      // 显示错误提示
+      toast({
+        title: '表单验证失败',
+        description: '请检查并填写所有必填项',
+        variant: 'destructive'
+      });
+
       return;
     }
     
     setLoading(true);
     try {
+      // ----------------------------------------------------------------
+      // 处理缩略图上传
+      // ----------------------------------------------------------------
+      let finalThumbnailFileId = values.thumbnailFileId;
+      if (pendingThumbnailFile) {
+        try {
+          toast({
+            title: '正在上传缩略图',
+            description: '请稍候...',
+          });
+          const tcb = await $w.cloud.getCloudInstance();
+          const timestamp = Date.now();
+          const randomStr = Math.random().toString(36).substring(2, 8);
+          const fileName = `video_record/thumbnails/${timestamp}_${randomStr}_${pendingThumbnailFile.name}`;
+          const uploadResult = await tcb.uploadFile({
+            cloudPath: fileName,
+            filePath: pendingThumbnailFile
+          });
+          finalThumbnailFileId = uploadResult.fileID;
+        } catch (error) {
+          console.error('缩略图上传失败:', error);
+          throw new Error('缩略图上传失败，请重试');
+        }
+      }
+
+      // ----------------------------------------------------------------
+      // 处理视频文件上传
+      // ----------------------------------------------------------------
+      let finalVideoFileId = values.videoFileId;
+      if (pendingVideoFile) {
+        try {
+          toast({
+            title: '正在上传视频文件',
+            description: '请稍候...',
+          });
+          const tcb = await $w.cloud.getCloudInstance();
+          const timestamp = Date.now();
+          const randomStr = Math.random().toString(36).substring(2, 8);
+          const fileName = `video_record/videos/${timestamp}_${randomStr}_${pendingVideoFile.name}`;
+          const uploadResult = await tcb.uploadFile({
+            cloudPath: fileName,
+            filePath: pendingVideoFile
+          });
+          finalVideoFileId = uploadResult.fileID;
+        } catch (error) {
+          console.error('视频文件上传失败:', error);
+          throw new Error('视频文件上传失败，请重试');
+        }
+      }
+
       // ----------------------------------------------------------------
       // 处理背景图片上传
       // ----------------------------------------------------------------
@@ -455,8 +567,8 @@ export function VideoUploadForm({
       const videoData = {
         name: values.name,
         description: values.description,
-        imageFileId: values.thumbnailFileId,
-        videoFileId: values.videoFileId,
+        imageFileId: finalThumbnailFileId,
+        videoFileId: finalVideoFileId,
         videoUrl: values.videoUrl,
         startTime: values.startTime ? values.startTime.getTime() : null,
         endTime: values.endTime ? values.endTime.getTime() : null,
@@ -523,8 +635,8 @@ export function VideoUploadForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className="sm:max-w-[900px] h-[85vh] flex flex-col p-0 gap-0 bg-background text-foreground border-border"
+      <DialogContent
+        className="sm:max-w-[1296px] max-w-[95vw] h-[90vh] max-h-[95vh] flex flex-col p-0 gap-0 bg-background text-foreground border-border"
         onEscapeKeyDown={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
@@ -537,66 +649,122 @@ export function VideoUploadForm({
         <Form {...form}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
             <div className="px-6 py-4 border-b border-border bg-muted/30">
-              <TabsList className="grid w-full grid-cols-4 h-11 bg-muted text-muted-foreground">
+              <TabsList className="grid w-full grid-cols-2 h-11 bg-muted text-muted-foreground">
                 <TabsTrigger value="basic" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all">
                   基础信息
                 </TabsTrigger>
-                <TabsTrigger value="video" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all">
-                  录像管理
-                </TabsTrigger>
                 <TabsTrigger value="broadcast" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all">
                   播报管理
-                </TabsTrigger>
-                <TabsTrigger value="music" className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all">
-                  背景音乐
                 </TabsTrigger>
               </TabsList>
             </div>
 
             <div className="flex-1 overflow-y-auto bg-muted/10">
               <form onSubmit={form.handleSubmit(onSubmit)} className="p-6">
-                <TabsContent value="basic" className="mt-0 space-y-6">
-                  <Card className="border-border shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="text-lg">基本信息</CardTitle>
-                      <CardDescription>设置录像的名称、描述及时长等基本属性</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <VideoBasicInfo 
-                        formData={form.watch()} 
-                        handleInputChange={handleInputChange} 
-                        handleDurationChange={handleDurationChange} 
-                        updateDuration={updateDuration} 
-                        $w={$w}
-                        onBackgroundImageUpload={handleBackgroundImageUpload} 
-                        onRemoveBackgroundImage={handleRemoveBackgroundImage} 
-                      />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+                <TabsContent value="basic" className="mt-0 space-y-8">
+                  {/* 基本信息区域 */}
+                  <div className="space-y-6">
+                    <VideoBasicInfo 
+                      formData={form.watch()} 
+                      handleInputChange={handleInputChange} 
+                      handleDurationChange={handleDurationChange} 
+                      updateDuration={updateDuration} 
+                      $w={$w}
+                      onBackgroundImageUpload={handleBackgroundImageUpload} 
+                      onRemoveBackgroundImage={handleRemoveBackgroundImage} 
+                    />
+                  </div>
 
-                <TabsContent value="video" className="mt-0 space-y-6">
-                  <Card className="border-border shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="text-lg">媒体文件</CardTitle>
-                      <CardDescription>上传缩略图和录像文件</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <VideoFileUpload 
-                        type="thumbnail" 
-                        label="缩略图" 
-                        accept="image/*" 
-                        icon={Image} 
-                        fileId={form.watch('thumbnailFileId')} 
-                        uploading={uploadingThumbnail} 
-                        onFileUpload={handleFileUpload} 
-                        onClearFile={clearFile} 
-                      />
+                  {/* 媒体文件区域 */}
+                  <div className="space-y-6">
+                    
+                    <div className="space-y-6">
+                      {/* 缩略图上传 */}
+                      <div className="space-y-4">
+                        <Label className="font-medium text-base">
+                          缩略图
+                        </Label>
+
+                        <div className="bg-muted/30 rounded-xl p-6 border-2 border-border hover:border-primary/50 transition-colors">
+                          {form.watch('thumbnailFileId') || pendingThumbnailFile ? (
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                  <div className="w-12 h-12 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center">
+                                    <Image className="h-6 w-6 text-green-600 dark:text-green-400" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-lg">
+                                      {pendingThumbnailFile ? '文件已选择' : '文件已上传'}
+                                    </p>
+                                    <p className="text-muted-foreground text-sm">
+                                      {pendingThumbnailFile 
+                                        ? `文件名: ${pendingThumbnailFile.name}`
+                                        : `文件ID: ${form.watch('thumbnailFileId')?.substring(0, 20)}...`
+                                      }
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex space-x-3">
+                                  <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => document.getElementById('thumbnailFile').click()} 
+                                    className="border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                                  >
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    更换
+                                  </Button>
+                                  <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={handleRemoveThumbnail} 
+                                    className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                                  >
+                                    <X className="h-4 w-4 mr-2" />
+                                    清除
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center cursor-pointer group" onClick={() => document.getElementById('thumbnailFile').click()}>
+                              <div className="space-y-6">
+                                <div className="flex justify-center">
+                                  <div className="w-24 h-24 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 transition-colors">
+                                    <Image className="h-10 w-10 text-blue-500 dark:text-blue-400" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <p className="text-foreground font-medium text-xl">
+                                    点击上传缩略图
+                                  </p>
+                                  <p className="text-muted-foreground text-sm mt-2">
+                                    支持 JPG, PNG 格式
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <input 
+                          id="thumbnailFile" 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={(e) => handleThumbnailFileSelect(e.target.files[0])} 
+                        />
+                      </div>
 
                       <Separator className="my-6" />
 
                       <div className="space-y-4">
-                        <Label className="text-base font-medium">录像源</Label>
+                        <Label className="font-medium text-base">
+                          录像源
+                          <span className="required-marker ml-1">*</span>
+                        </Label>
                         <div className="flex space-x-4">
                           <Button 
                             type="button" 
@@ -618,36 +786,125 @@ export function VideoUploadForm({
 
                         <div className="pt-2">
                           {videoUploadType === 'upload' ? (
-                            <VideoFileUpload 
-                              type="video" 
-                              label="录像文件" 
-                              accept="video/*" 
-                              icon={VideoIcon} 
-                              required={true} 
-                              fileId={form.watch('videoFileId')} 
-                              uploading={uploadingVideo} 
-                              onFileUpload={handleFileUpload} 
-                              onClearFile={clearFile} 
-                            />
+                            <div className="space-y-4">
+                              <Label className="font-medium text-base">
+                                录像文件
+                                <span className="required-marker ml-1">*</span>
+                              </Label>
+                              
+                              <div className="bg-muted/30 rounded-xl p-6 border-2 border-border hover:border-primary/50 transition-colors">
+                                {form.watch('videoFileId') || pendingVideoFile ? (
+                                  <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-4">
+                                        <div className="w-12 h-12 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center">
+                                          <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                                        </div>
+                                        <div>
+                                          <p className="font-medium text-lg">
+                                            {pendingVideoFile ? '文件已选择' : '文件已上传'}
+                                          </p>
+                                          <p className="text-muted-foreground text-sm">
+                                            {pendingVideoFile 
+                                              ? `文件名: ${pendingVideoFile.name}`
+                                              : `文件ID: ${form.watch('videoFileId')?.substring(0, 20)}...`
+                                            }
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div className="flex space-x-3">
+                                        <Button 
+                                          type="button" 
+                                          variant="outline" 
+                                          size="sm" 
+                                          onClick={() => document.getElementById('videoFile').click()} 
+                                          className="border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                                        >
+                                          <Upload className="h-4 w-4 mr-2" />
+                                          更换
+                                        </Button>
+                                        <Button 
+                                          type="button" 
+                                          variant="outline" 
+                                          size="sm" 
+                                          onClick={handleRemoveVideo} 
+                                          className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                                        >
+                                          <X className="h-4 w-4 mr-2" />
+                                          清除
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-center cursor-pointer group" onClick={() => document.getElementById('videoFile').click()}>
+                                    <div className="space-y-6">
+                                      <div className="flex justify-center">
+                                        <div className="w-24 h-24 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 transition-colors">
+                                          <VideoIcon className="h-10 w-10 text-blue-500 dark:text-blue-400" />
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <p className="text-foreground font-medium text-xl">
+                                          点击上传录像文件
+                                        </p>
+                                        <p className="text-muted-foreground text-sm mt-2">
+                                          支持 MP4, MOV, AVI 格式
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <input 
+                                id="videoFile" 
+                                type="file" 
+                                accept="video/*" 
+                                className="hidden" 
+                                onChange={(e) => handleVideoFileSelect(e.target.files[0])} 
+                              />
+                            </div>
                           ) : (
-                            <VideoUrlInput 
-                              videoUrl={form.watch('videoUrl')} 
-                              onVideoUrlChange={value => handleInputChange('videoUrl', value)} 
-                              onClearVideoFile={() => handleInputChange('videoFileId', '')} 
-                            />
+                            <div className="space-y-4">
+                              <Label className="font-medium text-base">
+                                视频地址
+                                <span className="required-marker ml-1">*</span>
+                              </Label>
+                              
+                              <div className="bg-muted/30 rounded-xl p-6 border-2 border-border hover:border-primary/50 transition-colors">
+                                <div className="space-y-6">
+                                  <div className="flex items-center space-x-4">
+                                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-500/20 rounded-full flex items-center justify-center">
+                                      <Link className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-lg">输入视频地址</p>
+                                      <p className="text-muted-foreground text-sm">支持在线视频链接</p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div>
+                                    <Input 
+                                      value={form.watch('videoUrl')} 
+                                      onChange={e => handleInputChange('videoUrl', e.target.value)} 
+                                      placeholder="请输入视频地址，例如：https://example.com/video.mp4" 
+                                      className="bg-background border-border p-3 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" 
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           )}
                           <FormMessage>{form.formState.errors.videoFileId?.message}</FormMessage>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
 
-                  <Card className="border-border shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="text-lg">播放设置</CardTitle>
-                      <CardDescription>配置视频的播放方向、角度和音频选项</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
+                  {/* 播放设置区域 */}
+                  <div className="space-y-6">
+                    
+                    <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* 视频朝向 */}
                         <FormField
@@ -655,7 +912,7 @@ export function VideoUploadForm({
                           name="isUpside"
                           render={({ field }) => (
                             <FormItem className="space-y-3">
-                              <FormLabel className="font-medium flex items-center">
+                              <FormLabel className="font-medium text-base flex items-center">
                                 <RotateCcw className="h-4 w-4 mr-2 text-primary" />
                                 视频朝向
                               </FormLabel>
@@ -696,7 +953,7 @@ export function VideoUploadForm({
                           rules={validationRules.videoAngle}
                           render={({ field }) => (
                             <FormItem className="space-y-3">
-                              <FormLabel className="font-medium flex items-center">
+                              <FormLabel className="font-medium text-base flex items-center">
                                 <RotateCw className="h-4 w-4 mr-2 text-primary" />
                                 视频朝向初始角度 (°)
                               </FormLabel>
@@ -726,7 +983,7 @@ export function VideoUploadForm({
                         name="isPlayOriginalSound"
                         render={({ field }) => (
                           <FormItem className="space-y-3">
-                            <FormLabel className="font-medium flex items-center">
+                            <FormLabel className="font-medium text-base flex items-center">
                               <Volume2 className="h-4 w-4 mr-2 text-primary" />
                               是否播放视频原声
                             </FormLabel>
@@ -757,36 +1014,29 @@ export function VideoUploadForm({
                           </FormItem>
                         )}
                       />
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
+
+                  {/* 背景音乐区域 */}
+                  <div className="space-y-6">
+                    <BackgroundMusicUploader 
+                      backgroundMusicFileId={form.watch('backgroundMusicFileId')} 
+                      onBackgroundMusicFileIdChange={handleBackgroundMusicFileIdChange} 
+                      $w={$w} 
+                    />
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="broadcast" className="mt-0 space-y-6">
-                  <Card className="border-border shadow-sm">
-                    <CardContent className="pt-6">
+                  <div className="bg-background rounded-lg border border-border shadow-sm">
+                    <div className="p-6">
                       <BroadcastManager 
                         broadcasts={form.watch('broadcasts')} 
                         onBroadcastsChange={handleBroadcastsChange} 
                         $w={$w} 
                       />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="music" className="mt-0 space-y-6">
-                  <Card className="border-border shadow-sm">
-                    <CardHeader>
-                      <CardTitle className="text-lg">背景音乐</CardTitle>
-                      <CardDescription>上传和管理背景音乐文件</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <BackgroundMusicUploader 
-                        backgroundMusicFileId={form.watch('backgroundMusicFileId')} 
-                        onBackgroundMusicFileIdChange={handleBackgroundMusicFileIdChange} 
-                        $w={$w} 
-                      />
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 </TabsContent>
               </form>
             </div>
