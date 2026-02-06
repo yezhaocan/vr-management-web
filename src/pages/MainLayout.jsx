@@ -110,8 +110,35 @@ export function MainLayout({
     $w
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const location = useLocation();
+
+    // 检查登录状态
+    useEffect(() => {
+        const checkLoginStatus = async () => {
+            try {
+                const tcb = await $w.cloud.getCloudInstance();
+                const auth = tcb.auth();
+                const loginState = auth.hasLoginState();
+
+                if (loginState && loginState.user?.name !== 'anonymous') {
+                    // 已登录
+                    setLoading(false);
+                } else {
+                    // 未登录，跳转到默认登录页
+                    auth.toDefaultLoginPage({
+                        redirect_uri: 'https://vr-manage.genew.com/',
+                    });
+                }
+            } catch (error) {
+                console.error('检查登录状态失败:', error);
+                setLoading(false);
+            }
+        };
+
+        checkLoginStatus();
+    }, []);
 
     // 获取当前激活的菜单 ID
     const activeMenuId = useMemo(() => {
@@ -135,6 +162,18 @@ export function MainLayout({
     useEffect(() => {
         document.title = `${currentTitle} - VR观光运营平台`;
     }, [currentTitle]);
+
+    // 加载中状态
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-900">
+                <div className="flex flex-col items-center space-y-4">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="text-white text-lg">检查登录状态...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
