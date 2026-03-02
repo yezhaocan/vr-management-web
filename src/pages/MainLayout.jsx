@@ -160,7 +160,7 @@ export function MainLayout({
 
     // 同步浏览器标题
     useEffect(() => {
-        document.title = `${currentTitle} - VR观光运营平台`;
+        document.title = `${currentTitle} - 无人机飞控中心`;
     }, [currentTitle]);
 
     // 加载中状态

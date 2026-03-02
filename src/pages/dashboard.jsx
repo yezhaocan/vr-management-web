@@ -141,7 +141,7 @@ export default function Dashboard(props) {
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
             欢迎回来，{currentUser?.name || '管理员'}！
           </h1>
-          <p className="text-muted-foreground">VR观光管理系统运行观测台</p>
+          <p className="text-muted-foreground">无人机飞控中心</p>
         </div>
         <div className="flex items-center space-x-4">
           <Button variant="outline" size="sm" onClick={loadDashboardStats} disabled={loading}>

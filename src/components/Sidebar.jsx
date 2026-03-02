@@ -124,7 +124,7 @@ export function Sidebar(props) {
           </div>
           <div>
             <h1 className="text-white font-bold text-lg tracking-tight">
-              VR观光管理平台
+              无人机飞控中心
             </h1>
           </div>
         </div>

@@ -20,8 +20,8 @@ export function Header({
           <div className="flex items-center space-x-4">
             {/* 品牌标识 */}
             <div className="flex items-center space-x-2 mr-4 border-r border-border/50 pr-4">
-               <img src="cloud://cloud1-1grrg77xa07045b0.636c-cloud1-1grrg77xa07045b0-1362525855/builder-uploads/785d9f8539459ed46270d385519263cf.png" alt="VR观光管理系统" className="h-8 w-auto object-contain" />
-               <span className="text-lg font-bold text-foreground hidden md:block">VR观光管理系统</span>
+               <img src="cloud://cloud1-1grrg77xa07045b0.636c-cloud1-1grrg77xa07045b0-1362525855/builder-uploads/785d9f8539459ed46270d385519263cf.png" alt="无人机飞控中心" className="h-8 w-auto object-contain" />
+               <span className="text-lg font-bold text-foreground hidden md:block">无人机飞控中心</span>
             </div>
 
             {/* 页面标题 - 已隐藏 */}

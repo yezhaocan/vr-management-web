@@ -67,7 +67,7 @@ export function SuperAdminSidebar(props) {
             <div className="w-6 h-6 rounded bg-background/80"></div>
           </div>
           <div>
-            <h1 className="text-primary-foreground font-bold text-xl tracking-tight">VR观光运营平台</h1>
+            <h1 className="text-primary-foreground font-bold text-xl tracking-tight">无人机飞控中心</h1>
             <p className="text-primary-foreground/80 text-xs font-light">Virtual Reality Tourism Platform</p>
           </div>
         </div>
