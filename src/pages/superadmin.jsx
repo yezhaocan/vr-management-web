@@ -1,7 +1,15 @@
 // @ts-ignore;
 import React, { useState, useEffect } from 'react';
 // @ts-ignore;
-import { useToast, Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from '@/components/ui';
+import {
+  useToast,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Button,
+} from '@/components/ui';
 // @ts-ignore;
 import { Users, HardDrive, PlayCircle, Shield, TrendingUp, Activity, MapPin } from 'lucide-react';
 
@@ -14,22 +22,16 @@ import VideoRecordManagement from './video-record';
 import FlightTaskManagement from './flight-task';
 import ConfigManagement from './config';
 import { AuthGuard } from '@/components/AuthGuard';
-import { MainLayout } from './MainLayout';
 
 export default function SuperAdminPage(props) {
-  const {
-    $w,
-    style
-  } = props;
-  const {
-    toast
-  } = useToast();
+  const { $w, style } = props;
+  const { toast } = useToast();
   const [activeMenu, setActiveMenu] = useState('superadmin');
   const [systemStats, setSystemStats] = useState({
     totalUsers: 0,
     totalDrones: 0,
     todayFlights: 0,
-    totalRoutes: 0
+    totalRoutes: 0,
   });
   useEffect(() => {
     // 加载系统统计数据
@@ -42,24 +44,24 @@ export default function SuperAdminPage(props) {
         totalUsers: 2846,
         totalDrones: 45,
         todayFlights: 23,
-        totalRoutes: 67
+        totalRoutes: 67,
       });
     } catch (error) {
       toast({
         title: '数据加载失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
-  const handleMenuChange = menuId => {
+  const handleMenuChange = (menuId) => {
     setActiveMenu(menuId);
   };
   const handleLogout = () => {
     // 模拟退出登录
     $w.utils.redirectTo({
       pageId: 'dashboard',
-      params: {}
+      params: {},
     });
   };
   const renderContent = () => {
@@ -80,12 +82,11 @@ export default function SuperAdminPage(props) {
         return renderSuperAdminDashboard();
     }
   };
-  const renderSuperAdminDashboard = () => <div className="p-6 space-y-6">
+  const renderSuperAdminDashboard = () => (
+    <div className="p-6 space-y-6">
       {/* 欢迎区域 */}
       <div className="bg-card rounded-xl p-6 border border-border shadow-sm">
-        <h1 className="text-2xl font-bold text-foreground mb-2">
-          系统管理控制台
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">系统管理控制台</h1>
         <p className="text-muted-foreground">平台整体运营数据监控</p>
       </div>
 
@@ -104,7 +105,9 @@ export default function SuperAdminPage(props) {
 
         <Card className="bg-card border-border shadow-sm hover:shadow-md transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">无人机设备总数</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              无人机设备总数
+            </CardTitle>
             <HardDrive className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -126,7 +129,9 @@ export default function SuperAdminPage(props) {
 
         <Card className="bg-card border-border shadow-sm hover:shadow-md transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">今日飞行任务次数</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              今日飞行任务次数
+            </CardTitle>
             <PlayCircle className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
@@ -144,9 +149,7 @@ export default function SuperAdminPage(props) {
               <HardDrive className="h-5 w-5 mr-2 text-primary" />
               无人机管理
             </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              管理所有无人机设备
-            </CardDescription>
+            <CardDescription className="text-muted-foreground">管理所有无人机设备</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" onClick={() => setActiveMenu('drone')}>
@@ -161,9 +164,7 @@ export default function SuperAdminPage(props) {
               <PlayCircle className="h-5 w-5 mr-2 text-primary" />
               飞行任务
             </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              查看和管理飞行任务
-            </CardDescription>
+            <CardDescription className="text-muted-foreground">查看和管理飞行任务</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" onClick={() => setActiveMenu('flight-task')}>
@@ -242,18 +243,22 @@ export default function SuperAdminPage(props) {
           </CardContent>
         </Card>
       </div>
-    </div>;
-  return <MainLayout $w={$w}>
+    </div>
+  );
+  return (
     <AuthGuard $w={$w}>
-        <div style={style} className="min-h-screen bg-background text-foreground">
-          <div className="flex h-screen bg-background">
-            <SuperAdminSidebar activeMenu={activeMenu} onMenuChange={handleMenuChange} onLogout={handleLogout} $w={$w} />
-            
-            <div className="flex-1 overflow-auto bg-background/50">
-              {renderContent()}
-            </div>
-          </div>
+      <div style={style} className="min-h-screen bg-background text-foreground">
+        <div className="flex h-screen bg-background">
+          <SuperAdminSidebar
+            activeMenu={activeMenu}
+            onMenuChange={handleMenuChange}
+            onLogout={handleLogout}
+            $w={$w}
+          />
+
+          <div className="flex-1 overflow-auto bg-background/50">{renderContent()}</div>
         </div>
-      </AuthGuard>
-    </MainLayout>;
+      </div>
+    </AuthGuard>
+  );
 }

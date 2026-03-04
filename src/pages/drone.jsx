@@ -1,12 +1,40 @@
 // @ts-ignore;
 import React, { useState, useEffect } from 'react';
 // @ts-ignore;
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, useToast, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label, DialogDescription } from '@/components/ui';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Button,
+  useToast,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  DialogDescription,
+} from '@/components/ui';
 // @ts-ignore;
-import { Plus, Wifi, Battery, MapPin, Edit, Trash2, Drone, Calendar, RefreshCw, Factory, Home, Signal, Search } from 'lucide-react';
+import {
+  Plus,
+  Wifi,
+  Battery,
+  MapPin,
+  Edit,
+  Trash2,
+  Drone,
+  Calendar,
+  RefreshCw,
+  Factory,
+  Home,
+  Signal,
+  Search,
+} from 'lucide-react';
 // @ts-ignore;
 import { AuthGuard } from '@/components/AuthGuard';
-import { MainLayout } from './MainLayout';
 
 export default function DroneManagement(props) {
   const { $w, style } = props;
@@ -22,7 +50,7 @@ export default function DroneManagement(props) {
     battery: 100,
     location: '',
     lastCommunicationTime: '',
-    lastUpdate: ''
+    lastUpdate: '',
   });
   const [loading, setLoading] = useState(false);
   const [dialogLoading, setDialogLoading] = useState(false);
@@ -32,7 +60,7 @@ export default function DroneManagement(props) {
     if (!$w.auth.currentUser) {
       $w.utils.redirectTo({
         pageId: 'login',
-        params: { redirect: 'drone' }
+        params: { redirect: 'drone' },
       });
       return;
     }
@@ -50,8 +78,8 @@ export default function DroneManagement(props) {
           filter: { where: {} },
           pageSize: 100,
           pageNumber: 1,
-          orderBy: [{ createdAt: 'desc' }]
-        }
+          orderBy: [{ createdAt: 'desc' }],
+        },
       });
       setDrones(result.records || []);
     } catch (error) {
@@ -59,16 +87,16 @@ export default function DroneManagement(props) {
       toast({
         title: '数据加载失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleReturnHome = async drone => {
+  const handleReturnHome = async (drone) => {
     try {
-      setReturningHome(prev => ({ ...prev, [drone._id]: true }));
+      setReturningHome((prev) => ({ ...prev, [drone._id]: true }));
       const result = await $w.cloud.callFunction({
         name: 'flight_control',
         data: {
@@ -77,25 +105,25 @@ export default function DroneManagement(props) {
           body: {
             droneId: drone._id,
             droneSn: drone.sn,
-            action: 'goHome'
-          }
-        }
+            action: 'goHome',
+          },
+        },
       });
       toast({
         title: '返航指令已发送',
         description: `无人机 ${drone.sn} 正在返航...`,
-        variant: 'default'
+        variant: 'default',
       });
     } catch (error) {
       console.error('返航指令发送失败:', error);
       toast({
         title: '返航指令发送失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setTimeout(() => {
-        setReturningHome(prev => ({ ...prev, [drone._id]: false }));
+        setReturningHome((prev) => ({ ...prev, [drone._id]: false }));
       }, 2000);
     }
   };
@@ -105,7 +133,7 @@ export default function DroneManagement(props) {
       toast({
         title: '操作失败',
         description: '请填写序列号和型号',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -118,9 +146,11 @@ export default function DroneManagement(props) {
         firmware: newDrone.firmware || 'v1.0.0',
         battery: editingDrone ? editingDrone.battery : 100,
         location: newDrone.location || '设备库',
-        lastCommunicationTime: editingDrone ? editingDrone.lastCommunicationTime : new Date().getTime(),
+        lastCommunicationTime: editingDrone
+          ? editingDrone.lastCommunicationTime
+          : new Date().getTime(),
         lastUpdate: editingDrone ? editingDrone.lastUpdate : new Date().toLocaleString('zh-CN'),
-        updatedAt: new Date().getTime()
+        updatedAt: new Date().getTime(),
       };
       if (editingDrone) {
         await $w.cloud.callDataSource({
@@ -128,8 +158,8 @@ export default function DroneManagement(props) {
           methodName: 'wedaUpdateV2',
           params: {
             data: droneData,
-            filter: { where: { _id: { $eq: editingDrone._id } } }
-          }
+            filter: { where: { _id: { $eq: editingDrone._id } } },
+          },
         });
         toast({ title: '更新成功', description: `设备 ${newDrone.sn} 已更新` });
       } else {
@@ -137,7 +167,7 @@ export default function DroneManagement(props) {
         await $w.cloud.callDataSource({
           dataSourceName: 'drone',
           methodName: 'wedaCreateV2',
-          params: { data: droneData }
+          params: { data: droneData },
         });
         toast({ title: '创建成功', description: `设备 ${newDrone.sn} 已创建` });
       }
@@ -150,7 +180,7 @@ export default function DroneManagement(props) {
         battery: 100,
         location: '',
         lastCommunicationTime: '',
-        lastUpdate: ''
+        lastUpdate: '',
       });
       setEditingDrone(null);
       setShowCreateDialog(false);
@@ -159,21 +189,21 @@ export default function DroneManagement(props) {
       toast({
         title: '操作失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setDialogLoading(false);
     }
   };
 
-  const handleDeleteDrone = async drone => {
+  const handleDeleteDrone = async (drone) => {
     try {
       await $w.cloud.callDataSource({
         dataSourceName: 'drone',
         methodName: 'wedaDeleteV2',
         params: {
-          filter: { where: { _id: { $eq: drone._id } } }
-        }
+          filter: { where: { _id: { $eq: drone._id } } },
+        },
       });
       toast({ title: '删除成功', description: `设备 ${drone.sn} 已删除` });
       loadDrones();
@@ -181,12 +211,12 @@ export default function DroneManagement(props) {
       toast({
         title: '删除失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
 
-  const handleEditDrone = drone => {
+  const handleEditDrone = (drone) => {
     setEditingDrone(drone);
     setNewDrone({
       sn: drone.sn || '',
@@ -196,7 +226,7 @@ export default function DroneManagement(props) {
       battery: drone.battery || 100,
       location: drone.location || '',
       lastCommunicationTime: drone.lastCommunicationTime || '',
-      lastUpdate: drone.lastUpdate || ''
+      lastUpdate: drone.lastUpdate || '',
     });
     setShowCreateDialog(true);
   };
@@ -212,48 +242,48 @@ export default function DroneManagement(props) {
       battery: 100,
       location: '',
       lastCommunicationTime: '',
-      lastUpdate: ''
+      lastUpdate: '',
     });
     setDialogLoading(false);
   };
 
-  const handleOpenChange = open => {
+  const handleOpenChange = (open) => {
     if (!open) handleDialogClose();
     else setShowCreateDialog(true);
   };
 
-  const formatTime = timestamp => {
+  const formatTime = (timestamp) => {
     if (!timestamp) return '未知';
     const date = new Date(timestamp);
     return date.toLocaleString('zh-CN');
   };
 
-  const getStatusDisplay = status => {
+  const getStatusDisplay = (status) => {
     const statusConfig = {
       online: {
         bg: 'bg-green-100 dark:bg-green-900/30',
         text: 'text-green-700 dark:text-green-400',
         dot: 'bg-green-500',
-        label: '在线'
+        label: '在线',
       },
       offline: {
         bg: 'bg-gray-100 dark:bg-gray-800',
         text: 'text-gray-700 dark:text-gray-400',
         dot: 'bg-gray-500',
-        label: '离线'
+        label: '离线',
       },
       maintenance: {
         bg: 'bg-orange-100 dark:bg-orange-900/30',
         text: 'text-orange-700 dark:text-orange-400',
         dot: 'bg-orange-500',
-        label: '维护中'
+        label: '维护中',
       },
       flying: {
         bg: 'bg-blue-100 dark:bg-blue-900/30',
         text: 'text-blue-700 dark:text-blue-400',
         dot: 'bg-blue-500',
-        label: '飞行中'
-      }
+        label: '飞行中',
+      },
     };
     const config = statusConfig[status] || statusConfig.offline;
     return (
@@ -264,34 +294,40 @@ export default function DroneManagement(props) {
     );
   };
 
-  const getBatteryColor = level => {
+  const getBatteryColor = (level) => {
     if (level > 70) return 'text-green-500 dark:text-green-400';
     if (level > 30) return 'text-yellow-500 dark:text-yellow-400';
     return 'text-red-500 dark:text-red-400';
   };
 
   return (
-    <MainLayout $w={$w}>
-      <AuthGuard $w={$w}>
-          <div style={style} className="space-y-6 animate-in fade-in duration-500">
-        
+    <AuthGuard $w={$w}>
+      <div style={style} className="space-y-6 animate-in fade-in duration-500">
         {/* 顶部工具栏 */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1 w-full sm:w-auto flex items-center gap-4">
-             <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input 
-                  placeholder="搜索设备..." 
-                  className="pl-10 bg-background border-input w-full hover:border-primary transition-colors duration-200" 
-                />
-             </div>
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="搜索设备..."
+                className="pl-10 bg-background border-input w-full hover:border-primary transition-colors duration-200"
+              />
+            </div>
           </div>
           <div className="flex space-x-2 w-full sm:w-auto">
-            <Button variant="outline" onClick={loadDrones} className="flex-1 sm:flex-none" disabled={loading}>
+            <Button
+              variant="outline"
+              onClick={loadDrones}
+              className="flex-1 sm:flex-none"
+              disabled={loading}
+            >
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               {loading ? '刷新中' : '刷新列表'}
             </Button>
-            <Button onClick={() => setShowCreateDialog(true)} className="flex-1 sm:flex-none bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              className="flex-1 sm:flex-none bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               <Plus className="h-4 w-4 mr-2" />
               添加设备
             </Button>
@@ -303,14 +339,16 @@ export default function DroneManagement(props) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="bg-card border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">在线设备</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  在线设备
+                </CardTitle>
                 <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
                   <Wifi className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-foreground">
-                  {drones.filter(d => d.status === 'online').length}
+                  {drones.filter((d) => d.status === 'online').length}
                 </div>
                 <p className="text-xs text-muted-foreground">当前实时在线</p>
               </CardContent>
@@ -318,7 +356,9 @@ export default function DroneManagement(props) {
 
             <Card className="bg-card border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">总设备数</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  总设备数
+                </CardTitle>
                 <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
                   <Drone className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
@@ -345,16 +385,24 @@ export default function DroneManagement(props) {
                 <p className="text-sm text-muted-foreground mt-2">点击上方"添加设备"按钮开始接入</p>
               </div>
             ) : (
-              drones.map(drone => (
-                <Card key={drone._id} className="bg-card border-border shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200 group">
+              drones.map((drone) => (
+                <Card
+                  key={drone._id}
+                  className="bg-card border-border shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-200 group"
+                >
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center space-x-3 overflow-hidden">
-                        <div className={`p-2 rounded-lg ${drone.status === 'online' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                        <div
+                          className={`p-2 rounded-lg ${drone.status === 'online' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}
+                        >
                           <Drone className="h-5 w-5" />
                         </div>
                         <div className="min-w-0">
-                          <CardTitle className="text-base font-semibold text-foreground truncate" title={drone.sn}>
+                          <CardTitle
+                            className="text-base font-semibold text-foreground truncate"
+                            title={drone.sn}
+                          >
                             {drone.sn}
                           </CardTitle>
                           <CardDescription className="truncate text-xs">
@@ -365,13 +413,15 @@ export default function DroneManagement(props) {
                       {getStatusDisplay(drone.status)}
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
                         <Battery className={`h-4 w-4 ${getBatteryColor(drone.battery)}`} />
                         <span className="text-muted-foreground text-xs">电量</span>
-                        <span className={`font-medium ${getBatteryColor(drone.battery)}`}>{drone.battery || 0}%</span>
+                        <span className={`font-medium ${getBatteryColor(drone.battery)}`}>
+                          {drone.battery || 0}%
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Signal className="h-4 w-4 text-blue-500" />
@@ -385,36 +435,58 @@ export default function DroneManagement(props) {
                         <span className="text-muted-foreground flex items-center">
                           <Factory className="h-3 w-3 mr-1" /> 厂商
                         </span>
-                        <span className="text-foreground font-medium truncate max-w-[120px]" title={drone.manufacturer}>{drone.manufacturer || '-'}</span>
+                        <span
+                          className="text-foreground font-medium truncate max-w-[120px]"
+                          title={drone.manufacturer}
+                        >
+                          {drone.manufacturer || '-'}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground flex items-center">
                           <MapPin className="h-3 w-3 mr-1" /> 位置
                         </span>
-                        <span className="text-foreground font-medium truncate max-w-[120px]" title={drone.location}>{drone.location || '-'}</span>
+                        <span
+                          className="text-foreground font-medium truncate max-w-[120px]"
+                          title={drone.location}
+                        >
+                          {drone.location || '-'}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground flex items-center">
                           <Calendar className="h-3 w-3 mr-1" /> 更新
                         </span>
-                        <span className="text-foreground truncate max-w-[140px]">{formatTime(drone.lastCommunicationTime)}</span>
+                        <span className="text-foreground truncate max-w-[140px]">
+                          {formatTime(drone.lastCommunicationTime)}
+                        </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 pt-2">
-                      <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={() => handleEditDrone(drone)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 h-8 text-xs"
+                        onClick={() => handleEditDrone(drone)}
+                      >
                         <Edit className="h-3 w-3 mr-1" />
                         编辑
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1 h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30" onClick={() => handleDeleteDrone(drone)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                        onClick={() => handleDeleteDrone(drone)}
+                      >
                         <Trash2 className="h-3 w-3 mr-1" />
                         删除
                       </Button>
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        className="flex-1 h-8 text-xs bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border-primary/20" 
-                        onClick={() => handleReturnHome(drone)} 
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1 h-8 text-xs bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border-primary/20"
+                        onClick={() => handleReturnHome(drone)}
                         disabled={returningHome[drone._id]}
                       >
                         {returningHome[drone._id] ? (
@@ -441,25 +513,29 @@ export default function DroneManagement(props) {
                 {editingDrone ? '修改设备的基本信息和配置' : '录入新的无人机设备信息'}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="grid gap-6 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="sn">序列号 <span className="text-destructive">*</span></Label>
-                  <Input 
+                  <Label htmlFor="sn">
+                    序列号 <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
                     id="sn"
-                    value={newDrone.sn} 
-                    onChange={e => setNewDrone(prev => ({ ...prev, sn: e.target.value }))} 
+                    value={newDrone.sn}
+                    onChange={(e) => setNewDrone((prev) => ({ ...prev, sn: e.target.value }))}
                     placeholder="请输入设备SN码"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="model">设备型号 <span className="text-destructive">*</span></Label>
-                  <Input 
+                  <Label htmlFor="model">
+                    设备型号 <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
                     id="model"
-                    value={newDrone.model} 
-                    onChange={e => setNewDrone(prev => ({ ...prev, model: e.target.value }))} 
-                    placeholder="例如: Mavic 3" 
+                    value={newDrone.model}
+                    onChange={(e) => setNewDrone((prev) => ({ ...prev, model: e.target.value }))}
+                    placeholder="例如: Mavic 3"
                   />
                 </div>
               </div>
@@ -467,31 +543,33 @@ export default function DroneManagement(props) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="manufacturer">厂商名称</Label>
-                  <Input 
+                  <Input
                     id="manufacturer"
-                    value={newDrone.manufacturer} 
-                    onChange={e => setNewDrone(prev => ({ ...prev, manufacturer: e.target.value }))} 
-                    placeholder="例如: DJI" 
+                    value={newDrone.manufacturer}
+                    onChange={(e) =>
+                      setNewDrone((prev) => ({ ...prev, manufacturer: e.target.value }))
+                    }
+                    placeholder="例如: DJI"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="firmware">固件版本</Label>
-                  <Input 
+                  <Input
                     id="firmware"
-                    value={newDrone.firmware} 
-                    onChange={e => setNewDrone(prev => ({ ...prev, firmware: e.target.value }))} 
-                    placeholder="例如: v1.0.0" 
+                    value={newDrone.firmware}
+                    onChange={(e) => setNewDrone((prev) => ({ ...prev, firmware: e.target.value }))}
+                    placeholder="例如: v1.0.0"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="location">部署位置</Label>
-                <Input 
+                <Input
                   id="location"
-                  value={newDrone.location} 
-                  onChange={e => setNewDrone(prev => ({ ...prev, location: e.target.value }))} 
-                  placeholder="请输入设备当前部署位置" 
+                  value={newDrone.location}
+                  onChange={(e) => setNewDrone((prev) => ({ ...prev, location: e.target.value }))}
+                  placeholder="请输入设备当前部署位置"
                 />
               </div>
 
@@ -505,11 +583,15 @@ export default function DroneManagement(props) {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs text-muted-foreground">剩余电量</span>
-                      <span className={`font-medium ${getBatteryColor(editingDrone.battery)}`}>{editingDrone.battery || 0}%</span>
+                      <span className={`font-medium ${getBatteryColor(editingDrone.battery)}`}>
+                        {editingDrone.battery || 0}%
+                      </span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs text-muted-foreground">最后通信</span>
-                      <span className="font-medium truncate">{formatTime(editingDrone.lastCommunicationTime)}</span>
+                      <span className="font-medium truncate">
+                        {formatTime(editingDrone.lastCommunicationTime)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -525,9 +607,8 @@ export default function DroneManagement(props) {
               </Button>
             </div>
           </DialogContent>
-          </Dialog>
-        </div>
-        </AuthGuard>
-      </MainLayout>
+        </Dialog>
+      </div>
+    </AuthGuard>
   );
 }

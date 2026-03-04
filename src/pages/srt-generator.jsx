@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
-import { Button, Textarea, Input, Label, Card, CardContent, CardHeader, CardTitle, useToast } from "@/components/ui";
-import { generateSRT, generateAlignedSrt } from "@/lib/subtitle-alignment";
-import { Loader2 } from "lucide-react";
+import {
+  Button,
+  Textarea,
+  Input,
+  Label,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  useToast,
+} from '@/components/ui';
+import { generateSRT, generateAlignedSrt } from '@/lib/subtitle-alignment';
+import { Loader2 } from 'lucide-react';
 
 const SrtGeneratorPage = () => {
   const [text, setText] = useState('');
@@ -14,9 +24,9 @@ const SrtGeneratorPage = () => {
   const handleGenerate = async () => {
     if (!text) {
       toast({
-        title: "验证失败",
-        description: "请输入有效的文本",
-        variant: "destructive"
+        title: '验证失败',
+        description: '请输入有效的文本',
+        variant: 'destructive',
       });
       return;
     }
@@ -26,18 +36,18 @@ const SrtGeneratorPage = () => {
         const dur = parseFloat(duration);
         if (isNaN(dur)) {
           toast({
-            title: "验证失败",
-            description: "请输入有效的音频时长",
-            variant: "destructive"
+            title: '验证失败',
+            description: '请输入有效的音频时长',
+            variant: 'destructive',
           });
           return;
         }
         const srt = generateSRT(text, dur);
         setResult(srt);
         toast({
-          title: "生成成功",
-          description: "SRT 字幕已生成",
-          variant: "default"
+          title: '生成成功',
+          description: 'SRT 字幕已生成',
+          variant: 'default',
         });
       } else {
         // Advanced mode: TTS + ASR + Alignment
@@ -45,17 +55,17 @@ const SrtGeneratorPage = () => {
         const { srt } = await generateAlignedSrt(text);
         setResult(srt);
         toast({
-          title: "智能生成成功",
-          description: "语音和字幕已生成",
-          variant: "default"
+          title: '智能生成成功',
+          description: '语音和字幕已生成',
+          variant: 'default',
         });
       }
     } catch (error) {
       console.error(error);
       toast({
-        title: "生成失败",
+        title: '生成失败',
         description: error.message,
-        variant: "destructive"
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -81,14 +91,14 @@ const SrtGeneratorPage = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4 mb-4">
-            <Button 
-              variant={mode === 'simple' ? "default" : "outline"}
+            <Button
+              variant={mode === 'simple' ? 'default' : 'outline'}
               onClick={() => setMode('simple')}
             >
               简单模式 (手动时长)
             </Button>
-            <Button 
-              variant={mode === 'advanced' ? "default" : "outline"}
+            <Button
+              variant={mode === 'advanced' ? 'default' : 'outline'}
               onClick={() => setMode('advanced')}
             >
               高级模式 (自动语音识别)
@@ -96,8 +106,10 @@ const SrtGeneratorPage = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="text">输入文本 {mode === 'advanced' && '(将自动进行 TTS 和 ASR)'}</Label>
-            <Textarea 
+            <Label htmlFor="text">
+              输入文本 {mode === 'advanced' && '(将自动进行 TTS 和 ASR)'}
+            </Label>
+            <Textarea
               id="text"
               placeholder="请输入需要生成字幕的文本内容..."
               className="h-40"
@@ -105,11 +117,11 @@ const SrtGeneratorPage = () => {
               onChange={(e) => setText(e.target.value)}
             />
           </div>
-          
+
           {mode === 'simple' && (
             <div className="space-y-2">
               <Label htmlFor="duration">音频总时长 (秒)</Label>
-              <Input 
+              <Input
                 id="duration"
                 type="number"
                 step="0.1"
@@ -126,7 +138,9 @@ const SrtGeneratorPage = () => {
               {loading ? '处理中...' : '生成 SRT'}
             </Button>
             {result && (
-              <Button variant="outline" onClick={handleDownload}>下载 .srt 文件</Button>
+              <Button variant="outline" onClick={handleDownload}>
+                下载 .srt 文件
+              </Button>
             )}
           </div>
         </CardContent>

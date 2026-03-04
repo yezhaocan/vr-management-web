@@ -1,25 +1,50 @@
 // @ts-ignore;
 import React, { useState, useEffect, useRef } from 'react';
 // @ts-ignore;
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useToast, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Textarea,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  useToast,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui';
 // @ts-ignore;
-import { MapPin, Navigation, Upload, X, Image, Video, Palette, Type, Code, Eye, CheckCircle, AlertCircle, Copy, RotateCcw } from 'lucide-react';
+import {
+  MapPin,
+  Navigation,
+  Upload,
+  X,
+  Image,
+  Video,
+  Palette,
+  Type,
+  Code,
+  Eye,
+  CheckCircle,
+  AlertCircle,
+  Copy,
+  RotateCcw,
+} from 'lucide-react';
 
 // 本地存储键名
 const SCENIC_SPOT_STORAGE_KEY = 'scenic_spot_data';
 // 天地图API密钥
 const TIAN_DI_TU_KEY = 'eaa119242fd58a04007ad66abc2546f7';
-export function POIForm({
-  poi,
-  $w,
-  open,
-  onOpenChange,
-  onSave,
-  onCancel
-}) {
-  const {
-    toast
-  } = useToast();
+export function POIForm({ poi, $w, open, onOpenChange, onSave, onCancel }) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -31,7 +56,7 @@ export function POIForm({
     fontFamily: 'Arial',
     fontSize: '14',
     fontColor: '#000000',
-    extension: ''
+    extension: '',
   });
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -60,12 +85,12 @@ export function POIForm({
   };
 
   // 获取文件临时链接
-  const getFileUrl = async fileId => {
+  const getFileUrl = async (fileId) => {
     if (!fileId) return '';
     try {
       const tcb = await $w.cloud.getCloudInstance();
       const result = await tcb.getTempFileURL({
-        fileList: [fileId]
+        fileList: [fileId],
       });
       if (result.fileList && result.fileList[0]) {
         return result.fileList[0].tempFileURL;
@@ -101,7 +126,7 @@ export function POIForm({
           fontFamily: poi.fontFamily || 'Arial',
           fontSize: poi.fontSize?.toString() || '14',
           fontColor: poi.fontColor || '#000000',
-          extension: poi.extension || ''
+          extension: poi.extension || '',
         });
         setImagePreviewUrl(imageUrl);
         setVideoPreviewUrl(videoUrl);
@@ -117,7 +142,7 @@ export function POIForm({
           fontFamily: 'Arial',
           fontSize: '14',
           fontColor: '#000000',
-          extension: ''
+          extension: '',
         });
         setImagePreviewUrl('');
         setVideoPreviewUrl('');
@@ -206,15 +231,15 @@ export function POIForm({
       mapInstance.addControl(new T.Control.MapType());
 
       // 地图点击事件 - 移除坐标拾取成功提示
-      const handleMapClick = e => {
+      const handleMapClick = (e) => {
         try {
           const lngLat = e.lnglat;
           const latitude = lngLat.lat.toFixed(6);
           const longitude = lngLat.lng.toFixed(6);
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             latitude: latitude,
-            longitude: longitude
+            longitude: longitude,
           }));
           // 移除坐标拾取成功提示
           addMarker(lngLat, mapInstance);
@@ -236,7 +261,7 @@ export function POIForm({
       toast({
         title: '地图加载失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -247,7 +272,7 @@ export function POIForm({
     try {
       // 清除之前的标记
       if (mapInstance._markers) {
-        mapInstance._markers.forEach(marker => {
+        mapInstance._markers.forEach((marker) => {
           mapInstance.removeOverLay(marker);
         });
       }
@@ -291,22 +316,22 @@ export function POIForm({
 
   // 处理输入框变化
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   // 处理JSON扩展字段变化
-  const handleExtensionChange = value => {
-    setFormData(prev => ({
+  const handleExtensionChange = (value) => {
+    setFormData((prev) => ({
       ...prev,
-      extension: value
+      extension: value,
     }));
   };
 
   // JSON格式校验
-  const validateJson = jsonString => {
+  const validateJson = (jsonString) => {
     if (!jsonString.trim()) {
       setJsonError('');
       setJsonValid(false);
@@ -336,19 +361,19 @@ export function POIForm({
     try {
       const parsed = JSON.parse(formData.extension);
       const formatted = JSON.stringify(parsed, null, 2);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        extension: formatted
+        extension: formatted,
       }));
       toast({
         title: 'JSON格式化成功',
-        description: 'JSON已格式化'
+        description: 'JSON已格式化',
       });
     } catch (error) {
       toast({
         title: '格式化失败',
         description: 'JSON格式不正确，无法格式化',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -359,19 +384,19 @@ export function POIForm({
     try {
       const parsed = JSON.parse(formData.extension);
       const compressed = JSON.stringify(parsed);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        extension: compressed
+        extension: compressed,
       }));
       toast({
         title: 'JSON压缩成功',
-        description: 'JSON已压缩'
+        description: 'JSON已压缩',
       });
     } catch (error) {
       toast({
         title: '压缩失败',
         description: 'JSON格式不正确，无法压缩',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -383,26 +408,26 @@ export function POIForm({
       await navigator.clipboard.writeText(formData.extension);
       toast({
         title: '复制成功',
-        description: 'JSON已复制到剪贴板'
+        description: 'JSON已复制到剪贴板',
       });
     } catch (error) {
       toast({
         title: '复制失败',
         description: '无法复制到剪贴板',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
 
   // 清空JSON
   const clearJson = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      extension: ''
+      extension: '',
     }));
     toast({
       title: '已清空',
-      description: 'JSON内容已清空'
+      description: 'JSON内容已清空',
     });
   };
 
@@ -416,7 +441,7 @@ export function POIForm({
       toast({
         title: '文件类型不支持',
         description: '请上传图片文件 (JPEG, PNG, GIF)',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -424,7 +449,7 @@ export function POIForm({
       toast({
         title: '文件类型不支持',
         description: '请上传视频文件 (MP4)',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -437,16 +462,16 @@ export function POIForm({
       const fileName = `poi_${type}s/${timestamp}_${randomStr}_${file.name}`;
       const uploadResult = await tcb.uploadFile({
         cloudPath: fileName,
-        filePath: file
+        filePath: file,
       });
       const fileID = uploadResult.fileID;
       const tempFileURLResult = await tcb.getTempFileURL({
-        fileList: [fileID]
+        fileList: [fileID],
       });
       const previewUrl = tempFileURLResult.fileList[0].tempFileURL;
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [type === 'image' ? 'imageFileId' : 'videoFileId']: fileID
+        [type === 'image' ? 'imageFileId' : 'videoFileId']: fileID,
       }));
       if (type === 'image') {
         setImagePreviewUrl(previewUrl);
@@ -455,13 +480,13 @@ export function POIForm({
       }
       toast({
         title: '上传成功',
-        description: `${type === 'image' ? '图片' : '视频'}文件已上传`
+        description: `${type === 'image' ? '图片' : '视频'}文件已上传`,
       });
     } catch (error) {
       toast({
         title: '上传失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       if (type === 'image') {
@@ -476,23 +501,23 @@ export function POIForm({
   };
 
   // 清除文件
-  const clearFile = type => {
+  const clearFile = (type) => {
     if (type === 'image') {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        imageFileId: ''
+        imageFileId: '',
       }));
       setImagePreviewUrl('');
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        videoFileId: ''
+        videoFileId: '',
       }));
       setVideoPreviewUrl('');
     }
     toast({
       title: '已清除',
-      description: `${type === 'image' ? '图片' : '视频'}文件已清除`
+      description: `${type === 'image' ? '图片' : '视频'}文件已清除`,
     });
   };
 
@@ -502,7 +527,7 @@ export function POIForm({
       toast({
         title: '表单验证失败',
         description: '请输入POI名称',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -510,7 +535,7 @@ export function POIForm({
       toast({
         title: '表单验证失败',
         description: '请选择坐标位置',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -518,7 +543,7 @@ export function POIForm({
       toast({
         title: 'JSON格式错误',
         description: '请检查拓展配置的JSON格式',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -536,7 +561,7 @@ export function POIForm({
         fontSize: parseInt(formData.fontSize) || 14,
         fontColor: formData.fontColor,
         extension: formData.extension,
-        updatedAt: new Date().getTime()
+        updatedAt: new Date().getTime(),
       };
       if (poi?._id) {
         await $w.cloud.callDataSource({
@@ -546,16 +571,16 @@ export function POIForm({
             filter: {
               where: {
                 _id: {
-                  $eq: poi._id
-                }
-              }
+                  $eq: poi._id,
+                },
+              },
             },
-            data: poiData
-          }
+            data: poiData,
+          },
         });
         toast({
           title: 'POI更新成功',
-          description: `POI "${formData.name}" 已更新`
+          description: `POI "${formData.name}" 已更新`,
         });
       } else {
         poiData.createdAt = new Date().getTime();
@@ -563,12 +588,12 @@ export function POIForm({
           dataSourceName: 'signage_data',
           methodName: 'wedaCreateV2',
           params: {
-            data: poiData
-          }
+            data: poiData,
+          },
         });
         toast({
           title: 'POI创建成功',
-          description: `POI "${formData.name}" 已创建`
+          description: `POI "${formData.name}" 已创建`,
         });
       }
       onSave && onSave();
@@ -576,7 +601,7 @@ export function POIForm({
       toast({
         title: '操作失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -584,15 +609,33 @@ export function POIForm({
   };
 
   // 渲染基础信息标签页
-  const renderBasicTab = () => <div className="space-y-4">
+  const renderBasicTab = () => (
+    <div className="space-y-4">
       <div>
-        <Label htmlFor="name" className="font-medium">POI名称 *</Label>
-        <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入POI名称" className="mt-1" required />
+        <Label htmlFor="name" className="font-medium">
+          POI名称 *
+        </Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          placeholder="请输入POI名称"
+          className="mt-1"
+          required
+        />
       </div>
 
       <div>
-        <Label htmlFor="description" className="font-medium">描述</Label>
-        <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入POI描述" className="mt-1 h-20" />
+        <Label htmlFor="description" className="font-medium">
+          描述
+        </Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => handleInputChange('description', e.target.value)}
+          placeholder="请输入POI描述"
+          className="mt-1 h-20"
+        />
       </div>
 
       {/* 坐标信息 - 直接显示地图 */}
@@ -607,12 +650,28 @@ export function POIForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <Label htmlFor="latitude" className="text-muted-foreground">纬度</Label>
-            <Input id="latitude" value={formData.latitude} onChange={e => handleInputChange('latitude', e.target.value)} placeholder="例如：39.90923" className="mt-1" />
+            <Label htmlFor="latitude" className="text-muted-foreground">
+              纬度
+            </Label>
+            <Input
+              id="latitude"
+              value={formData.latitude}
+              onChange={(e) => handleInputChange('latitude', e.target.value)}
+              placeholder="例如：39.90923"
+              className="mt-1"
+            />
           </div>
           <div>
-            <Label htmlFor="longitude" className="text-muted-foreground">经度</Label>
-            <Input id="longitude" value={formData.longitude} onChange={e => handleInputChange('longitude', e.target.value)} placeholder="例如：116.397428" className="mt-1" />
+            <Label htmlFor="longitude" className="text-muted-foreground">
+              经度
+            </Label>
+            <Input
+              id="longitude"
+              value={formData.longitude}
+              onChange={(e) => handleInputChange('longitude', e.target.value)}
+              placeholder="例如：116.397428"
+              className="mt-1"
+            />
           </div>
         </div>
 
@@ -624,58 +683,107 @@ export function POIForm({
             </p>
           </div>
           <div ref={mapContainerRef} className="w-full h-64 bg-muted">
-            {!mapLoaded && <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            {!mapLoaded && (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                 地图加载中...
-              </div>}
+              </div>
+            )}
           </div>
         </div>
 
-        {formData.latitude && formData.longitude && <div className="mt-3 p-3 bg-primary/10 border border-primary/20 rounded">
+        {formData.latitude && formData.longitude && (
+          <div className="mt-3 p-3 bg-primary/10 border border-primary/20 rounded">
             <div className="flex items-center space-x-2 text-primary text-sm">
               <MapPin className="h-4 w-4" />
-              <span>当前坐标：纬度 {formData.latitude}，经度 {formData.longitude}</span>
+              <span>
+                当前坐标：纬度 {formData.latitude}，经度 {formData.longitude}
+              </span>
             </div>
-          </div>}
+          </div>
+        )}
       </div>
 
       <div>
-        <Label htmlFor="height" className="font-medium">高度 (米)</Label>
-        <Input id="height" type="number" value={formData.height} onChange={e => handleInputChange('height', e.target.value)} placeholder="请输入高度" className="mt-1" />
+        <Label htmlFor="height" className="font-medium">
+          高度 (米)
+        </Label>
+        <Input
+          id="height"
+          type="number"
+          value={formData.height}
+          onChange={(e) => handleInputChange('height', e.target.value)}
+          placeholder="请输入高度"
+          className="mt-1"
+        />
       </div>
-    </div>;
+    </div>
+  );
 
   // 渲染媒体上传标签页
-  const renderMediaTab = () => <div className="space-y-6">
+  const renderMediaTab = () => (
+    <div className="space-y-6">
       {/* 图片上传 */}
       <div className="bg-muted/30 rounded-lg p-4 border border-border">
         <Label className="mb-4 block font-medium">图片上传</Label>
         <div className="space-y-3">
-          <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleFileUpload(e, 'image')} />
-          
-          {formData.imageFileId ? <div className="space-y-3">
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleFileUpload(e, 'image')}
+          />
+
+          {formData.imageFileId ? (
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Image className="h-6 w-6 text-green-500" />
                   <div>
                     <p className="text-sm font-medium">图片已上传</p>
-                    <p className="text-xs text-muted-foreground">文件ID: {formData.imageFileId.substring(0, 20)}...</p>
+                    <p className="text-xs text-muted-foreground">
+                      文件ID: {formData.imageFileId.substring(0, 20)}...
+                    </p>
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => imageInputRef.current?.click()} className="px-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="px-3"
+                  >
                     <Upload className="h-3 w-3 mr-1" />
                     更换
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => clearFile('image')} className="px-3 hover:text-destructive">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearFile('image')}
+                    className="px-3 hover:text-destructive"
+                  >
                     <X className="h-3 w-3 mr-1" />
                     清除
                   </Button>
                 </div>
               </div>
-              {imagePreviewUrl && <div className="border border-border rounded-lg p-2 bg-muted/50">
-                  <img src={imagePreviewUrl} alt="预览" className="w-full h-32 object-cover rounded" />
-                </div>}
-            </div> : <div className="text-center border-2 border-dashed border-border rounded-lg p-6 hover:border-primary transition-colors cursor-pointer bg-muted/20" onClick={() => imageInputRef.current?.click()}>
+              {imagePreviewUrl && (
+                <div className="border border-border rounded-lg p-2 bg-muted/50">
+                  <img
+                    src={imagePreviewUrl}
+                    alt="预览"
+                    className="w-full h-32 object-cover rounded"
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className="text-center border-2 border-dashed border-border rounded-lg p-6 hover:border-primary transition-colors cursor-pointer bg-muted/20"
+              onClick={() => imageInputRef.current?.click()}
+            >
               <div className="space-y-3">
                 <div className="flex justify-center">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
@@ -683,14 +791,19 @@ export function POIForm({
                   </div>
                 </div>
                 <div>
-                  <p className="text-foreground font-medium">{uploadingImage ? '上传中...' : '点击上传图片'}</p>
+                  <p className="text-foreground font-medium">
+                    {uploadingImage ? '上传中...' : '点击上传图片'}
+                  </p>
                   <p className="text-muted-foreground text-sm mt-1">支持 JPG, PNG, GIF 格式</p>
                 </div>
-                {uploadingImage && <div className="w-full bg-muted rounded-full h-2">
+                {uploadingImage && (
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div className="bg-primary h-2 rounded-full animate-pulse"></div>
-                  </div>}
+                  </div>
+                )}
               </div>
-            </div>}
+            </div>
+          )}
         </div>
       </div>
 
@@ -698,32 +811,64 @@ export function POIForm({
       <div className="bg-muted/30 rounded-lg p-4 border border-border">
         <Label className="mb-4 block font-medium">视频上传</Label>
         <div className="space-y-3">
-          <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={e => handleFileUpload(e, 'video')} />
-          
-          {formData.videoFileId ? <div className="space-y-3">
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            className="hidden"
+            onChange={(e) => handleFileUpload(e, 'video')}
+          />
+
+          {formData.videoFileId ? (
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Video className="h-6 w-6 text-green-500" />
                   <div>
                     <p className="text-sm font-medium">视频已上传</p>
-                    <p className="text-xs text-muted-foreground">文件ID: {formData.videoFileId.substring(0, 20)}...</p>
+                    <p className="text-xs text-muted-foreground">
+                      文件ID: {formData.videoFileId.substring(0, 20)}...
+                    </p>
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => videoInputRef.current?.click()} className="px-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => videoInputRef.current?.click()}
+                    className="px-3"
+                  >
                     <Upload className="h-3 w-3 mr-1" />
                     更换
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => clearFile('video')} className="px-3 hover:text-destructive">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearFile('video')}
+                    className="px-3 hover:text-destructive"
+                  >
                     <X className="h-3 w-3 mr-1" />
                     清除
                   </Button>
                 </div>
               </div>
-              {videoPreviewUrl && <div className="border border-border rounded-lg p-2 bg-muted/50">
-                  <video src={videoPreviewUrl} controls className="w-full h-32 object-cover rounded" />
-                </div>}
-            </div> : <div className="text-center border-2 border-dashed border-border rounded-lg p-6 hover:border-primary transition-colors cursor-pointer bg-muted/20" onClick={() => videoInputRef.current?.click()}>
+              {videoPreviewUrl && (
+                <div className="border border-border rounded-lg p-2 bg-muted/50">
+                  <video
+                    src={videoPreviewUrl}
+                    controls
+                    className="w-full h-32 object-cover rounded"
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className="text-center border-2 border-dashed border-border rounded-lg p-6 hover:border-primary transition-colors cursor-pointer bg-muted/20"
+              onClick={() => videoInputRef.current?.click()}
+            >
               <div className="space-y-3">
                 <div className="flex justify-center">
                   <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center">
@@ -731,20 +876,27 @@ export function POIForm({
                   </div>
                 </div>
                 <div>
-                  <p className="text-foreground font-medium">{uploadingVideo ? '上传中...' : '点击上传视频'}</p>
+                  <p className="text-foreground font-medium">
+                    {uploadingVideo ? '上传中...' : '点击上传视频'}
+                  </p>
                   <p className="text-muted-foreground text-sm mt-1">支持 MP4, MOV, AVI 格式</p>
                 </div>
-                {uploadingVideo && <div className="w-full bg-muted rounded-full h-2">
+                {uploadingVideo && (
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div className="bg-purple-500 h-2 rounded-full animate-pulse"></div>
-                  </div>}
+                  </div>
+                )}
               </div>
-            </div>}
+            </div>
+          )}
         </div>
       </div>
-    </div>;
+    </div>
+  );
 
   // 渲染样式配置标签页
-  const renderStyleTab = () => <div className="space-y-6">
+  const renderStyleTab = () => (
+    <div className="space-y-6">
       {/* 字体配置 */}
       <div className="bg-muted/30 rounded-lg p-4 border border-border">
         <Label className="mb-4 block flex items-center font-medium">
@@ -753,8 +905,13 @@ export function POIForm({
         </Label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <Label htmlFor="fontFamily" className="text-muted-foreground">字体</Label>
-            <Select value={formData.fontFamily} onValueChange={value => handleInputChange('fontFamily', value)}>
+            <Label htmlFor="fontFamily" className="text-muted-foreground">
+              字体
+            </Label>
+            <Select
+              value={formData.fontFamily}
+              onValueChange={(value) => handleInputChange('fontFamily', value)}
+            >
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="选择字体" />
               </SelectTrigger>
@@ -768,14 +925,36 @@ export function POIForm({
             </Select>
           </div>
           <div>
-            <Label htmlFor="fontSize" className="text-muted-foreground">字号</Label>
-            <Input id="fontSize" type="number" value={formData.fontSize} onChange={e => handleInputChange('fontSize', e.target.value)} placeholder="字号大小" className="mt-1" />
+            <Label htmlFor="fontSize" className="text-muted-foreground">
+              字号
+            </Label>
+            <Input
+              id="fontSize"
+              type="number"
+              value={formData.fontSize}
+              onChange={(e) => handleInputChange('fontSize', e.target.value)}
+              placeholder="字号大小"
+              className="mt-1"
+            />
           </div>
           <div>
-            <Label htmlFor="fontColor" className="text-muted-foreground">字体颜色</Label>
+            <Label htmlFor="fontColor" className="text-muted-foreground">
+              字体颜色
+            </Label>
             <div className="flex items-center space-x-2 mt-1">
-              <Input id="fontColor" type="color" value={formData.fontColor} onChange={e => handleInputChange('fontColor', e.target.value)} className="h-10 w-16 p-1 cursor-pointer" />
-              <Input value={formData.fontColor} onChange={e => handleInputChange('fontColor', e.target.value)} placeholder="#000000" className="flex-1" />
+              <Input
+                id="fontColor"
+                type="color"
+                value={formData.fontColor}
+                onChange={(e) => handleInputChange('fontColor', e.target.value)}
+                className="h-10 w-16 p-1 cursor-pointer"
+              />
+              <Input
+                value={formData.fontColor}
+                onChange={(e) => handleInputChange('fontColor', e.target.value)}
+                placeholder="#000000"
+                className="flex-1"
+              />
             </div>
           </div>
         </div>
@@ -788,28 +967,35 @@ export function POIForm({
           字体效果预览
         </Label>
         <div className="bg-muted/50 rounded-lg p-6 border border-border">
-          <div className="text-center p-4 rounded-lg" style={{
-          fontFamily: formData.fontFamily,
-          fontSize: `${formData.fontSize}px`,
-          color: formData.fontColor,
-          backgroundColor: 'rgba(255,255,255,0.1)',
-          border: '1px solid rgba(255,255,255,0.2)'
-        }}>
+          <div
+            className="text-center p-4 rounded-lg"
+            style={{
+              fontFamily: formData.fontFamily,
+              fontSize: `${formData.fontSize}px`,
+              color: formData.fontColor,
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.2)',
+            }}
+          >
             <p className="font-semibold mb-2">{formData.name || 'POI名称预览'}</p>
-            <p className="text-xs opacity-70 mt-2">字体: {formData.fontFamily} | 字号: {formData.fontSize}px | 颜色: {formData.fontColor}</p>
+            <p className="text-xs opacity-70 mt-2">
+              字体: {formData.fontFamily} | 字号: {formData.fontSize}px | 颜色: {formData.fontColor}
+            </p>
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 
   // 渲染拓展配置标签页
-  const renderExtensionTab = () => <div className="space-y-6">
+  const renderExtensionTab = () => (
+    <div className="space-y-6">
       <div className="bg-muted/30 rounded-lg p-4 border border-border">
         <Label className="mb-4 block flex items-center font-medium">
           <Code className="h-4 w-4 mr-2" />
           拓展配置
         </Label>
-        
+
         {/* JSON操作工具栏 */}
         <div className="flex flex-wrap gap-2 mb-4">
           <Button type="button" onClick={formatJson} variant="outline" size="sm" className="h-8">
@@ -824,7 +1010,13 @@ export function POIForm({
             <Copy className="h-3 w-3 mr-1" />
             复制
           </Button>
-          <Button type="button" onClick={clearJson} variant="outline" size="sm" className="h-8 hover:text-destructive">
+          <Button
+            type="button"
+            onClick={clearJson}
+            variant="outline"
+            size="sm"
+            className="h-8 hover:text-destructive"
+          >
             <X className="h-3 w-3 mr-1" />
             清空
           </Button>
@@ -832,26 +1024,46 @@ export function POIForm({
 
         {/* JSON验证状态 */}
         <div className="flex items-center space-x-2 mb-3">
-          {formData.extension.trim() ? jsonValid ? <div className="flex items-center space-x-1 text-green-500 text-sm">
+          {formData.extension.trim() ? (
+            jsonValid ? (
+              <div className="flex items-center space-x-1 text-green-500 text-sm">
                 <CheckCircle className="h-4 w-4" />
                 <span>JSON格式正确</span>
-              </div> : <div className="flex items-center space-x-1 text-destructive text-sm">
+              </div>
+            ) : (
+              <div className="flex items-center space-x-1 text-destructive text-sm">
                 <AlertCircle className="h-4 w-4" />
                 <span>JSON格式错误</span>
-              </div> : <div className="text-muted-foreground text-sm">请输入JSON配置</div>}
+              </div>
+            )
+          ) : (
+            <div className="text-muted-foreground text-sm">请输入JSON配置</div>
+          )}
         </div>
 
         <div>
-          <Label htmlFor="extension" className="text-muted-foreground">拓展字段配置</Label>
-          <Textarea ref={extensionTextareaRef} id="extension" value={formData.extension} onChange={e => handleExtensionChange(e.target.value)} placeholder='{"customField1": "value1", "customField2": "value2"}' className={`mt-1 h-40 font-mono text-sm ${jsonError ? 'border-destructive' : jsonValid ? 'border-green-500' : ''}`} style={{
-          fontFamily: 'Monaco, Menlo, Consolas, monospace',
-          fontSize: '13px',
-          lineHeight: '1.4'
-        }} />
-          {jsonError && <p className="text-destructive text-xs mt-1 flex items-center space-x-1">
+          <Label htmlFor="extension" className="text-muted-foreground">
+            拓展字段配置
+          </Label>
+          <Textarea
+            ref={extensionTextareaRef}
+            id="extension"
+            value={formData.extension}
+            onChange={(e) => handleExtensionChange(e.target.value)}
+            placeholder='{"customField1": "value1", "customField2": "value2"}'
+            className={`mt-1 h-40 font-mono text-sm ${jsonError ? 'border-destructive' : jsonValid ? 'border-green-500' : ''}`}
+            style={{
+              fontFamily: 'Monaco, Menlo, Consolas, monospace',
+              fontSize: '13px',
+              lineHeight: '1.4',
+            }}
+          />
+          {jsonError && (
+            <p className="text-destructive text-xs mt-1 flex items-center space-x-1">
               <AlertCircle className="h-3 w-3" />
               <span>{jsonError}</span>
-            </p>}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground mt-2">
             支持JSON格式的自定义配置，可用于存储额外的POI配置信息。支持格式化、压缩、复制等操作。
           </p>
@@ -876,10 +1088,14 @@ export function POIForm({
 }`}
         </pre>
       </div>
-    </div>;
+    </div>
+  );
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[70vh] bg-background border border-border shadow-xl rounded-lg flex flex-col p-0 overflow-hidden" onPointerDownOutside={e => e.preventDefault()}>
+      <DialogContent
+        className="max-w-4xl h-[70vh] bg-background border border-border shadow-xl rounded-lg flex flex-col p-0 overflow-hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader className="flex-shrink-0 p-6 border-b border-border bg-card">
           <DialogTitle className="flex items-center text-xl font-bold text-foreground">
             <MapPin className="h-5 w-5 mr-2 text-primary" />
@@ -888,21 +1104,37 @@ export function POIForm({
         </DialogHeader>
 
         <div className="flex-1 flex flex-col min-h-0 bg-background/50">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex-1 flex flex-col min-h-0"
+          >
             <TabsList className="flex w-full bg-background border-b border-border rounded-none p-0 h-12 justify-start px-6 gap-6">
-              <TabsTrigger value="basic" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
+              <TabsTrigger
+                value="basic"
+                className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
                 <MapPin className="h-4 w-4 mr-2" />
                 基础信息
               </TabsTrigger>
-              <TabsTrigger value="media" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
+              <TabsTrigger
+                value="media"
+                className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
                 <Upload className="h-4 w-4 mr-2" />
                 媒体上传
               </TabsTrigger>
-              <TabsTrigger value="style" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
+              <TabsTrigger
+                value="style"
+                className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
                 <Palette className="h-4 w-4 mr-2" />
                 样式配置
               </TabsTrigger>
-              <TabsTrigger value="extension" className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground">
+              <TabsTrigger
+                value="extension"
+                className="h-full rounded-none border-b-2 border-transparent px-0 data-[state=active]:border-[#1890FF] data-[state=active]:bg-background data-[state=active]:text-[#1890FF] data-[state=active]:shadow-none transition-all text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
                 <Code className="h-4 w-4 mr-2" />
                 拓展配置
               </TabsTrigger>
@@ -929,11 +1161,21 @@ export function POIForm({
           {/* 保存按钮区域 - 固定在底部 */}
           <div className="flex-shrink-0 border-t border-border bg-card p-4">
             <div className="flex justify-end space-x-3">
-              <Button type="button" variant="outline" onClick={onCancel} className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
                 <X className="w-4 h-4 mr-2" /> 取消
               </Button>
-              <Button onClick={handleSaveClick} disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
-                <CheckCircle className="w-4 h-4 mr-2" /> {loading ? '保存中...' : poi ? '更新POI' : '创建POI'}
+              <Button
+                onClick={handleSaveClick}
+                disabled={loading}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />{' '}
+                {loading ? '保存中...' : poi ? '更新POI' : '创建POI'}
               </Button>
             </div>
           </div>

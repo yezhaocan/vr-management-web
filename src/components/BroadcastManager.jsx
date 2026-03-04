@@ -1,39 +1,65 @@
 import React, { useState } from 'react';
-import { useForm } from "react-hook-form";
-import { Input, Label, Textarea, Card, CardContent, Badge, useToast, Form, FormField, FormItem, FormLabel, FormControl, FormMessage, Button } from '@/components/ui';
-import { Upload, Megaphone, Clock, Plus, Trash2, CheckCircle, Play, Download, Volume2, FileText, Wand2, FileDown, PlayCircle, ArrowRight } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import {
+  Input,
+  Label,
+  Textarea,
+  Card,
+  CardContent,
+  Badge,
+  useToast,
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  Button,
+} from '@/components/ui';
+import {
+  Upload,
+  Megaphone,
+  Clock,
+  Plus,
+  Trash2,
+  CheckCircle,
+  Play,
+  Download,
+  Volume2,
+  FileText,
+  Wand2,
+  FileDown,
+  PlayCircle,
+  ArrowRight,
+} from 'lucide-react';
 import { generateAlignedSrt } from '@/lib/subtitle-alignment';
 
 // 表单验证规则
 const validationRules = {
   triggerTime: {
-    required: "请输入触发时间",
+    required: '请输入触发时间',
     min: {
       value: 0,
-      message: "触发时间必须大于等于0"
+      message: '触发时间必须大于等于0',
     },
-    valueAsNumber: true
+    valueAsNumber: true,
   },
   text: {
-    required: "请输入播报内容",
+    required: '请输入播报内容',
     minLength: {
       value: 1,
-      message: "播报内容不能为空"
-    }
+      message: '播报内容不能为空',
+    },
   },
   audioFileId: {
-    required: "请上传音频文件"
-  }
+    required: '请上传音频文件',
+  },
 };
 
-export function BroadcastManager({
-  broadcasts,
-  onBroadcastsChange,
-  $w
-}) {
+export function BroadcastManager({ broadcasts, onBroadcastsChange, $w }) {
   const [tempFiles, setTempFiles] = useState({
     audio: null,
-    subtitle: null
+    subtitle: null,
   });
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [uploadingSubtitle, setUploadingSubtitle] = useState(false);
@@ -42,9 +68,7 @@ export function BroadcastManager({
   const [synthesizedAudio, setSynthesizedAudio] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
   const [showDownloadButton, setShowDownloadButton] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
 
   const form = useForm({
     defaultValues: {
@@ -53,40 +77,40 @@ export function BroadcastManager({
       audioFileId: '',
       audioUrl: '',
       subtitleFileId: '',
-      subtitleUrl: ''
+      subtitleUrl: '',
     },
-    mode: 'onChange'
+    mode: 'onChange',
   });
 
   // 添加播报
   const onAddBroadcast = (data) => {
     // 手动验证
     const errors = {};
-    
+
     // 验证触发时间
     const triggerTime = parseFloat(data.triggerTime);
     if (!data.triggerTime || isNaN(triggerTime) || triggerTime < 0) {
-      errors.triggerTime = "触发时间必须大于等于0";
+      errors.triggerTime = '触发时间必须大于等于0';
     }
-    
+
     // 验证文字稿
     if (!data.text || data.text.trim().length === 0) {
-      errors.text = "请输入播报内容";
+      errors.text = '请输入播报内容';
     }
-    
+
     // 验证音频文件
     if (!data.audioFileId || data.audioFileId.trim().length === 0) {
-      errors.audioFileId = "请上传音频文件";
+      errors.audioFileId = '请上传音频文件';
     }
-    
+
     // 如果有错误，设置表单错误并返回
     if (Object.keys(errors).length > 0) {
-      Object.keys(errors).forEach(field => {
+      Object.keys(errors).forEach((field) => {
         form.setError(field, { message: errors[field] });
       });
       return;
     }
-    
+
     // 构建播报对象
     const broadcast = {
       id: Date.now(),
@@ -97,12 +121,12 @@ export function BroadcastManager({
       // 附加临时文件数据，供父组件在最终提交时上传
       tempFiles: {
         audio: tempFiles.audio,
-        subtitle: tempFiles.subtitle
-      }
+        subtitle: tempFiles.subtitle,
+      },
     };
-    
+
     onBroadcastsChange([...broadcasts, broadcast]);
-    
+
     // 重置状态
     form.reset({
       triggerTime: '',
@@ -110,27 +134,27 @@ export function BroadcastManager({
       audioFileId: '',
       audioUrl: '',
       subtitleFileId: '',
-      subtitleUrl: ''
+      subtitleUrl: '',
     });
     setTempFiles({ audio: null, subtitle: null });
     setSynthesizedAudio(null);
     setAudioBlob(null);
     setShowDownloadButton(false);
     setGeneratedSrt('');
-    
+
     toast({
       title: '播报添加成功',
-      description: `第${broadcast.triggerTime}秒播报已添加 (等待最终保存时上传)`
+      description: `第${broadcast.triggerTime}秒播报已添加 (等待最终保存时上传)`,
     });
   };
 
   // 删除播报
-  const deleteBroadcast = index => {
+  const deleteBroadcast = (index) => {
     const updatedBroadcasts = broadcasts.filter((_, i) => i !== index);
     onBroadcastsChange(updatedBroadcasts);
     toast({
       title: '播报已删除',
-      description: '播报点已从列表中移除'
+      description: '播报点已从列表中移除',
     });
   };
 
@@ -141,14 +165,14 @@ export function BroadcastManager({
       toast({
         title: '文字稿为空',
         description: '请先输入要生成的文字稿',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
 
     try {
       setIsGenerating(true);
-      
+
       // 清理之前的状态
       setSynthesizedAudio(null);
       setAudioBlob(null);
@@ -157,10 +181,10 @@ export function BroadcastManager({
 
       // 调用智能生成接口
       const { srt, audioBlob } = await generateAlignedSrt(text);
-      
+
       // 创建音频URL用于预览
       const audioUrl = URL.createObjectURL(audioBlob);
-      
+
       setAudioBlob(audioBlob);
       setSynthesizedAudio(audioUrl);
       setGeneratedSrt(srt);
@@ -171,7 +195,7 @@ export function BroadcastManager({
       const randomStr = Math.random().toString(36).substring(2, 8);
       const tempAudioId = `temp_audio_${timestamp}_${randomStr}`;
       const tempSubtitleId = `temp_subtitle_${timestamp}_${randomStr}`;
-      
+
       // 创建字幕 Blob
       const srtBlob = new Blob([srt], { type: 'text/plain' });
       const srtUrl = URL.createObjectURL(srtBlob);
@@ -179,7 +203,7 @@ export function BroadcastManager({
       // 更新临时文件状态
       setTempFiles({
         audio: audioBlob,
-        subtitle: srtBlob
+        subtitle: srtBlob,
       });
 
       // 更新表单状态
@@ -194,15 +218,14 @@ export function BroadcastManager({
       toast({
         title: '智能生成成功',
         description: '音频和字幕已生成，将在最终保存时上传',
-        variant: 'default'
+        variant: 'default',
       });
-
     } catch (error) {
       console.error('智能生成失败:', error);
       toast({
         title: '生成失败',
         description: error.message || '请重试',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsGenerating(false);
@@ -213,11 +236,11 @@ export function BroadcastManager({
   const handlePreviewAudio = () => {
     if (synthesizedAudio) {
       const audio = new Audio(synthesizedAudio);
-      audio.play().catch(e => {
+      audio.play().catch((e) => {
         toast({
           title: '播放失败',
           description: '无法播放音频',
-          variant: 'destructive'
+          variant: 'destructive',
         });
       });
     }
@@ -236,18 +259,18 @@ export function BroadcastManager({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: '下载成功',
         description: 'SRT字幕文件已下载',
-        variant: 'default'
+        variant: 'default',
       });
     } catch (error) {
       console.error('SRT下载失败:', error);
       toast({
         title: '下载失败',
         description: '文件下载过程中出现错误',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -265,20 +288,20 @@ export function BroadcastManager({
       toast({
         title: '下载成功',
         description: '音频文件已开始下载，请上传到云存储',
-        variant: 'default'
+        variant: 'default',
       });
     } catch (error) {
       console.error('下载失败:', error);
       toast({
         title: '下载失败',
         description: '文件下载过程中出现错误',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
 
   // 检查文件是否为音频文件（忽略大小写，支持WEBM）
-  const isAudioFile = file => {
+  const isAudioFile = (file) => {
     if (!file) return false;
     const extension = file.name.toLowerCase().split('.').pop();
     const audioExtensions = ['webm', 'mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'mpeg'];
@@ -289,7 +312,7 @@ export function BroadcastManager({
   };
 
   // 检查文件是否为字幕文件
-  const isSubtitleFile = file => {
+  const isSubtitleFile = (file) => {
     if (!file) return false;
     const extension = file.name.toLowerCase().split('.').pop();
     const subtitleExtensions = ['srt', 'vtt', 'ass', 'ssa', 'txt', 'sub'];
@@ -300,7 +323,7 @@ export function BroadcastManager({
   };
 
   // 上传音频文件到本地暂存（统一处理合成音频和本地文件）
-  const handleAudioUpload = async event => {
+  const handleAudioUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -308,44 +331,44 @@ export function BroadcastManager({
       toast({
         title: '文件类型错误',
         description: '请上传音频文件（支持webm、mp3、wav、ogg、m4a等格式）',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
-    
+
     try {
       setUploadingAudio(true);
-      
+
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 8);
       const tempId = `temp_audio_manual_${timestamp}_${randomStr}`;
       const tempUrl = URL.createObjectURL(file);
-      
-      setTempFiles(prev => ({
+
+      setTempFiles((prev) => ({
         ...prev,
-        audio: file
+        audio: file,
       }));
 
       form.setValue('audioFileId', tempId);
       form.setValue('audioUrl', tempUrl);
-      
+
       // 清除音频文件的验证错误
       form.clearErrors('audioFileId');
-      
+
       setSynthesizedAudio(null);
       setAudioBlob(null);
       setShowDownloadButton(false);
-      
+
       toast({
         title: '音频文件已选择',
         description: '将在最终保存时上传',
-        variant: 'default'
+        variant: 'default',
       });
     } catch (error) {
       toast({
         title: '文件处理失败',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setUploadingAudio(false);
@@ -354,7 +377,7 @@ export function BroadcastManager({
   };
 
   // 上传字幕文件到本地暂存
-  const handleSubtitleUpload = async event => {
+  const handleSubtitleUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -362,37 +385,37 @@ export function BroadcastManager({
       toast({
         title: '文件类型错误',
         description: '请上传字幕文件（支持srt、vtt、ass、ssa、txt等格式）',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
-    
+
     try {
       setUploadingSubtitle(true);
-      
+
       const timestamp = Date.now();
       const randomStr = Math.random().toString(36).substring(2, 8);
       const tempId = `temp_subtitle_manual_${timestamp}_${randomStr}`;
       const tempUrl = URL.createObjectURL(file);
 
-      setTempFiles(prev => ({
+      setTempFiles((prev) => ({
         ...prev,
-        subtitle: file
+        subtitle: file,
       }));
 
       form.setValue('subtitleFileId', tempId);
       form.setValue('subtitleUrl', tempUrl);
-      
+
       toast({
         title: '字幕文件已选择',
         description: '将在最终保存时上传',
-        variant: 'default'
+        variant: 'default',
       });
     } catch (error) {
       toast({
         title: '文件处理失败',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setUploadingSubtitle(false);
@@ -404,19 +427,19 @@ export function BroadcastManager({
   const handleRemoveAudio = () => {
     form.setValue('audioFileId', '');
     form.setValue('audioUrl', '');
-    setTempFiles(prev => ({
+    setTempFiles((prev) => ({
       ...prev,
-      audio: null
+      audio: null,
     }));
-    
+
     setSynthesizedAudio(null);
     setAudioBlob(null);
     setShowDownloadButton(false);
-    
+
     toast({
       title: '音频文件已移除',
       description: '音频文件已从配置中移除',
-      variant: 'default'
+      variant: 'default',
     });
   };
 
@@ -424,14 +447,14 @@ export function BroadcastManager({
   const handleRemoveSubtitle = () => {
     form.setValue('subtitleFileId', '');
     form.setValue('subtitleUrl', '');
-    setTempFiles(prev => ({
+    setTempFiles((prev) => ({
       ...prev,
-      subtitle: null
+      subtitle: null,
     }));
     toast({
       title: '字幕文件已移除',
       description: '字幕文件已从配置中移除',
-      variant: 'default'
+      variant: 'default',
     });
   };
 
@@ -455,9 +478,7 @@ export function BroadcastManager({
           <Card className="h-full border-2 border-border">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h4 className="font-semibold text-lg text-foreground">
-                  配置播报
-                </h4>
+                <h4 className="font-semibold text-lg text-foreground">配置播报</h4>
               </div>
 
               <Form {...form}>
@@ -469,9 +490,7 @@ export function BroadcastManager({
                     rules={validationRules.triggerTime}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          触发时间（秒）
-                        </FormLabel>
+                        <FormLabel className="text-sm font-medium">触发时间（秒）</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -493,9 +512,7 @@ export function BroadcastManager({
                     rules={validationRules.text}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          播报内容
-                        </FormLabel>
+                        <FormLabel className="text-sm font-medium">播报内容</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="输入播报文字"
@@ -569,9 +586,7 @@ export function BroadcastManager({
                     rules={validationRules.audioFileId}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">
-                          音频文件
-                        </FormLabel>
+                        <FormLabel className="text-sm font-medium">音频文件</FormLabel>
                         {!audioFileId ? (
                           <div className="relative">
                             <input
@@ -619,7 +634,9 @@ export function BroadcastManager({
 
                   {/* 字幕上传（可选） */}
                   <div>
-                    <Label className="text-sm font-medium text-muted-foreground">字幕文件（可选）</Label>
+                    <Label className="text-sm font-medium text-muted-foreground">
+                      字幕文件（可选）
+                    </Label>
                     {!subtitleFileId ? (
                       <div className="relative mt-2">
                         <input
@@ -687,9 +704,7 @@ export function BroadcastManager({
           <Card className="h-full border-2 border-border">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h4 className="font-semibold text-lg text-foreground">
-                  播报列表
-                </h4>
+                <h4 className="font-semibold text-lg text-foreground">播报列表</h4>
                 <Badge className="px-3 py-1 font-medium bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
                   {broadcasts.length} 个播报点
                 </Badge>
@@ -748,11 +763,11 @@ export function BroadcastManager({
                                 onClick={() => {
                                   const audioUrl = URL.createObjectURL(broadcast.tempFiles.audio);
                                   const audio = new Audio(audioUrl);
-                                  audio.play().catch(e => {
+                                  audio.play().catch((e) => {
                                     toast({
                                       title: '播放失败',
                                       description: '无法播放音频',
-                                      variant: 'destructive'
+                                      variant: 'destructive',
                                     });
                                   });
                                 }}

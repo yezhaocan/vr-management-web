@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import envConfig from "../configs/env";
+import envConfig from '../configs/env';
 import {
   createWebApp,
   _ACTIONS_KEY as ACTIONS_KEY,
   _ROUTER_KEY as ROUTER_KEY,
   actionSdk as sdk,
   _WEDA_CLOUD_SDK,
-} from "@cloudbase/weda-client";
+} from '@cloudbase/weda-client';
 
 const { initTcb, setConfig } = _WEDA_CLOUD_SDK;
 
@@ -24,7 +24,7 @@ const runtime = window;
 let __app = undefined;
 export const $w = new Proxy(__app?.__internal__?.$w || {}, {
   get(_, prop: string) {
-    if (prop === "$app" || prop === "app") {
+    if (prop === '$app' || prop === 'app') {
       return __app;
     }
     return __app?.__internal__?.$w?.[prop];
@@ -56,7 +56,7 @@ function createGlboalApi() {
     }),
     {
       get: (obj, prop) => {
-        if (prop === "app" || prop === "$app") {
+        if (prop === 'app' || prop === '$app') {
           return app;
         } else {
           return obj[prop];
@@ -116,7 +116,7 @@ export function createPageApi(): any {
     },
     {
       get(obj, prop) {
-        return prop === "$page" ? obj : obj[prop];
+        return prop === '$page' ? obj : obj[prop];
       },
     }
   );
@@ -126,7 +126,7 @@ export function createPageApi(): any {
 setConfig({
   isProd: true,
   /** 低码应用ID */
-  appID: "weda",
+  appID: 'weda',
   /** 云开发环境ID */
   envID: envConfig.env,
   /** 应用端ID */
@@ -146,8 +146,8 @@ setConfig({
       state: {},
     },
   },
-  tcbApiOrigin: "",
-  gatewayOrigin: "",
+  tcbApiOrigin: '',
+  gatewayOrigin: '',
   isPrivate: false,
   beforeDSRequest: (cfg) => {
     if (!cfg.options || !cfg.options.showLoading) return;

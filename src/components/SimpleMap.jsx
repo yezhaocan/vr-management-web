@@ -11,8 +11,8 @@ export function SimpleMap({
   onLocationSelect,
   currentLocation,
   waypoints = [],
-  className = "h-64",
-  onClearConnections
+  className = 'h-64',
+  onClearConnections,
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -20,10 +20,12 @@ export function SimpleMap({
   const polylineRef = useRef(null);
   const waypointMarkersRef = useRef([]); // 新增：存储所有航点标记引用
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(currentLocation || {
-    lat: center[0],
-    lng: center[1]
-  });
+  const [selectedLocation, setSelectedLocation] = useState(
+    currentLocation || {
+      lat: center[0],
+      lng: center[1],
+    }
+  );
 
   // 检查 Leaflet 是否已加载
   const isLeafletLoaded = () => typeof window !== 'undefined' && window.L;
@@ -107,7 +109,7 @@ export function SimpleMap({
     }
 
     // 创建航点坐标数组
-    const latLngs = waypoints.map(wp => window.L.latLng(wp.lat, wp.lng));
+    const latLngs = waypoints.map((wp) => window.L.latLng(wp.lat, wp.lng));
 
     // 创建连线
     polylineRef.current = window.L.polyline(latLngs, {
@@ -116,16 +118,16 @@ export function SimpleMap({
       opacity: 0.8,
       lineJoin: 'round',
       dashArray: null,
-      className: 'route-connection-line'
+      className: 'route-connection-line',
     }).addTo(mapInstance);
 
     // 添加点击事件高亮
-    polylineRef.current.on('click', e => {
+    polylineRef.current.on('click', (e) => {
       // 高亮显示连线
       polylineRef.current.setStyle({
         color: '#f59e0b',
         weight: 3,
-        opacity: 1
+        opacity: 1,
       });
 
       // 3秒后恢复原样
@@ -133,7 +135,7 @@ export function SimpleMap({
         polylineRef.current.setStyle({
           color: '#3b82f6',
           weight: 2,
-          opacity: 0.8
+          opacity: 0.8,
         });
       }, 3000);
     });
@@ -150,7 +152,7 @@ export function SimpleMap({
   // 清除所有航点标记
   const clearWaypointMarkers = () => {
     if (mapInstanceRef.current && waypointMarkersRef.current.length > 0) {
-      waypointMarkersRef.current.forEach(marker => {
+      waypointMarkersRef.current.forEach((marker) => {
         if (marker) {
           mapInstanceRef.current.removeLayer(marker);
         }
@@ -169,8 +171,9 @@ export function SimpleMap({
     // 为每个航点添加标记
     waypoints.forEach((waypoint, index) => {
       // 检查是否为选中的航点（通过currentLocation坐标匹配）
-      const isSelected = currentLocation && 
-        Math.abs(currentLocation.lat - waypoint.lat) < 0.00000001 && 
+      const isSelected =
+        currentLocation &&
+        Math.abs(currentLocation.lat - waypoint.lat) < 0.00000001 &&
         Math.abs(currentLocation.lng - waypoint.lng) < 0.00000001;
 
       const marker = window.L.marker([waypoint.lat, waypoint.lng], {
@@ -178,7 +181,7 @@ export function SimpleMap({
           className: 'waypoint-marker',
           html: `
             <div style="
-              background: ${isSelected ? '#f59e0b' : (index === 0 ? '#10b981' : index === waypoints.length - 1 ? '#ef4444' : '#3b82f6')};
+              background: ${isSelected ? '#f59e0b' : index === 0 ? '#10b981' : index === waypoints.length - 1 ? '#ef4444' : '#3b82f6'};
               width: ${isSelected ? '28px' : '24px'};
               height: ${isSelected ? '28px' : '24px'};
               border-radius: 50%;
@@ -197,25 +200,26 @@ export function SimpleMap({
             </div>
           `,
           iconSize: isSelected ? [28, 28] : [24, 24],
-          iconAnchor: isSelected ? [14, 14] : [12, 12]
-        })
+          iconAnchor: isSelected ? [14, 14] : [12, 12],
+        }),
       }).addTo(mapInstance);
 
       // 添加点击事件
       marker.on('click', (e) => {
         // 阻止事件冒泡，防止触发地图背景点击
         window.L.DomEvent.stopPropagation(e);
-        
+
         // 触发位置选择事件，将点击的航点信息回传给父组件
-        onLocationSelect && onLocationSelect({
-          lat: waypoint.lat,
-          lng: waypoint.lng,
-          name: waypoint.name,
-          flightSpeed: waypoint.flightSpeed,
-          hoverDuration: waypoint.hoverDuration,
-          altitude: waypoint.altitude,
-          index: index // 传递索引，方便父组件识别
-        });
+        onLocationSelect &&
+          onLocationSelect({
+            lat: waypoint.lat,
+            lng: waypoint.lng,
+            name: waypoint.name,
+            flightSpeed: waypoint.flightSpeed,
+            hoverDuration: waypoint.hoverDuration,
+            altitude: waypoint.altitude,
+            index: index, // 传递索引，方便父组件识别
+          });
       });
 
       // 存储标记引用
@@ -229,7 +233,7 @@ export function SimpleMap({
     try {
       // 加载 Leaflet 资源
       await Promise.all([loadLeafletCSS(), loadLeafletJS()]);
-      
+
       // 再次检查容器和实例状态（因为是异步操作）
       if (!mapContainerRef.current || mapInstanceRef.current) {
         return;
@@ -245,30 +249,36 @@ export function SimpleMap({
       const mapInstance = window.L.map(mapContainerRef.current, {
         center: center,
         zoom: 12,
-        zoomControl: false
+        zoomControl: false,
       });
 
       // 添加 OpenStreetMap 瓦片图层
-      window.L.tileLayer('https://t0.tianditu.gov.cn/DataServer?T=img_w/&x={x}&y={y}&l={z}&style=dark&tk=eaa119242fd58a04007ad66abc2546f7', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18
-      }).addTo(mapInstance);
+      window.L.tileLayer(
+        'https://t0.tianditu.gov.cn/DataServer?T=img_w/&x={x}&y={y}&l={z}&style=dark&tk=eaa119242fd58a04007ad66abc2546f7',
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 18,
+        }
+      ).addTo(mapInstance);
 
       // 添加缩放控件
-      window.L.control.zoom({
-        position: 'topright'
-      }).addTo(mapInstance);
+      window.L.control
+        .zoom({
+          position: 'topright',
+        })
+        .addTo(mapInstance);
 
       // 地图点击事件 - 确保8位小数精度
-      const handleMapClick = e => {
+      const handleMapClick = (e) => {
         try {
           const location = {
             lat: validateCoordinate(e.latlng.lat.toFixed(8), '纬度'),
-            lng: validateCoordinate(e.latlng.lng.toFixed(8), '经度')
+            lng: validateCoordinate(e.latlng.lng.toFixed(8), '经度'),
           };
           // 仅触发选择事件，不自动设置 selectedLocation，由父组件控制
           onLocationSelect && onLocationSelect(location);
-          
+
           // 不再自动添加标记，依赖父组件传入的 currentLocation 更新标记
           // addMarker(e.latlng, mapInstance);
         } catch (error) {
@@ -311,8 +321,8 @@ export function SimpleMap({
           className: 'custom-marker',
           html: '<div style="background: #8b5cf6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
           iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        })
+          iconAnchor: [10, 10],
+        }),
       }).addTo(mapInstance);
 
       // 将地图中心移动到标记位置
@@ -386,13 +396,21 @@ export function SimpleMap({
       cleanupMap();
     };
   }, []);
-  return <div className={`w-full ${className} bg-card rounded-lg border border-border overflow-hidden`}>
-      <div ref={mapContainerRef} className="w-full h-full bg-card" style={{
-      minHeight: '256px'
-    }}>
-        {!mapLoaded && <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+  return (
+    <div className={`w-full ${className} bg-card rounded-lg border border-border overflow-hidden`}>
+      <div
+        ref={mapContainerRef}
+        className="w-full h-full bg-card"
+        style={{
+          minHeight: '256px',
+        }}
+      >
+        {!mapLoaded && (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             地图加载中...
-          </div>}
+          </div>
+        )}
       </div>
-    </div>;
+    </div>
+  );
 }

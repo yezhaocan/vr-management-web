@@ -5,32 +5,32 @@ import { ImageOff } from 'lucide-react';
 
 /**
  * EnhancedCard Component
- * 
+ *
  * A card component with enhanced overflow handling, visual styling, and responsive layout.
  * Optimized for displaying scenic spots with images and content.
  */
-export function EnhancedCard({ 
-  title, 
-  description, 
-  children, 
-  footer, 
+export function EnhancedCard({
+  title,
+  description,
+  children,
+  footer,
   imageSrc,
   className,
   contentClassName,
-  ...props 
+  ...props
 }) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
 
   return (
     <>
-      <Card 
+      <Card
         className={cn(
-          "flex flex-col sm:flex-row overflow-hidden transition-all duration-300 ease-in-out group",
+          'flex flex-col sm:flex-row overflow-hidden transition-all duration-300 ease-in-out group',
           // Shadow requirement: x=0, y=2px, blur=8px, color=rgba(0,0,0,0.1)
-          "shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]",
-          "hover:border-[#1890ff] dark:hover:border-[#1890ff]", // 边框高亮
-          "bg-white dark:bg-card border-border", // 使用系统颜色变量
+          'shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]',
+          'hover:border-[#1890ff] dark:hover:border-[#1890ff]', // 边框高亮
+          'bg-white dark:bg-card border-border', // 使用系统颜色变量
           className
         )}
         {...props}
@@ -46,12 +46,12 @@ export function EnhancedCard({
                       <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
                     </div>
                   )}
-                  <img 
-                    src={imageSrc} 
-                    alt={title || "Card Image"} 
+                  <img
+                    src={imageSrc}
+                    alt={title || 'Card Image'}
                     className={cn(
-                      "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105",
-                      imageLoading ? "opacity-0" : "opacity-100"
+                      'w-full h-full object-cover transition-transform duration-500 group-hover:scale-105',
+                      imageLoading ? 'opacity-0' : 'opacity-100'
                     )}
                     onLoad={() => setImageLoading(false)}
                     onError={() => {
@@ -75,12 +75,18 @@ export function EnhancedCard({
           {/* Header & Content */}
           <div className="flex-1 p-4 sm:p-6 pb-16 sm:pb-6 flex flex-col gap-2">
             <div className="pr-12">
-              {title && <h3 className="text-lg font-semibold text-foreground tracking-tight mb-1 truncate">{title}</h3>}
-              {description && <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>}
+              {title && (
+                <h3 className="text-lg font-semibold text-foreground tracking-tight mb-1 truncate">
+                  {title}
+                </h3>
+              )}
+              {description && (
+                <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
+              )}
             </div>
-            
+
             {/* Main Content */}
-            <div className={cn("text-sm text-foreground mt-auto", contentClassName)}>
+            <div className={cn('text-sm text-foreground mt-auto', contentClassName)}>
               {children}
             </div>
           </div>
