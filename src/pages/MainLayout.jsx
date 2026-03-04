@@ -110,7 +110,13 @@ export function MainLayout({
     $w
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(() => {
+        try {
+            return sessionStorage.getItem('auth_checked') !== '1';
+        } catch {
+            return true;
+        }
+    });
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -123,16 +129,17 @@ export function MainLayout({
                 const loginState = auth.hasLoginState();
 
                 if (loginState && loginState.user?.name !== 'anonymous') {
-                    // 已登录
+                    sessionStorage.setItem('auth_checked', '1');
                     setLoading(false);
                 } else {
-                    // 未登录，跳转到默认登录页
+                    sessionStorage.removeItem('auth_checked');
                     auth.toDefaultLoginPage({
                         redirect_uri: 'https://vr-manage.genew.com/',
                     });
                 }
             } catch (error) {
                 console.error('检查登录状态失败:', error);
+                sessionStorage.removeItem('auth_checked');
                 setLoading(false);
             }
         };
