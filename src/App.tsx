@@ -1,13 +1,18 @@
 // @ts-nocheck
-import React from 'react';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { unstable_HistoryRouter as BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { PageWrapper } from '@/components/ui/page-wrapper';
-import { routers } from './configs/routers';
-import { createBrowserHistory } from 'history';
+import React from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  unstable_HistoryRouter as BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { PageWrapper } from "./components/ui/page-wrapper";
+import { routers } from "./configs/routers";
+import { createBrowserHistory } from "history";
 
 const history = createBrowserHistory();
 window._WEAPPS_HISTORY = history;
@@ -27,7 +32,9 @@ const App: React.FC = () => {
                 path="/"
                 element={
                   <Navigate
-                    to={`/${routers.find((item) => item.isHome)?.id || routers[0].id}`}
+                    to={`/${
+                      routers.find((item) => item.isHome)?.id || routers[0].id
+                    }`}
                     replace
                   />
                 }

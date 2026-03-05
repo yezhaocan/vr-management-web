@@ -10,48 +10,48 @@ import VIDEO_RECORD from '../pages/video-record.jsx';
 import TIPS from '../pages/tips.jsx';
 import SCENIC_MANAGEMENT from '../pages/scenic-management.jsx';
 import LOGIN from '../pages/login.jsx';
-import MAINLAYOUT from '../pages/MainLayout.jsx';
+import { MainLayout } from '../pages/MainLayout.jsx';
 import SRT_GENERATOR from '../pages/srt-generator.jsx';
 export const routers = [{
-  id: "dashboard",
-  component: DASHBOARD
-}, {
-  id: "drone",
-  component: DRONE
-}, {
-  id: "route",
-  component: ROUTE
-}, {
-  id: "poi",
-  component: POI
-}, {
-  id: "config",
-  component: CONFIG
-}, {
-  id: "superadmin",
-  component: SUPERADMIN
-}, {
-  id: "flight-task",
-  component: FLIGHT_TASK
-}, {
-  id: "_app",
-  component: _APP
-}, {
-  id: "video-record",
-  component: VIDEO_RECORD
-}, {
-  id: "tips",
-  component: TIPS
-}, {
-  id: "scenic-management",
-  component: SCENIC_MANAGEMENT
-}, {
-  id: "login",
-  component: LOGIN
-}, {
-  id: "MainLayout",
-  component: MAINLAYOUT
-}, {
-  id: "srt-generator",
-  component: SRT_GENERATOR
-}]
+                id: "dashboard",
+                component: DASHBOARD
+              }, {
+                id: "drone",
+                component: DRONE
+              }, {
+                id: "route",
+                component: ROUTE
+              }, {
+                id: "poi",
+                component: POI
+              }, {
+                id: "config",
+                component: CONFIG
+              }, {
+                id: "superadmin",
+                component: SUPERADMIN
+              }, {
+                id: "flight-task",
+                component: FLIGHT_TASK
+              }, {
+                id: "_app",
+                component: _APP
+              }, {
+                id: "video-record",
+                component: VIDEO_RECORD
+              }, {
+                id: "tips",
+                component: TIPS
+              }, {
+                id: "scenic-management",
+                component: SCENIC_MANAGEMENT
+              }, {
+                id: "login",
+                component: LOGIN
+              }, {
+                id: "MainLayout",
+                component: MainLayout
+              }, {
+                id: "srt-generator",
+                component: SRT_GENERATOR
+              }]
