@@ -1,58 +1,35 @@
 // @ts-ignore;
 import React, { useState, useEffect } from 'react';
 // @ts-ignore;
-import {
-  Button,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-  useToast,
-  Card,
-  CardContent,
-  Badge,
-} from '@/components/ui';
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, useToast, Card, CardContent, Badge } from '@/components/ui';
 // @ts-ignore;
-import {
-  Clock,
-  Save,
-  X,
-  Gauge,
-  Repeat,
-  MapPin,
-  Navigation,
-  Play,
-  CheckCircle,
-  Wifi,
-  FileText,
-  Plane,
-  Map,
-  RotateCcw,
-  AlertCircle,
-} from 'lucide-react';
+import { Clock, Save, X, Gauge, Repeat, MapPin, Navigation, Play, CheckCircle, Wifi, FileText, Plane, Map, RotateCcw, AlertCircle } from 'lucide-react';
 
 import { DroneList } from './DroneList';
 import { AirlineList } from './AirlineList';
 
-export function MissionForm({ mission, $w, onSave, onCancel }) {
-  const { toast } = useToast();
+export function MissionForm({
+  mission,
+  $w,
+  onSave,
+  onCancel
+}) {
+  const {
+    toast
+  } = useToast();
   const [formData, setFormData] = useState({
     name: mission?.name || '',
     description: mission?.description || '',
     droneSn: mission?.droneSn || '',
     airlineId: mission?.airlineId || '',
     maxSpeed: mission?.maxSpeed || 5,
-    repeatCount: mission?.repeatCount || 0,
+    repeatCount: mission?.repeatCount || 0
   });
   const [selectedDrone, setSelectedDrone] = useState(null);
   const [selectedAirline, setSelectedAirline] = useState(null);
   const [loading, setLoading] = useState(false);
   const [airlineWaypoints, setAirlineWaypoints] = useState(0);
-  const [airlines, setAirlines] = useState([]);
+  const [airlines, setAirlines] = useState([]); 
   const [drones, setDrones] = useState([]);
   const [errors, setErrors] = useState({});
 
@@ -66,8 +43,8 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
           select: { $master: true },
           filter: { where: {} },
           pageSize: 100,
-          pageNumber: 1,
-        },
+          pageNumber: 1
+        }
       });
       setDrones(result.records || []);
     } catch (error) {
@@ -75,7 +52,7 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
       toast({
         title: '加载无人机失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     }
   };
@@ -85,7 +62,7 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
   }, []);
 
   const handleDroneChange = (value) => {
-    const drone = drones.find((d) => d.sn === value);
+    const drone = drones.find(d => d.sn === value);
     if (drone) {
       handleDroneSelect(drone);
       // 实时验证
@@ -96,7 +73,7 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
   };
 
   const handleAirlineChange = (value) => {
-    const airline = airlines.find((a) => a._id === value);
+    const airline = airlines.find(a => a._id === value);
     if (airline) {
       handleAirlineSelect(airline);
       // 实时验证
@@ -108,10 +85,10 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
 
   const handleAirlineSelectInternal = (value) => {
     handleAirlineChange(value);
-
+    
     // 如果是新建任务（没有传入mission prop），自动生成任务名称
     if (!mission) {
-      const airline = airlines.find((a) => a._id === value);
+      const airline = airlines.find(a => a._id === value);
       if (airline) {
         const now = new Date();
         const year = now.getFullYear();
@@ -119,7 +96,7 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
         const day = String(now.getDate()).padStart(2, '0');
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
-
+        
         const autoName = `${airline.name} ${year}-${month}-${day} ${hours}:${minutes}`;
         handleInputChange('name', autoName);
       }
@@ -163,7 +140,7 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
     }
 
     setErrors(newErrors);
-
+    
     // 如果有错误，聚焦到第一个错误字段
     if (!isValid) {
       const firstErrorField = Object.keys(newErrors)[0];
@@ -184,7 +161,7 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
       droneSn: '',
       airlineId: '',
       maxSpeed: 5,
-      repeatCount: 0,
+      repeatCount: 0
     });
     setErrors({});
     setSelectedDrone(null);
@@ -208,20 +185,18 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
         methodName: 'wedaGetRecordsV2',
         params: {
           select: {
-            $master: true,
+            $master: true
           },
           filter: {
-            where: {}, // 查询所有航线
+            where: {} // 查询所有航线
           },
           pageSize: 100,
           pageNumber: 1,
-          orderBy: [
-            {
-              createdAt: 'desc',
-            },
-          ],
-          getCount: true,
-        },
+          orderBy: [{
+            createdAt: 'desc'
+          }],
+          getCount: true
+        }
       });
       setAirlines(result.records || []);
     } catch (error) {
@@ -229,13 +204,13 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
       toast({
         title: '加载航线失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     }
   };
 
   // 获取航线航点数量
-  const getAirlineWaypointCount = async (airlineId) => {
+  const getAirlineWaypointCount = async airlineId => {
     if (!airlineId) return 0;
     try {
       const result = await $w.cloud.callDataSource({
@@ -245,14 +220,14 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
           filter: {
             where: {
               _id: {
-                $eq: airlineId,
-              },
-            },
+                $eq: airlineId
+              }
+            }
           },
           select: {
-            $master: true,
-          },
-        },
+            $master: true
+          }
+        }
       });
       return result?.waypoints?.length || result?.waypointCount || 0;
     } catch (error) {
@@ -270,16 +245,16 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
       loadAirlineInfo(mission.airlineId);
     }
     if (mission) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         maxSpeed: mission.maxSpeed || 5,
-        repeatCount: mission.repeatCount || 0,
+        repeatCount: mission.repeatCount || 0
       }));
     }
   }, [mission]);
 
   // 根据序列号加载无人机信息
-  const loadDroneInfoBySn = async (droneSn) => {
+  const loadDroneInfoBySn = async droneSn => {
     try {
       const result = await $w.cloud.callDataSource({
         dataSourceName: 'drone',
@@ -288,29 +263,29 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
           filter: {
             where: {
               sn: {
-                $eq: droneSn,
-              },
-            },
+                $eq: droneSn
+              }
+            }
           },
           select: {
-            $master: true,
-          },
-        },
+            $master: true
+          }
+        }
       });
       if (result.records && result.records.length > 0) {
         const drone = result.records[0];
         setSelectedDrone(drone);
         const droneDisplayName = `${drone.sn || '未知序列号'}·${drone.model || '未知型号'}`;
-        setFormData((prev) => ({
+        setFormData(prev => ({
           ...prev,
-          droneModelSn: droneDisplayName,
+          droneModelSn: droneDisplayName
         }));
       }
     } catch (error) {
       console.error('根据序列号加载无人机信息失败:', error);
     }
   };
-  const loadAirlineInfo = async (airlineId) => {
+  const loadAirlineInfo = async airlineId => {
     try {
       const result = await $w.cloud.callDataSource({
         dataSourceName: 'airline',
@@ -319,14 +294,14 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
           filter: {
             where: {
               _id: {
-                $eq: airlineId,
-              },
-            },
+                $eq: airlineId
+              }
+            }
           },
           select: {
-            $master: true,
-          },
-        },
+            $master: true
+          }
+        }
       });
       setSelectedAirline(result);
       // 获取航点数量
@@ -336,30 +311,30 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
       console.error('加载航线信息失败:', error);
     }
   };
-  const handleDroneSelect = (drone) => {
+  const handleDroneSelect = drone => {
     setSelectedDrone(drone);
     const droneDisplayName = `${drone.sn || '未知序列号'}·${drone.model || '未知型号'}`;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       droneSn: drone.sn,
-      droneModelSn: droneDisplayName,
+      droneModelSn: droneDisplayName
     }));
   };
-  const handleAirlineSelect = async (airline) => {
+  const handleAirlineSelect = async airline => {
     setSelectedAirline(airline);
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       airlineId: airline._id,
-      airlineName: airline.name,
+      airlineName: airline.name
     }));
     // 获取航点数量
     const waypointCount = airline?.waypoints?.length || airline?.waypointCount || 0;
     setAirlineWaypoints(waypointCount);
   };
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     if (!validateForm()) return;
-
+    
     setLoading(true);
     try {
       // 生成自增任务编号
@@ -371,15 +346,13 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
           methodName: 'wedaGetRecordsV2',
           params: {
             select: {
-              missionID: true,
+              missionID: true
             },
-            orderBy: [
-              {
-                missionID: 'desc',
-              },
-            ],
-            pageSize: 1,
-          },
+            orderBy: [{
+              missionID: 'desc'
+            }],
+            pageSize: 1
+          }
         });
         const maxMissionID = result.records?.[0]?.missionID || 0;
         missionID = maxMissionID + 1;
@@ -389,7 +362,7 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
         missionID: missionID,
         status: mission?.status || 'pending',
         startTime: mission?.startTime || Date.now(),
-        current_waypoint_index: mission?.current_waypoint_index || 0,
+        current_waypoint_index: mission?.current_waypoint_index || 0
       };
       delete missionData.scenic;
       if (mission?._id) {
@@ -400,28 +373,28 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
             filter: {
               where: {
                 _id: {
-                  $eq: mission._id,
-                },
-              },
+                  $eq: mission._id
+                }
+              }
             },
-            data: missionData,
-          },
+            data: missionData
+          }
         });
         toast({
           title: '任务更新成功',
-          description: `任务 "${formData.name}" 已更新`,
+          description: `任务 "${formData.name}" 已更新`
         });
       } else {
         await $w.cloud.callDataSource({
           dataSourceName: 'mission',
           methodName: 'wedaCreateV2',
           params: {
-            data: missionData,
-          },
+            data: missionData
+          }
         });
         toast({
           title: '任务创建成功',
-          description: `任务 "${formData.name}" 已创建`,
+          description: `任务 "${formData.name}" 已创建`
         });
       }
       onSave && onSave();
@@ -429,16 +402,16 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
       toast({
         title: '操作失败',
         description: error.message || '请检查网络连接',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
     }
   };
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }));
 
     // 实时验证逻辑
@@ -474,31 +447,29 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
   };
 
   // 获取状态徽章
-  const getStatusBadge = (status) => {
+  const getStatusBadge = status => {
     const variants = {
-      pending: 'secondary',
-      executing: 'default',
-      completed: 'secondary',
-      cancelled: 'destructive',
+      'pending': 'secondary',
+      'executing': 'default',
+      'completed': 'secondary',
+      'cancelled': 'destructive'
     };
     const labels = {
-      pending: '待执行',
-      executing: '执行中',
-      completed: '已完成',
-      cancelled: '已取消',
+      'pending': '待执行',
+      'executing': '执行中',
+      'completed': '已完成',
+      'cancelled': '已取消'
     };
     const icons = {
-      pending: <Clock className="h-3 w-3 mr-1" />,
-      executing: <Play className="h-3 w-3 mr-1" />,
-      completed: <CheckCircle className="h-3 w-3 mr-1" />,
-      cancelled: <X className="h-3 w-3 mr-1" />,
+      'pending': <Clock className="h-3 w-3 mr-1" />,
+      'executing': <Play className="h-3 w-3 mr-1" />,
+      'completed': <CheckCircle className="h-3 w-3 mr-1" />,
+      'cancelled': <X className="h-3 w-3 mr-1" />
     };
-    return (
-      <Badge variant={variants[status] || 'secondary'} className="flex items-center">
+    return <Badge variant={variants[status] || 'secondary'} className="flex items-center">
         {icons[status] || <Clock className="h-3 w-3 mr-1" />}
         {labels[status] || status}
-      </Badge>
-    );
+      </Badge>;
   };
 
   // 获取任务进度显示 - 格式：current_waypoint_index/航点总数
@@ -512,98 +483,76 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
   // 简化的航线选择组件
   const SimpleAirlineSelector = () => {
     if (airlines.length === 0) {
-      return (
-        <div className="text-center py-8">
+      return <div className="text-center py-8">
           <div className="text-muted-foreground mb-2">
             <MapPin className="h-12 w-12 mx-auto opacity-30" />
           </div>
           <p className="text-muted-foreground text-sm">暂无可用航线</p>
           <p className="text-muted-foreground text-xs mt-1">请先在航线管理页面创建航线</p>
-        </div>
-      );
+        </div>;
     }
-    return (
-      <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
-        {airlines.map((airline) => {
-          const waypointCount = airline?.waypoints?.length || airline?.waypointCount || 0;
-          return (
-            <Card
-              key={airline._id}
-              className={`bg-card border cursor-pointer transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/50 ${selectedAirline?._id === airline._id ? 'border-primary ring-1 ring-primary' : 'border-border'}`}
-              onClick={() => handleAirlineSelect(airline)}
-            >
-              <CardContent className="p-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
-                      <MapPin className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-foreground font-medium text-sm">{airline.name}</p>
-                      <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                        <span>{waypointCount}个航点</span>
-                        <span>•</span>
-                        <span>{airline.estimated_duration || 0}分钟</span>
-                      </div>
+    return <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+        {airlines.map(airline => {
+        const waypointCount = airline?.waypoints?.length || airline?.waypointCount || 0;
+        return <Card key={airline._id} className={`bg-card border cursor-pointer transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/50 ${selectedAirline?._id === airline._id ? 'border-primary ring-1 ring-primary' : 'border-border'}`} onClick={() => handleAirlineSelect(airline)}>
+            <CardContent className="p-3">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
+                    <MapPin className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-foreground font-medium text-sm">{airline.name}</p>
+                    <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                      <span>{waypointCount}个航点</span>
+                      <span>•</span>
+                      <span>{airline.estimated_duration || 0}分钟</span>
                     </div>
                   </div>
-                  {selectedAirline?._id === airline._id && (
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  )}
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    );
+                {selectedAirline?._id === airline._id && <div className="w-2 h-2 bg-primary rounded-full"></div>}
+              </div>
+            </CardContent>
+          </Card>;
+      })}
+      </div>;
   };
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+  return <form onSubmit={handleSubmit} className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* 任务编号显示 */}
-        {mission?.missionID && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+        {mission?.missionID && <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center border border-blue-200 dark:border-blue-800">
-                <span className="text-blue-600 dark:text-blue-400 font-bold text-sm">
-                  #{mission.missionID}
-                </span>
+                <span className="text-blue-600 dark:text-blue-400 font-bold text-sm">#{mission.missionID}</span>
               </div>
               <div>
-                <span className="text-blue-600 dark:text-blue-400 text-sm font-medium">
-                  任务编号: {mission.missionID}
-                </span>
-                <p className="text-blue-500/70 dark:text-blue-400/70 text-xs">
-                  自增编号，由系统自动生成
-                </p>
+                <span className="text-blue-600 dark:text-blue-400 text-sm font-medium">任务编号: {mission.missionID}</span>
+                <p className="text-blue-500/70 dark:text-blue-400/70 text-xs">自增编号，由系统自动生成</p>
               </div>
             </div>
-          </div>
-        )}
+          </div>}
 
         <div className="grid grid-cols-1 gap-6">
+          
           {/* 航线选择 - 调整到最上方 */}
           <div className="space-y-4">
             <div>
               <FormLabel icon={Map} label="选择航线" required />
-              <Select value={formData.airlineId} onValueChange={handleAirlineSelectInternal}>
-                <SelectTrigger
-                  className={`w-full ${errors.airlineId ? 'border-destructive' : ''}`}
-                  id="airlineId"
-                >
+              <Select 
+                value={formData.airlineId} 
+                onValueChange={handleAirlineSelectInternal}
+              >
+                <SelectTrigger className={`w-full ${errors.airlineId ? 'border-destructive' : ''}`} id="airlineId">
                   <SelectValue placeholder="请选择航线" />
                 </SelectTrigger>
                 <SelectContent>
-                  {airlines.map((airline) => {
+                  {airlines.map(airline => {
                     const waypointCount = airline?.waypoints?.length || airline?.waypointCount || 0;
                     return (
                       <SelectItem key={airline._id} value={airline._id}>
                         <div className="flex flex-col items-start">
                           <span className="font-medium">{airline.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {waypointCount}个航点 · {airline.estimated_duration || 0}分钟
-                          </span>
+                          <span className="text-xs text-muted-foreground">{waypointCount}个航点 · {airline.estimated_duration || 0}分钟</span>
                         </div>
                       </SelectItem>
                     );
@@ -611,187 +560,108 @@ export function MissionForm({ mission, $w, onSave, onCancel }) {
                 </SelectContent>
               </Select>
               <div className="min-h-[20px] mt-1">
-                {errors.airlineId && (
-                  <p className="text-xs text-destructive flex items-center">
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    {errors.airlineId}
-                  </p>
-                )}
+                {errors.airlineId && <p className="text-xs text-destructive flex items-center"><AlertCircle className="w-3 h-3 mr-1"/>{errors.airlineId}</p>}
               </div>
             </div>
 
             {/* 任务名称 - 自动生成但可编辑 */}
             <div>
               <FormLabel icon={FileText} label="任务名称" required />
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="请输入任务名称 (选择航线后自动生成)"
-                className={`bg-background border-input text-foreground mt-1 focus:ring-primary ${errors.name ? 'border-destructive' : ''}`}
-                required
-              />
+              <Input id="name" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} placeholder="请输入任务名称 (选择航线后自动生成)" className={`bg-background border-input text-foreground mt-1 focus:ring-primary ${errors.name ? 'border-destructive' : ''}`} required />
               <div className="min-h-[20px] mt-1">
-                {errors.name && (
-                  <p className="text-xs text-destructive flex items-center">
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    {errors.name}
-                  </p>
-                )}
+                {errors.name && <p className="text-xs text-destructive flex items-center"><AlertCircle className="w-3 h-3 mr-1"/>{errors.name}</p>}
               </div>
             </div>
 
             {/* 无人机选择 */}
             <div>
               <FormLabel icon={Plane} label="选择无人机" required />
-              <Select value={formData.droneSn} onValueChange={handleDroneChange}>
-                <SelectTrigger
-                  className={`w-full ${errors.droneSn ? 'border-destructive' : ''}`}
-                  id="droneSn"
-                >
+              <Select 
+                value={formData.droneSn} 
+                onValueChange={handleDroneChange}
+              >
+                <SelectTrigger className={`w-full ${errors.droneSn ? 'border-destructive' : ''}`} id="droneSn">
                   <SelectValue placeholder="请选择无人机" />
                 </SelectTrigger>
                 <SelectContent>
-                  {drones.map((drone) => (
+                  {drones.map(drone => (
                     <SelectItem key={drone.sn} value={drone.sn}>
                       <div className="flex flex-col items-start">
                         <span className="font-medium">{drone.sn}</span>
-                        <span className="text-xs text-muted-foreground">
-                          型号: {drone.model} · 电量: {drone.battery}%
-                        </span>
+                        <span className="text-xs text-muted-foreground">型号: {drone.model} · 电量: {drone.battery}%</span>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <div className="min-h-[20px] mt-1">
-                {errors.droneSn && (
-                  <p className="text-xs text-destructive flex items-center">
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    {errors.droneSn}
-                  </p>
-                )}
+                {errors.droneSn && <p className="text-xs text-destructive flex items-center"><AlertCircle className="w-3 h-3 mr-1"/>{errors.droneSn}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <FormLabel icon={Gauge} label="最高飞行速度 (m/s)" required />
-                <Input
-                  id="maxSpeed"
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={formData.maxSpeed}
-                  onChange={(e) => handleInputChange('maxSpeed', parseFloat(e.target.value) || 0)}
-                  placeholder="请输入最高飞行速度"
-                  className={`bg-background border-input text-foreground focus:ring-primary ${errors.maxSpeed ? 'border-destructive' : ''}`}
-                  required
-                />
+                <Input id="maxSpeed" type="number" min="1" max="20" value={formData.maxSpeed} onChange={e => handleInputChange('maxSpeed', parseFloat(e.target.value) || 0)} placeholder="请输入最高飞行速度" className={`bg-background border-input text-foreground focus:ring-primary ${errors.maxSpeed ? 'border-destructive' : ''}`} required />
                 <div className="h-5 mt-1">
-                  {errors.maxSpeed ? (
-                    <p className="text-xs text-destructive flex items-center">
-                      <AlertCircle className="w-3 h-3 mr-1" />
-                      {errors.maxSpeed}
-                    </p>
-                  ) : (
-                    <p className="text-muted-foreground text-xs">建议值：5-15 m/s</p>
-                  )}
+                  {errors.maxSpeed ? <p className="text-xs text-destructive flex items-center"><AlertCircle className="w-3 h-3 mr-1"/>{errors.maxSpeed}</p> : <p className="text-muted-foreground text-xs">建议值：5-15 m/s</p>}
                 </div>
               </div>
 
               <div>
                 <FormLabel icon={Repeat} label="重复飞行次数" required />
-                <Input
-                  id="repeatCount"
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={formData.repeatCount}
-                  onChange={(e) => handleInputChange('repeatCount', parseInt(e.target.value) || 0)}
-                  placeholder="请输入重复飞行次数"
-                  className={`bg-background border-input text-foreground focus:ring-primary ${errors.repeatCount ? 'border-destructive' : ''}`}
-                  required
-                />
+                <Input id="repeatCount" type="number" min="0" max="10" value={formData.repeatCount} onChange={e => handleInputChange('repeatCount', parseInt(e.target.value) || 0)} placeholder="请输入重复飞行次数" className={`bg-background border-input text-foreground focus:ring-primary ${errors.repeatCount ? 'border-destructive' : ''}`} required />
                 <div className="h-5 mt-1">
-                  {errors.repeatCount ? (
-                    <p className="text-xs text-destructive flex items-center">
-                      <AlertCircle className="w-3 h-3 mr-1" />
-                      {errors.repeatCount}
-                    </p>
-                  ) : (
-                    <p className="text-muted-foreground text-xs">
-                      {formData.repeatCount === 0 ? '执行1次' : `执行${formData.repeatCount + 1}次`}
-                    </p>
-                  )}
+                  {errors.repeatCount ? <p className="text-xs text-destructive flex items-center"><AlertCircle className="w-3 h-3 mr-1"/>{errors.repeatCount}</p> : <p className="text-muted-foreground text-xs">
+                    {formData.repeatCount === 0 ? '执行1次' : `执行${formData.repeatCount + 1}次`}
+                  </p>}
                 </div>
               </div>
             </div>
-
+            
             <div>
               <FormLabel icon={FileText} label="任务描述" />
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="请输入任务描述 (可选)"
-                className="bg-background border-input text-foreground mt-1 h-20 focus:ring-primary"
-              />
+              <Textarea id="description" value={formData.description} onChange={e => handleInputChange('description', e.target.value)} placeholder="请输入任务描述 (可选)" className="bg-background border-input text-foreground mt-1 h-20 focus:ring-primary" />
             </div>
           </div>
         </div>
 
         {/* 只读信息区域 - 放置在界面下方，简化显示 */}
-        {mission && (
-          <Card className="bg-muted/50 rounded-lg p-4 border border-border">
+        {mission && <Card className="bg-muted/50 rounded-lg p-4 border border-border">
             <div className="space-y-3">
               <Label className="text-muted-foreground text-sm">只读信息（通过外部平台同步）</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center space-x-2">
                   <Wifi className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                   <span className="text-muted-foreground">任务状态:</span>
-                  <div className="flex items-center">{getStatusBadge(mission.status)}</div>
+                  <div className="flex items-center">
+                    {getStatusBadge(mission.status)}
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-4 w-4 text-green-500 dark:text-green-400" />
                   <span className="text-muted-foreground">任务进度:</span>
-                  <span className="text-foreground font-medium">{getProgressDisplay()}</span>
+                  <span className="text-foreground font-medium">
+                    {getProgressDisplay()}
+                  </span>
                 </div>
               </div>
             </div>
-          </Card>
-        )}
+          </Card>}
       </div>
 
       <div className="flex justify-end space-x-3 p-6 border-t border-border bg-background">
-        {!mission && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleReset}
-            className="mr-auto text-muted-foreground hover:text-foreground"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            重置
-          </Button>
-        )}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          className="border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-        >
+        {!mission && <Button type="button" variant="ghost" onClick={handleReset} className="mr-auto text-muted-foreground hover:text-foreground">
+          <RotateCcw className="h-4 w-4 mr-2" />
+          重置
+        </Button>}
+        <Button type="button" variant="outline" onClick={onCancel} className="border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground">
           取消
         </Button>
-        <Button
-          type="submit"
-          disabled={loading}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
           <Save className="h-4 w-4 mr-2" />
           {loading ? '保存中...' : mission ? '更新任务' : '创建任务'}
         </Button>
       </div>
-    </form>
-  );
+    </form>;
 }

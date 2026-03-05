@@ -355,7 +355,7 @@ export function alignSubtitles(originalText, asrSegments) {
       console.log('[SRT Generator] TTS success, file path:', ttsData.filePath);
   
   
-      // 3. 下载语音文件并准备传给 ASR
+      // 3. 下载语音文件并且准备传给 ASR
       const audioFileResponse = await fetch(`https://vr.genew.com/cgs/api${ttsData.filePath}`);
       if (!audioFileResponse.ok) {
         throw new Error(`Failed to download audio file: ${ttsData.filePath}`);

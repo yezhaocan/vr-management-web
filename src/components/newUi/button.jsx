@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { cn } from '@/lib/utils';
+import * as React from "react"
+import { cn } from "@/lib/utils"
 
 // Button 样式变体 - 基于 Tailwind CSS
 // 使用方式: className={buttonVariants.primary} 或 className={`${buttonVariants.primary} ${buttonVariants.sizes.md}`}
@@ -13,9 +13,7 @@ export const buttonVariants = {
     active:bg-blue-800 active:shadow-none
     disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-60
     focus:bg-blue-700
-  `
-    .replace(/\s+/g, ' ')
-    .trim(),
+  `.replace(/\s+/g, ' ').trim(),
 
   // 次要按钮 - 用于次要操作
   secondary: `
@@ -30,9 +28,7 @@ export const buttonVariants = {
     dark:active:bg-gray-600 dark:active:shadow-none
     dark:focus:bg-gray-700
     dark:disabled:bg-gray-900 dark:disabled:text-gray-500
-  `
-    .replace(/\s+/g, ' ')
-    .trim(),
+  `.replace(/\s+/g, ' ').trim(),
 
   // 警告按钮 - 用于需要注意的操作
   warning: `
@@ -42,9 +38,7 @@ export const buttonVariants = {
     active:bg-amber-700 active:shadow-none
     disabled:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60
     focus:bg-amber-600
-  `
-    .replace(/\s+/g, ' ')
-    .trim(),
+  `.replace(/\s+/g, ' ').trim(),
 
   // 危险按钮 - 用于危险操作（删除、取消等）
   danger: `
@@ -54,16 +48,14 @@ export const buttonVariants = {
     active:bg-red-800 active:shadow-none
     disabled:bg-red-300 disabled:cursor-not-allowed disabled:opacity-60
     focus:bg-red-700
-  `
-    .replace(/\s+/g, ' ')
-    .trim(),
+  `.replace(/\s+/g, ' ').trim(),
 
   // 尺寸变体
   sizes: {
     sm: 'px-3 py-1.5 text-sm h-8',
     md: 'px-4 py-2 text-sm h-10',
     lg: 'px-6 py-3 text-base h-12',
-    xl: 'px-8 py-4 text-lg h-14',
+    xl: 'px-8 py-4 text-lg h-14'
   },
 
   // Ghost 变体（无边框样式）
@@ -81,9 +73,7 @@ export const buttonVariants = {
       dark:active:bg-blue-900/40 dark:active:shadow-none
       dark:focus:bg-blue-900/20 dark:focus:text-blue-300
       dark:disabled:text-blue-600
-    `
-      .replace(/\s+/g, ' ')
-      .trim(),
+    `.replace(/\s+/g, ' ').trim(),
 
     secondary: `
       inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200
@@ -97,9 +87,7 @@ export const buttonVariants = {
       dark:active:bg-gray-700 dark:active:shadow-none
       dark:focus:bg-gray-800 dark:focus:text-gray-300
       dark:disabled:text-gray-600
-    `
-      .replace(/\s+/g, ' ')
-      .trim(),
+    `.replace(/\s+/g, ' ').trim(),
 
     warning: `
       inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200
@@ -112,9 +100,7 @@ export const buttonVariants = {
       dark:hover:bg-amber-900/20 dark:hover:text-amber-300
       dark:active:bg-amber-900/40 dark:active:shadow-none
       dark:focus:bg-amber-900/20 dark:focus:text-amber-300
-    `
-      .replace(/\s+/g, ' ')
-      .trim(),
+    `.replace(/\s+/g, ' ').trim(),
 
     danger: `
       inline-flex items-center justify-center rounded-lg font-medium transition-colors duration-200
@@ -127,16 +113,14 @@ export const buttonVariants = {
       dark:hover:bg-red-900/20 dark:hover:text-red-300
       dark:active:bg-red-900/40 dark:active:shadow-none
       dark:focus:bg-red-900/20 dark:focus:text-red-300
-    `
-      .replace(/\s+/g, ' ')
-      .trim(),
-  },
+    `.replace(/\s+/g, ' ').trim()
+  }
 };
 
 // 辅助函数：组合按钮样式
 export const combineButtonStyles = (variant = 'primary', size = 'md', type = 'solid') => {
   let baseStyle = '';
-
+  
   switch (type) {
     case 'outline':
     case 'ghost':
@@ -146,28 +130,25 @@ export const combineButtonStyles = (variant = 'primary', size = 'md', type = 'so
     default:
       baseStyle = buttonVariants[variant];
   }
-
+  
   return `${baseStyle} ${buttonVariants.sizes[size]}`;
 };
 
 const Button = React.forwardRef(
-  (
-    { className, variant = 'primary', size = 'default', asChild = false, children, ...props },
-    ref
-  ) => {
+  ({ className, variant = "primary", size = "default", asChild = false, children, ...props }, ref) => {
     // Map 'size' prop to button-variants.js sizes
     // Original: default, sm, lg, icon
     // button-variants.js: sm, md, lg, xl
     const sizeMap = {
-      default: 'md',
-      sm: 'sm',
-      lg: 'lg',
-      icon: 'md', // Base size for icon, will override dimensions
-      xl: 'xl',
-      md: 'md',
-    };
+      default: "md",
+      sm: "sm",
+      lg: "lg",
+      icon: "md", // Base size for icon, will override dimensions
+      xl: "xl",
+      md: "md"
+    }
 
-    const mappedSize = sizeMap[size] || 'md';
+    const mappedSize = sizeMap[size] || "md"
 
     // Logic to resolve styles based on variant
     // We aim to support:
@@ -175,92 +156,85 @@ const Button = React.forwardRef(
     // 2. Compound variants (outline-primary, ghost-danger)
     // 3. Legacy/Original variants mapping (default -> primary, destructive -> danger, link)
     // 4. 'outline' and 'ghost' as shorthands
-
-    let type = 'solid';
-    let colorVariant = variant;
-    let isLink = false;
+    
+    let type = "solid"
+    let colorVariant = variant
+    let isLink = false
 
     // Handle legacy mappings
-    if (variant === 'default') colorVariant = 'primary';
-    else if (variant === 'destructive') colorVariant = 'danger';
-    else if (variant === 'link') {
-      isLink = true;
+    if (variant === "default") colorVariant = "primary"
+    else if (variant === "destructive") colorVariant = "danger"
+    else if (variant === "link") {
+      isLink = true
       // Link doesn't fit well into the solid/outline/ghost system of button-variants.js
       // We will handle it specifically
     }
     // Handle compound variants or type shorthands
-    else if (variant.startsWith('outline')) {
-      type = 'outline';
-      if (variant === 'outline') {
-        colorVariant = 'secondary'; // Default outline color
+    else if (variant.startsWith("outline")) {
+      type = "outline"
+      if (variant === "outline") {
+        colorVariant = "secondary" // Default outline color
       } else {
-        const parts = variant.split('-');
-        if (parts.length > 1) colorVariant = parts.slice(1).join('-');
+        const parts = variant.split("-")
+        if (parts.length > 1) colorVariant = parts.slice(1).join("-")
       }
-    } else if (variant.startsWith('ghost')) {
-      type = 'ghost';
-      if (variant === 'ghost') {
-        colorVariant = 'secondary'; // Default ghost color
+    } else if (variant.startsWith("ghost")) {
+      type = "ghost"
+      if (variant === "ghost") {
+        colorVariant = "secondary" // Default ghost color
       } else {
-        const parts = variant.split('-');
-        if (parts.length > 1) colorVariant = parts.slice(1).join('-');
+        const parts = variant.split("-")
+        if (parts.length > 1) colorVariant = parts.slice(1).join("-")
       }
     }
 
     // Generate base classes
-    let buttonClasses = '';
-
+    let buttonClasses = ""
+    
     if (isLink) {
       // Recreate link style from original button or similar
-      buttonClasses = 'text-primary underline-offset-4 hover:underline bg-transparent';
+      buttonClasses = "text-primary underline-offset-4 hover:underline bg-transparent"
       // Append size classes? Link usually has size padding? Original button includes size classes for link.
       // We'll use the size classes from button-variants
-      buttonClasses = `${buttonClasses} ${buttonVariants.sizes[mappedSize] || ''}`;
+      buttonClasses = `${buttonClasses} ${buttonVariants.sizes[mappedSize] || ""}`
     } else {
       // Validate if colorVariant exists for the type to avoid "undefined" classes
       const isValid = (t, c) => {
-        if (t === 'solid') return !!buttonVariants[c];
+        if (t === "solid") return !!buttonVariants[c]
         // Since outline variant is removed and mapped to ghost, we check ghost instead
-        if (t === 'outline') return buttonVariants.ghost && !!buttonVariants.ghost[c];
-        if (t === 'ghost') return buttonVariants.ghost && !!buttonVariants.ghost[c];
-        return false;
-      };
+        if (t === "outline") return buttonVariants.ghost && !!buttonVariants.ghost[c]
+        if (t === "ghost") return buttonVariants.ghost && !!buttonVariants.ghost[c]
+        return false
+      }
 
       if (!isValid(type, colorVariant)) {
         // Fallback to primary solid if invalid
-        type = 'solid';
-        colorVariant = 'primary';
+        type = "solid"
+        colorVariant = "primary"
       }
 
-      buttonClasses = combineButtonStyles(colorVariant, mappedSize, type);
+      buttonClasses = combineButtonStyles(colorVariant, mappedSize, type)
     }
 
     // Additional overrides
-    const iconClasses = size === 'icon' ? 'h-10 w-10 p-0 shrink-0' : '';
-
+    const iconClasses = size === "icon" ? "h-10 w-10 p-0 shrink-0" : ""
+    
     // Ensure we include the base structure classes if they are not fully covered by button-variants
     // button-variants includes: inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200
     // Original button includes: inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0
-
+    
     // button-variants.js covers most visual properties but might miss some accessibility/layout tweaks (like focus rings, gap-2, svg sizing).
     // We should probably merge the essential structural classes from original button to ensure "core functionality" and consistency.
-    const baseStructure =
-      'gap-2 whitespace-nowrap disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0';
+    const baseStructure = "gap-2 whitespace-nowrap disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
 
     // Handle asChild prop - render children directly if asChild is true
     if (asChild && React.isValidElement(children)) {
       return React.cloneElement(children, {
-        className: cn(
-          baseStructure,
-          buttonClasses,
-          iconClasses,
-          className,
-          children.props.className
-        ),
+        className: cn(baseStructure, buttonClasses, iconClasses, className, children.props.className),
         ref,
         ...props,
-        ...children.props,
-      });
+        ...children.props
+      })
     }
 
     return (
@@ -271,9 +245,9 @@ const Button = React.forwardRef(
       >
         {children}
       </button>
-    );
+    )
   }
-);
-Button.displayName = 'Button';
+)
+Button.displayName = "Button"
 
-export { Button };
+export { Button }

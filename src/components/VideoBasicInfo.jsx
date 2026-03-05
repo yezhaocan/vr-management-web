@@ -1,18 +1,6 @@
 import React from 'react';
-import { useFormContext } from 'react-hook-form';
-import {
-  Input,
-  Label,
-  Textarea,
-  Button,
-  useToast,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-  FormDescription,
-} from '@/components/ui';
+import { useFormContext } from "react-hook-form";
+import { Input, Label, Textarea, Button, useToast, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui';
 import { DatePicker } from '@/components/newUi/date-picker';
 import { Clock, Upload, X, CheckCircle } from 'lucide-react';
 
@@ -20,10 +8,12 @@ export function VideoBasicInfo({
   updateDuration,
   $w,
   onBackgroundImageUpload,
-  onRemoveBackgroundImage,
+  onRemoveBackgroundImage
 }) {
   const { control, watch, setValue, clearErrors, formState } = useFormContext();
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [backgroundImage, setBackgroundImage] = React.useState(null);
   const [backgroundPreview, setBackgroundPreview] = React.useState('');
   const [uploading, setUploading] = React.useState(false);
@@ -33,12 +23,12 @@ export function VideoBasicInfo({
   const endTime = watch('endTime');
 
   // 加载背景图预览
-  const loadBackgroundImagePreview = async (fileId) => {
+  const loadBackgroundImagePreview = async fileId => {
     if (!fileId) return;
     try {
       const tcb = await $w.cloud.getCloudInstance();
       const fileUrl = await tcb.getTempFileURL({
-        fileList: [fileId],
+        fileList: [fileId]
       });
       if (fileUrl && fileUrl.fileList && fileUrl.fileList[0]) {
         setBackgroundPreview(fileUrl.fileList[0].tempFileURL);
@@ -62,7 +52,7 @@ export function VideoBasicInfo({
       // 当我们选择新图片时，VideoUploadForm 可能会清空 backgroundImageId (或者保持旧的直到上传？)
       // 让我们假设 parent 处理 clear 逻辑。
       if (!backgroundPreview || !backgroundPreview.startsWith('blob:')) {
-        setBackgroundPreview('');
+         setBackgroundPreview('');
       }
     }
   }, [backgroundImageId]);
@@ -77,7 +67,7 @@ export function VideoBasicInfo({
   }, [backgroundPreview]);
 
   // 处理背景图上传
-  const handleBackgroundImageUpload = (event) => {
+  const handleBackgroundImageUpload = event => {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -86,7 +76,7 @@ export function VideoBasicInfo({
       toast({
         title: '文件类型错误',
         description: '请上传图片文件',
-        variant: 'destructive',
+        variant: 'destructive'
       });
       return;
     }
@@ -96,7 +86,7 @@ export function VideoBasicInfo({
       toast({
         title: '文件过大',
         description: '图片大小不能超过 5MB',
-        variant: 'destructive',
+        variant: 'destructive'
       });
       return;
     }
@@ -123,14 +113,14 @@ export function VideoBasicInfo({
       toast({
         title: '图片已选择',
         description: '背景图片已暂存，将在创建录像时上传',
-        duration: 2000,
+        duration: 2000
       });
     } catch (error) {
       console.error('处理图片失败:', error);
       toast({
         title: '图片处理失败',
         description: '请重新选择图片',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     }
   };
@@ -150,7 +140,7 @@ export function VideoBasicInfo({
     toast({
       title: '背景图片已移除',
       description: '背景图片已从配置中移除',
-      variant: 'default',
+      variant: 'default'
     });
   };
 
@@ -200,7 +190,7 @@ export function VideoBasicInfo({
             背景图片
             <span className="required-marker ml-1">*</span>
           </Label>
-
+          
           <div className="bg-muted/30 rounded-xl p-6 border-2 border-border hover:border-primary/50 transition-colors">
             {backgroundPreview || backgroundImageId ? (
               <div className="space-y-4">
@@ -211,9 +201,7 @@ export function VideoBasicInfo({
                     </div>
                     <div>
                       <p className="font-medium text-lg">
-                        {backgroundPreview && backgroundPreview.startsWith('blob:')
-                          ? '图片已选择'
-                          : '图片已上传'}
+                        {backgroundPreview && backgroundPreview.startsWith('blob:') ? '图片已选择' : '图片已上传'}
                       </p>
                       <p className="text-muted-foreground text-sm">
                         {backgroundImage ? `文件名: ${backgroundImage.name}` : '背景图片已设置'}
@@ -221,21 +209,21 @@ export function VideoBasicInfo({
                     </div>
                   </div>
                   <div className="flex space-x-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => document.getElementById('background-upload').click()}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => document.getElementById('background-upload').click()} 
                       className="border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       更换
                     </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRemoveBackgroundImage}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleRemoveBackgroundImage} 
                       className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
                     >
                       <X className="h-4 w-4 mr-2" />
@@ -243,26 +231,19 @@ export function VideoBasicInfo({
                     </Button>
                   </div>
                 </div>
-
+                
                 {/* 背景图预览 */}
                 {backgroundPreview && (
                   <div className="mt-4">
                     <div className="text-sm text-muted-foreground mb-2">预览</div>
                     <div className="relative bg-muted/50 rounded-lg overflow-hidden border border-border">
-                      <img
-                        src={backgroundPreview}
-                        alt="背景图预览"
-                        className="w-full h-32 object-cover"
-                      />
+                      <img src={backgroundPreview} alt="背景图预览" className="w-full h-32 object-cover" />
                     </div>
                   </div>
                 )}
               </div>
             ) : (
-              <div
-                className="text-center cursor-pointer group"
-                onClick={() => document.getElementById('background-upload').click()}
-              >
+              <div className="text-center cursor-pointer group" onClick={() => document.getElementById('background-upload').click()}>
                 <div className="space-y-6">
                   <div className="flex justify-center">
                     <div className="w-24 h-24 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 transition-colors">
@@ -270,8 +251,12 @@ export function VideoBasicInfo({
                     </div>
                   </div>
                   <div>
-                    <p className="text-foreground font-medium text-xl">点击上传背景图片</p>
-                    <p className="text-muted-foreground text-sm mt-2">支持 JPG, PNG, GIF 格式</p>
+                    <p className="text-foreground font-medium text-xl">
+                      点击上传背景图片
+                    </p>
+                    <p className="text-muted-foreground text-sm mt-2">
+                      支持 JPG, PNG, GIF 格式
+                    </p>
                   </div>
                   {uploading && (
                     <div className="w-full bg-muted rounded-full h-3">
@@ -355,14 +340,13 @@ export function VideoBasicInfo({
                   </FormLabel>
                   <div className="flex items-center space-x-4">
                     <FormControl>
-                      <Input placeholder="01:10:00" className="w-32" {...field} />
+                      <Input 
+                        placeholder="01:10:00" 
+                        className="w-32" 
+                        {...field}
+                      />
                     </FormControl>
-                    <Button
-                      type="button"
-                      onClick={updateDuration}
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
+                    <Button type="button" onClick={updateDuration} size="sm" className="bg-green-600 hover:bg-green-700 text-white">
                       自动计算
                     </Button>
                   </div>

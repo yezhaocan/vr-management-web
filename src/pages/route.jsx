@@ -1,41 +1,16 @@
 // @ts-ignore;
 import React, { useState, useEffect } from 'react';
 // @ts-ignore;
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  useToast,
-  Badge,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  Input,
-} from '@/components/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, useToast, Badge, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Input } from '@/components/ui';
 // @ts-ignore;
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Play,
-  Music,
-  Volume2,
-  AlertTriangle,
-  Map,
-  Clock,
-  Search,
-} from 'lucide-react';
+import { Plus, Edit, Trash2, Play, Music, Volume2, AlertTriangle, Map, Clock, Search } from 'lucide-react';
 
 // @ts-ignore;
 import { RouteEditor } from '@/components/RouteEditor';
 // @ts-ignore;
 import { AirlineList } from '@/components/AirlineList';
 import { AuthGuard } from '@/components/AuthGuard';
+import { MainLayout } from './MainLayout';
 
 export default function RoutePage(props) {
   const { $w, style } = props;
@@ -58,8 +33,8 @@ export default function RoutePage(props) {
           pageSize: 100,
           pageNumber: 1,
           orderBy: [{ createdAt: 'desc' }],
-          select: { $master: true },
-        },
+          select: { $master: true }
+        }
       });
       setRoutes(result.records || []);
     } catch (error) {
@@ -67,7 +42,7 @@ export default function RoutePage(props) {
       toast({
         title: '加载失败',
         description: error.message || '请稍后重试',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
@@ -83,12 +58,12 @@ export default function RoutePage(props) {
     setShowEditor(true);
   };
 
-  const handleEditRoute = (route) => {
+  const handleEditRoute = route => {
     setEditingRoute(route);
     setShowEditor(true);
   };
 
-  const handleDeleteRoute = (route) => {
+  const handleDeleteRoute = route => {
     setRouteToDelete(route);
     setDeleteConfirmOpen(true);
   };
@@ -100,8 +75,8 @@ export default function RoutePage(props) {
         dataSourceName: 'airline',
         methodName: 'wedaDeleteV2',
         params: {
-          filter: { where: { _id: { $eq: routeToDelete._id } } },
-        },
+          filter: { where: { _id: { $eq: routeToDelete._id } } }
+        }
       });
       if (result.count > 0) {
         toast({ title: '删除成功', description: '航线已删除', variant: 'default' });
@@ -112,7 +87,7 @@ export default function RoutePage(props) {
       toast({
         title: '删除失败',
         description: error.message || '请稍后重试',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setDeleteConfirmOpen(false);
@@ -136,41 +111,36 @@ export default function RoutePage(props) {
     loadRoutes();
   };
 
-  const hasVoiceGuide = (route) => {
+  const hasVoiceGuide = route => {
     if (!route.waypoints || !Array.isArray(route.waypoints)) return false;
-    return route.waypoints.some(
-      (waypoint) => waypoint.voiceGuide && waypoint.voiceGuide.enabled === true
-    );
+    return route.waypoints.some(waypoint => waypoint.voiceGuide && waypoint.voiceGuide.enabled === true);
   };
 
   const getStats = () => {
     const totalRoutes = routes.length;
-    const routesWithBackgroundMusic = routes.filter(
-      (route) => route.cloudStorageId && route.cloudStorageId.trim() !== ''
-    ).length;
-    const routesWithVoiceGuide = routes.filter((route) => hasVoiceGuide(route)).length;
+    const routesWithBackgroundMusic = routes.filter(route => route.cloudStorageId && route.cloudStorageId.trim() !== '').length;
+    const routesWithVoiceGuide = routes.filter(route => hasVoiceGuide(route)).length;
     return {
       totalRoutes,
       routesWithBackgroundMusic,
       routesWithVoiceGuide,
-      backgroundMusicPercentage:
-        totalRoutes > 0 ? Math.round((routesWithBackgroundMusic / totalRoutes) * 100) : 0,
-      voiceGuidePercentage:
-        totalRoutes > 0 ? Math.round((routesWithVoiceGuide / totalRoutes) * 100) : 0,
+      backgroundMusicPercentage: totalRoutes > 0 ? Math.round(routesWithBackgroundMusic / totalRoutes * 100) : 0,
+      voiceGuidePercentage: totalRoutes > 0 ? Math.round(routesWithVoiceGuide / totalRoutes * 100) : 0
     };
   };
   const stats = getStats();
 
   // 过滤航线列表
-  const filteredRoutes = routes.filter(
-    (route) =>
-      route.name?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      route.description?.toLowerCase().includes(searchKeyword.toLowerCase())
+  const filteredRoutes = routes.filter(route => 
+    route.name?.toLowerCase().includes(searchKeyword.toLowerCase()) || 
+    route.description?.toLowerCase().includes(searchKeyword.toLowerCase())
   );
 
   return (
-    <AuthGuard $w={$w}>
-      <div style={style} className="space-y-6 animate-in fade-in duration-500">
+    <MainLayout $w={$w}>
+      <AuthGuard $w={$w}>
+          <div style={style} className="space-y-6 animate-in fade-in duration-500">
+        
         {/* 统计信息卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="flex flex-row items-center p-6 border border-border bg-card shadow-sm gap-4">
@@ -190,15 +160,11 @@ export default function RoutePage(props) {
             </div>
             <div className="flex flex-col items-start space-y-1 flex-1">
               <h3 className="text-sm font-medium text-muted-foreground">带背景音乐</h3>
-              <div className="text-3xl font-bold text-primary">
-                {stats.routesWithBackgroundMusic}
-              </div>
+              <div className="text-3xl font-bold text-primary">{stats.routesWithBackgroundMusic}</div>
             </div>
             <div className="flex flex-col items-end">
-              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {stats.backgroundMusicPercentage}%
-              </span>
-              <span className="text-xs text-muted-foreground">占比</span>
+               <span className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.backgroundMusicPercentage}%</span>
+               <span className="text-xs text-muted-foreground">占比</span>
             </div>
           </Card>
 
@@ -211,10 +177,8 @@ export default function RoutePage(props) {
               <div className="text-3xl font-bold text-primary">{stats.routesWithVoiceGuide}</div>
             </div>
             <div className="flex flex-col items-end">
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {stats.voiceGuidePercentage}%
-              </span>
-              <span className="text-xs text-muted-foreground">占比</span>
+               <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.voiceGuidePercentage}%</span>
+               <span className="text-xs text-muted-foreground">占比</span>
             </div>
           </Card>
         </div>
@@ -222,43 +186,28 @@ export default function RoutePage(props) {
         {/* 顶部工具栏 */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex-1 w-full sm:w-auto flex items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="搜索航线名称或描述..."
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                className="pl-10 bg-background border-input w-full hover:border-primary transition-colors duration-200"
-              />
-            </div>
+             <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input 
+                  placeholder="搜索航线名称或描述..." 
+                  value={searchKeyword} 
+                  onChange={e => setSearchKeyword(e.target.value)} 
+                  className="pl-10 bg-background border-input w-full hover:border-primary transition-colors duration-200" 
+                />
+             </div>
           </div>
-          <Button
-            onClick={handleCreateRoute}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-          >
+          <Button onClick={handleCreateRoute} className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Plus className="w-4 h-4 mr-2" /> 创建航线
           </Button>
         </div>
 
         {/* 航线列表 */}
         <div className="bg-background">
-          <AirlineList
-            routes={filteredRoutes}
-            onEdit={handleEditRoute}
-            onDelete={handleDeleteRoute}
-            hasVoiceGuide={hasVoiceGuide}
-          />
+          <AirlineList routes={filteredRoutes} onEdit={handleEditRoute} onDelete={handleDeleteRoute} hasVoiceGuide={hasVoiceGuide} />
         </div>
 
         {/* 航线编辑器弹窗 */}
-        {showEditor && (
-          <RouteEditor
-            route={editingRoute}
-            onClose={handleEditorClose}
-            onSuccess={handleEditorSuccess}
-            $w={$w}
-          />
-        )}
+        {showEditor && <RouteEditor route={editingRoute} onClose={handleEditorClose} onSuccess={handleEditorSuccess} $w={$w} />}
 
         {/* 删除确认对话框 */}
         <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
@@ -268,9 +217,11 @@ export default function RoutePage(props) {
                 <AlertTriangle className="h-5 w-5 text-destructive" />
                 <DialogTitle>确认删除航线</DialogTitle>
               </div>
-              <DialogDescription>您确定要删除这条航线吗？此操作不可恢复。</DialogDescription>
+              <DialogDescription>
+                您确定要删除这条航线吗？此操作不可恢复。
+              </DialogDescription>
             </DialogHeader>
-
+            
             {routeToDelete && (
               <div className="bg-muted/50 rounded-md p-4 space-y-2 text-sm border border-border">
                 <div className="flex justify-between">
@@ -279,19 +230,15 @@ export default function RoutePage(props) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">航点数量</span>
-                  <span className="font-medium text-foreground">
-                    {routeToDelete.waypointCount || 0} 个
-                  </span>
+                  <span className="font-medium text-foreground">{routeToDelete.waypointCount || 0} 个</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">预计时长</span>
-                  <span className="font-medium text-foreground">
-                    {routeToDelete.estimated_duration || 0} 分钟
-                  </span>
+                  <span className="font-medium text-foreground">{routeToDelete.estimated_duration || 0} 分钟</span>
                 </div>
               </div>
             )}
-
+            
             <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={cancelDeleteRoute}>
                 取消
@@ -301,8 +248,9 @@ export default function RoutePage(props) {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
-      </div>
-    </AuthGuard>
+          </Dialog>
+        </div>
+        </AuthGuard>
+      </MainLayout>
   );
 }

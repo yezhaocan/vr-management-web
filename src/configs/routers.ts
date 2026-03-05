@@ -1,63 +1,57 @@
-import WORKSPACE_SHELL from '../pages/workspace-shell.jsx';
-import LEGACY_REDIRECT from '../pages/legacy-redirect.jsx';
+import DASHBOARD from '../pages/dashboard.jsx';
+import DRONE from '../pages/drone.jsx';
+import ROUTE from '../pages/route.jsx';
+import POI from '../pages/poi.jsx';
+import CONFIG from '../pages/config.jsx';
+import SUPERADMIN from '../pages/superadmin.jsx';
+import FLIGHT_TASK from '../pages/flight-task.jsx';
+import _APP from '../pages/_app.jsx';
+import VIDEO_RECORD from '../pages/video-record.jsx';
+import TIPS from '../pages/tips.jsx';
+import SCENIC_MANAGEMENT from '../pages/scenic-management.jsx';
 import LOGIN from '../pages/login.jsx';
+import MAINLAYOUT from '../pages/MainLayout.jsx';
 import SRT_GENERATOR from '../pages/srt-generator.jsx';
-export const routers = [
-  {
-    id: 'workspace',
-    component: WORKSPACE_SHELL,
-    isHome: true,
-  },
-  {
-    id: 'workspace/:pageId',
-    component: WORKSPACE_SHELL,
-  },
-  {
-    id: 'login',
-    component: LOGIN,
-  },
-  {
-    id: 'srt-generator',
-    component: SRT_GENERATOR,
-  },
-  {
-    id: 'dashboard',
-    component: LEGACY_REDIRECT,
-  },
-  {
-    id: 'drone',
-    component: LEGACY_REDIRECT,
-  },
-  {
-    id: 'route',
-    component: LEGACY_REDIRECT,
-  },
-  {
-    id: 'poi',
-    component: LEGACY_REDIRECT,
-  },
-  {
-    id: 'config',
-    component: LEGACY_REDIRECT,
-  },
-  {
-    id: 'superadmin',
-    component: LEGACY_REDIRECT,
-  },
-  {
-    id: 'flight-task',
-    component: LEGACY_REDIRECT,
-  },
-  {
-    id: 'video-record',
-    component: LEGACY_REDIRECT,
-  },
-  {
-    id: 'tips',
-    component: LEGACY_REDIRECT,
-  },
-  {
-    id: 'scenic-management',
-    component: LEGACY_REDIRECT,
-  },
-];
+export const routers = [{
+  id: "dashboard",
+  component: DASHBOARD
+}, {
+  id: "drone",
+  component: DRONE
+}, {
+  id: "route",
+  component: ROUTE
+}, {
+  id: "poi",
+  component: POI
+}, {
+  id: "config",
+  component: CONFIG
+}, {
+  id: "superadmin",
+  component: SUPERADMIN
+}, {
+  id: "flight-task",
+  component: FLIGHT_TASK
+}, {
+  id: "_app",
+  component: _APP
+}, {
+  id: "video-record",
+  component: VIDEO_RECORD
+}, {
+  id: "tips",
+  component: TIPS
+}, {
+  id: "scenic-management",
+  component: SCENIC_MANAGEMENT
+}, {
+  id: "login",
+  component: LOGIN
+}, {
+  id: "MainLayout",
+  component: MAINLAYOUT
+}, {
+  id: "srt-generator",
+  component: SRT_GENERATOR
+}]

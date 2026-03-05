@@ -21,7 +21,6 @@ export * from './VoiceConfigPanel.jsx';
 export * from './BasicInfoPanel.jsx';
 export * from './SimpleMap.jsx';
 export * from './VideoBasicInfo.jsx';
-export * from './VideoFileUpload.jsx';
 export * from './BroadcastManager.jsx';
 export * from './BackgroundMusicUploader.jsx';
 export * from './EnhancedCard.jsx';

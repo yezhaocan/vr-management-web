@@ -4,8 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui';
 
 export default function App(props) {
-  const { $w, style, children } = props;
-  const { toast } = useToast();
+  const {
+    $w,
+    style,
+    children
+  } = props;
+  const {
+    toast
+  } = useToast();
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -44,8 +50,8 @@ export default function App(props) {
             $w.utils.redirectTo({
               pageId: 'login',
               params: {
-                redirect: currentPage,
-              },
+                redirect: currentPage
+              }
             });
           }
         }
@@ -60,8 +66,8 @@ export default function App(props) {
         $w.utils.redirectTo({
           pageId: 'login',
           params: {
-            redirect: currentPage,
-          },
+            redirect: currentPage
+          }
         });
       }
     }
@@ -84,7 +90,7 @@ export default function App(props) {
       // 重定向到登录页
       $w.utils.redirectTo({
         pageId: 'login',
-        params: {},
+        params: {}
       });
     } catch (error) {
       console.error('退出登录失败:', error);
@@ -93,14 +99,12 @@ export default function App(props) {
 
   // 渲染加载状态
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-white text-lg">检查登录状态...</div>
-        </div>
+    return <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-white text-lg">检查登录状态...</div>
       </div>
-    );
+    </div>;
   }
 
   // 如果是登录页，直接渲染
@@ -108,41 +112,29 @@ export default function App(props) {
   if (currentPage === 'login') {
     return React.cloneElement(children, {
       ...props,
-      onLoginSuccess: handleLoginSuccess,
+      onLoginSuccess: handleLoginSuccess
     });
   }
 
   // 未登录时显示重定向提示
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold text-white mb-2">正在重定向到登录页...</h2>
-          <p className="text-gray-400">请稍候，系统正在为您跳转到登录页面</p>
+    return <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
         </div>
+        <h2 className="text-xl font-semibold text-white mb-2">正在重定向到登录页...</h2>
+        <p className="text-gray-400">请稍候，系统正在为您跳转到登录页面</p>
       </div>
-    );
+    </div>;
   }
 
   // 已登录，渲染应用内容
   return React.cloneElement(children, {
     ...props,
     currentUser: currentUser,
-    onLogout: handleLogout,
+    onLogout: handleLogout
   });
 }

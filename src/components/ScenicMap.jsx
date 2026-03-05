@@ -12,9 +12,11 @@ export function ScenicMap({
   onPositionSelect,
   initialPosition,
   disabled = false,
-  className = 'h-80',
+  className = "h-80"
 }) {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [selectedPosition, setSelectedPosition] = useState(initialPosition || null);
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -24,7 +26,7 @@ export function ScenicMap({
   const [mapError, setMapError] = useState(null);
   const [userLocation, setUserLocation] = useState({
     latitude: 39.9042,
-    longitude: 116.4074,
+    longitude: 116.4074
   });
 
   // 检查 Leaflet 是否已加载
@@ -99,17 +101,14 @@ export function ScenicMap({
   // 获取用户地理位置
   useEffect(() => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.warn('获取用户位置失败:', error);
-        }
-      );
+      navigator.geolocation.getCurrentPosition(position => {
+        setUserLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      }, error => {
+        console.warn('获取用户位置失败:', error);
+      });
     }
   }, []);
 
@@ -139,33 +138,27 @@ export function ScenicMap({
       const mapInstance = window.L.map(mapContainerRef.current, {
         center: mapCenter,
         zoom: 12,
-        zoomControl: false,
+        zoomControl: false
       });
 
       // 添加天地图瓦片图层
-      window.L.tileLayer(
-        'https://t0.tianditu.gov.cn/DataServer?T=img_w/&x={x}&y={y}&l={z}&style=dark&tk=eaa119242fd58a04007ad66abc2546f7',
-        {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 18,
-        }
-      ).addTo(mapInstance);
+      window.L.tileLayer('https://t0.tianditu.gov.cn/DataServer?T=img_w/&x={x}&y={y}&l={z}&style=dark&tk=eaa119242fd58a04007ad66abc2546f7', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18
+      }).addTo(mapInstance);
 
       // 添加缩放控件
-      window.L.control
-        .zoom({
-          position: 'topright',
-        })
-        .addTo(mapInstance);
+      window.L.control.zoom({
+        position: 'topright'
+      }).addTo(mapInstance);
 
       // 地图点击事件 - 更新唯一标记位置
-      const handleMapClick = (e) => {
+      const handleMapClick = e => {
         if (disabled) return;
         try {
           const location = {
             lat: validateCoordinate(e.latlng.lat.toFixed(6), '纬度'),
-            lng: validateCoordinate(e.latlng.lng.toFixed(6), '经度'),
+            lng: validateCoordinate(e.latlng.lng.toFixed(6), '经度')
           };
           setSelectedPosition(location);
           onPositionSelect && onPositionSelect(location);
@@ -175,7 +168,7 @@ export function ScenicMap({
           toast({
             title: '坐标拾取失败',
             description: error.message,
-            variant: 'destructive',
+            variant: 'destructive'
           });
         }
       };
@@ -194,7 +187,7 @@ export function ScenicMap({
       toast({
         title: '地图初始化失败',
         description: error.message,
-        variant: 'destructive',
+        variant: 'destructive'
       });
       setMapError(error);
     } finally {
@@ -236,23 +229,23 @@ export function ScenicMap({
           </div>
         `,
         iconSize: [24, 24],
-        iconAnchor: [12, 12],
+        iconAnchor: [12, 12]
       });
 
       // 创建新标记
       markerRef.current = window.L.marker(latLng, {
         icon: customIcon,
-        draggable: !disabled,
+        draggable: !disabled
       }).addTo(mapInstance);
 
       // 标记拖动事件
-      markerRef.current.on('dragend', (e) => {
+      markerRef.current.on('dragend', e => {
         if (disabled) return;
         const marker = e.target;
         const position = marker.getLatLng();
         const location = {
           lat: validateCoordinate(position.lat.toFixed(6), '纬度'),
-          lng: validateCoordinate(position.lng.toFixed(6), '经度'),
+          lng: validateCoordinate(position.lng.toFixed(6), '经度')
         };
         setSelectedPosition(location);
         onPositionSelect && onPositionSelect(location);
@@ -278,7 +271,7 @@ export function ScenicMap({
       const newValue = validateCoordinate(value, field === 'lat' ? '纬度' : '经度');
       const newPosition = {
         ...selectedPosition,
-        [field]: newValue,
+        [field]: newValue
       };
 
       // 确保两个坐标都存在
@@ -300,7 +293,7 @@ export function ScenicMap({
       toast({
         title: '坐标输入错误',
         description: error.message,
-        variant: 'destructive',
+        variant: 'destructive'
       });
     }
   };
@@ -334,12 +327,7 @@ export function ScenicMap({
 
   // 监听初始位置变化
   useEffect(() => {
-    if (
-      initialPosition &&
-      (!selectedPosition ||
-        initialPosition.lat !== selectedPosition.lat ||
-        initialPosition.lng !== selectedPosition.lng)
-    ) {
+    if (initialPosition && (!selectedPosition || initialPosition.lat !== selectedPosition.lat || initialPosition.lng !== selectedPosition.lng)) {
       setSelectedPosition(initialPosition);
       if (mapInstanceRef.current && initialPosition.lat && initialPosition.lng) {
         const latLng = window.L.latLng(initialPosition.lat, initialPosition.lng);
@@ -392,42 +380,32 @@ export function ScenicMap({
           z-index: 1;
         }
       `}</style>
-      <div
-        ref={mapContainerRef}
-        className={`relative w-full h-full ${className} bg-muted/20`}
-        style={{
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          width: '100%',
-          height: '100%',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
+      <div ref={mapContainerRef} className={`relative w-full h-full ${className} bg-muted/20`} style={{
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        zIndex: 1
+      }}>
         {/* 地图加载状态 */}
-        {!mapLoaded && !mapError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-[1000]">
+        {!mapLoaded && !mapError && <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-[1000]">
             <div className="flex flex-col items-center space-y-2">
               <Loader className="h-8 w-8 text-primary animate-spin" />
               <div className="text-foreground text-sm font-medium">地图加载中...</div>
             </div>
-          </div>
-        )}
-        {mapError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-destructive/10 z-[1100]">
+          </div>}
+        {mapError && <div className="absolute inset-0 flex items-center justify-center bg-destructive/10 z-[1100]">
             <div className="text-destructive-foreground text-sm font-medium bg-destructive px-4 py-2 rounded border border-destructive-foreground/20">
               地图初始化失败
             </div>
-          </div>
-        )}
-
+          </div>}
+        
         {/* 禁用状态遮罩 */}
-        {disabled && mapLoaded && (
-          <div className="absolute inset-0 bg-background/40 flex items-center justify-center backdrop-blur-sm z-[1100]">
+        {disabled && mapLoaded && <div className="absolute inset-0 bg-background/40 flex items-center justify-center backdrop-blur-sm z-[1100]">
             <div className="text-foreground text-lg font-medium bg-background/90 px-4 py-3 rounded-lg border border-border shadow-sm">
               编辑模式下可设置坐标
             </div>
-          </div>
-        )}
+          </div>}
       </div>
     </>
   );
