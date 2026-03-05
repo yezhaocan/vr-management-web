@@ -32,8 +32,6 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --required: 0 65.4% 50.6%; /* #d32f2f */
-
     --radius: 0.5rem;
   }
 
@@ -65,8 +63,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    
-    --required: 0.9 83.3% 62.5%; /* #ef5350 */
   }
 }
 
@@ -77,17 +73,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-@layer utilities {
-  .required-marker {
-    color: hsl(var(--required));
-  }
-}
-
-/* Global focus-visible style with highest specificity */
-*:focus-visible {
-  outline-width: 0 !important;
-  outline: none !important;
-  box-shadow: none !important;
 }
